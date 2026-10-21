@@ -16329,6 +16329,8 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
   --dnr-reading-bg: var(--dnr-bg);
   --dnr-reading-text: var(--dnr-text);
   --dnr-error: #b13b3b;
+  --dnr-footer-height: 44px;
+  --dnr-sync-footer-offset: 0px;
   position: relative; display: flex; flex-direction: column; width: 100%; height: 100%; min-width: 0;
   color: var(--dnr-text); background: var(--dnr-bg); container-type: inline-size; overflow: hidden;
   font: 400 12px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -16573,7 +16575,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-acquisition-progress i { display: block; height: 100%; background: var(--dnr-muted); transition: width 180ms; }
 .dnr-online-disclaimer { margin: 16px 0 4px; padding: 10px 12px; border-radius: 8px; background: var(--dnr-surface); color: var(--dnr-muted); font-size: 11px; line-height: 1.6; }
 
-.dnr-footer { height: 44px; flex: 0 0 44px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border-top: 1px solid var(--dnr-line); background: var(--dnr-bg); }
+.dnr-footer { height: var(--dnr-footer-height); flex: 0 0 var(--dnr-footer-height); display: flex; align-items: center; gap: 10px; padding: 0 12px; border-top: 1px solid var(--dnr-line); background: var(--dnr-bg); }
 .dnr-footer > button { height: 28px; display: flex; align-items: center; gap: 3px; padding: 0 6px; border: 0; border-radius: 6px; background: transparent; color: var(--dnr-muted); font-size: 11px; white-space: nowrap; }
 .dnr-footer > button svg { width: 14px; height: 14px; }
 .dnr-footer > button:hover:not(:disabled) { background: var(--dnr-accent-soft); color: var(--dnr-text); }
@@ -16678,10 +16680,10 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-cloud-url { overflow-wrap:anywhere; }
 .dnr-cloud-empty { padding:30px 20px; border:1px dashed var(--dnr-line); color:var(--dnr-muted); border-radius:12px; }
 .dnr-cloud-message { padding:12px; background:var(--dnr-surface); border-radius:8px; }
-.dnr-sync-control { position: absolute; z-index: 9; left: 4px; bottom: max(2px, env(safe-area-inset-bottom)); width: 40px; height: 40px; }
+.dnr-shell:not(.is-immersive):has(> .dnr-footer) { --dnr-sync-footer-offset: var(--dnr-footer-height); }
+.dnr-sync-control { position: absolute; z-index: 9; left: 4px; bottom: calc(var(--dnr-sync-footer-offset) + max(2px, env(safe-area-inset-bottom))); width: 40px; height: 40px; }
 .dnr-sync-button { position: relative; display: grid; place-items: center; width: 40px; height: 40px; padding: 6px; border: 0; border-radius: 10px; background: var(--dnr-bg); color: var(--dnr-muted); }
 .dnr-sync-button:hover, .dnr-sync-button[aria-expanded="true"] { background: var(--dnr-surface); }
-.dnr-shell:has(.dnr-sync-control) .dnr-footer { padding-left: 48px; }
 .dnr-shell.is-immersive .dnr-sync-button { background: var(--dnr-reading-bg); color: var(--dnr-reading-text); }
 .dnr-sync-check { stroke: #2f925f; }
 .dnr-shell[data-color-scheme="dark"] .dnr-sync-check { stroke: #79c69b; }
@@ -16689,7 +16691,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-sync-button.is-syncing .dnr-sync-arrows { animation: dnr-sync-spin 1.2s linear infinite; }
 .dnr-sync-alert { color: var(--dnr-error); }
 .dnr-sync-dot { position: absolute; top: 9px; right: 8px; width: 4px; height: 4px; border-radius: 50%; background: var(--dnr-error); box-shadow: 0 0 0 2px var(--dnr-bg); }
-.dnr-sync-details { position: absolute; z-index: 20; left: 12px; bottom: calc(50px + env(safe-area-inset-bottom)); width: min(296px, calc(100% - 24px)); max-height: calc(100% - 100px); overflow: auto; padding: 16px; border: 1px solid var(--dnr-line); border-radius: 12px; background: var(--dnr-bg); box-shadow: 0 8px 30px #0002; color: var(--dnr-text); font-size: 12px; }
+.dnr-sync-details { position: absolute; z-index: 20; left: 12px; bottom: calc(var(--dnr-sync-footer-offset) + 50px + env(safe-area-inset-bottom)); width: min(296px, calc(100% - 24px)); max-height: calc(100% - 100px - var(--dnr-sync-footer-offset)); overflow: auto; padding: 16px; border: 1px solid var(--dnr-line); border-radius: 12px; background: var(--dnr-bg); box-shadow: 0 8px 30px #0002; color: var(--dnr-text); font-size: 12px; }
 .dnr-sync-heading { display: flex; align-items: center; justify-content: space-between; }
 .dnr-sync-heading strong { font-size: 13px; font-weight: 600; }
 .dnr-sync-heading button { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--dnr-muted); }
