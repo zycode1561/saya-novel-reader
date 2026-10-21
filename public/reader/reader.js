@@ -11025,7 +11025,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 
 //#endregion
 //#region src/client/components/Icon.tsx
-var import_react_dom$1 = /* @__PURE__ */ __toESM(require_react_dom());
 	const paths = {
 		cloud: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M7 18a5 5 0 0 1-1-9.9A6 6 0 0 1 17.6 7a5.5 5.5 0 0 1 .9 11H7Z" }),
 		library: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M4 4v16M8 4v16M12 4v16M16 5l4 14" }) }),
@@ -11125,12 +11124,11 @@ var import_react_dom$1 = /* @__PURE__ */ __toESM(require_react_dom());
 		pending: false,
 		lastSyncedAt: 0
 	};
-	function CloudSync({ toolbarTarget = null }) {
+	function CloudSync() {
 		const { book, progress, bookmarks } = useReader();
 		const [status, setStatus] = (0, import_react.useState)(initialStatus);
 		const [conflict, setConflict] = (0, import_react.useState)(null);
 		const [open, setOpen] = (0, import_react.useState)(false);
-		const [top, setTop] = (0, import_react.useState)(64);
 		const [slow, setSlow] = (0, import_react.useState)(false);
 		const buttonRef = (0, import_react.useRef)(null);
 		const detailsRef = (0, import_react.useRef)(null);
@@ -11294,24 +11292,56 @@ var import_react_dom$1 = /* @__PURE__ */ __toESM(require_react_dom());
 		}, [open]);
 		if (!currentCloudId) return null;
 		const showDetails = () => {
-			const button = buttonRef.current;
-			const shell = button?.closest(".dnr-shell");
-			if (button && shell) setTop(button.getBoundingClientRect().bottom - shell.getBoundingClientRect().top + 8);
 			setOpen((value) => !value);
 		};
-		const label = status.phase === "conflict" ? "阅读进度有冲突" : status.phase === "error" ? "暂未连接云端" : status.pending ? "进度已存本机，待同步" : status.lastSyncedAt ? "进度已同步" : "正在检查云端进度";
+		const busy = status.pending || slow && working || !status.lastSyncedAt;
+		const visualState = status.phase === "conflict" || status.phase === "error" ? status.phase : busy ? "pending" : "synced";
+		const label = status.phase === "conflict" ? "阅读进度有冲突" : status.phase === "error" ? "暂未连接云端" : status.phase === "syncing" && slow ? status.pending ? "正在同步进度…" : "正在检查云端进度…" : status.pending ? "进度已存本机，待同步" : status.lastSyncedAt ? "进度已同步" : "正在检查云端进度";
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-			toolbarTarget && (0, import_react_dom$1.createPortal)(/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-				ref: buttonRef,
-				type: "button",
-				className: `dnr-sync-button ${slow && working ? "is-syncing" : ""}`,
-				"aria-label": "同步详情",
-				title: label,
-				"aria-expanded": open,
-				"aria-haspopup": "dialog",
-				onClick: showDetails,
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: slow && working ? "sync" : "cloud" }), (status.phase === "error" || status.phase === "conflict") && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { className: "dnr-sync-dot" })]
-			}), toolbarTarget),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "dnr-sync-control",
+				"data-sync-state": visualState,
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+					ref: buttonRef,
+					type: "button",
+					className: `dnr-sync-button ${slow && working ? "is-syncing" : ""}`,
+					"aria-label": "同步详情",
+					title: label,
+					"aria-expanded": open,
+					"aria-haspopup": "dialog",
+					onClick: showDetails,
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+						className: "dnr-sync-cloud",
+						viewBox: "0 0 24 24",
+						width: "26",
+						height: "26",
+						fill: "none",
+						stroke: "currentColor",
+						strokeWidth: "1.6",
+						strokeLinecap: "round",
+						strokeLinejoin: "round",
+						"aria-hidden": "true",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M7 19a5 5 0 0 1-1-9.9A6 6 0 0 1 17.6 8a5.5 5.5 0 0 1 .9 11H7Z" }), visualState === "synced" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+							className: "dnr-sync-check",
+							d: "m8.5 13 2.3 2.3 4.7-4.7",
+							strokeWidth: "2"
+						}) : visualState === "pending" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("g", {
+							className: "dnr-sync-arrows",
+							strokeWidth: "1.3",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M8.8 12a3.5 3.5 0 0 1 6-1.1L16 12m0-2.5V12h-2.5M15.2 14a3.5 3.5 0 0 1-6 1.1L8 14m0 2.5V14h2.5" })
+						}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("g", {
+							className: "dnr-sync-alert",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M12 10.5v3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+								cx: "12",
+								cy: "16.2",
+								r: ".7",
+								fill: "currentColor",
+								stroke: "none"
+							})]
+						})]
+					}), (status.phase === "error" || status.phase === "conflict") && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { className: "dnr-sync-dot" })]
+				})
+			}),
 			conflict && !open && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 				type: "button",
 				className: "dnr-sync-conflict",
@@ -11323,7 +11353,6 @@ var import_react_dom$1 = /* @__PURE__ */ __toESM(require_react_dom());
 				className: "dnr-sync-details",
 				role: "dialog",
 				"aria-label": "同步详情",
-				style: { top },
 				children: [
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "dnr-sync-heading",
@@ -12213,7 +12242,7 @@ var import_react_dom$1 = /* @__PURE__ */ __toESM(require_react_dom());
 		const [selected, setSelected] = (0, import_react.useState)(0);
 		const results = (0, import_react.useMemo)(() => book === null ? [] : searchBook(book, query), [book, query]);
 		(0, import_react.useEffect)(() => {
-			inputRef.current?.focus();
+			inputRef.current?.focus({ preventScroll: true });
 		}, []);
 		(0, import_react.useEffect)(() => setSelected(0), [query]);
 		const jump = (index) => {
@@ -14669,6 +14698,7 @@ var import_dist = /* @__PURE__ */ __toESM(require_dist());
 
 //#endregion
 //#region src/client/fanqie/api.ts
+var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 	var FanqieApiError = class extends Error {
 		constructor(code, message) {
 			super(message);
@@ -15017,7 +15047,6 @@ var import_dist = /* @__PURE__ */ __toESM(require_dist());
 
 //#endregion
 //#region src/client/components/FanqieWorkspace.tsx
-	var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 	function readingBook(open, text, index) {
 		return {
 			...buildReadingBook({
@@ -15449,7 +15478,6 @@ var import_dist = /* @__PURE__ */ __toESM(require_dist());
 		const colorScheme = settings.theme === "light" || settings.theme === "dark" ? settings.theme : hostTheme;
 		const [view, setView] = (0, import_react.useState)(cloudHosted ? "cloud" : "reader");
 		const [toolbarTarget, setToolbarTarget] = (0, import_react.useState)(null);
-		const [syncTarget, setSyncTarget] = (0, import_react.useState)(null);
 		const [fanqieVisited, setFanqieVisited] = (0, import_react.useState)(false);
 		(0, import_react.useEffect)(() => {
 			setReaderActive(view === "reader");
@@ -15608,16 +15636,12 @@ var import_dist = /* @__PURE__ */ __toESM(require_dist());
 											onClick: () => void changeDisplay("pip"),
 											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "pip" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "画中画" })]
 										}),
-										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+										!cloudHosted && window.openai?.requestDisplayMode && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 											type: "button",
 											"aria-label": "切换全屏",
 											title: "全屏",
 											onClick: () => void changeDisplay("fullscreen"),
 											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "fullscreen" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "全屏" })]
-										}),
-										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-											className: "dnr-sync-slot",
-											ref: setSyncTarget
 										})
 									]
 								})
@@ -15631,7 +15655,7 @@ var import_dist = /* @__PURE__ */ __toESM(require_dist());
 					onClick: () => setHostNotice(null),
 					children: hostNotice ?? notices[0]
 				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudSync, { toolbarTarget: syncTarget }),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudSync, {}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudReadingActivity, { active: showReader }),
 				view !== "cloud" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(UploadStatus, {
 					compact: true,
@@ -15799,7 +15823,6 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-shell.is-navigation-pinned .dnr-top-dock { height: auto; flex-basis: auto; }
 .dnr-shell.is-navigation-pinned .dnr-top-dock::after { display: none; }
 .dnr-shell.is-navigation-pinned .dnr-top-controls { position: relative; transform: none; opacity: 1; pointer-events: auto; }
-.dnr-top-dock:has(.dnr-sync-button[aria-expanded="true"]) .dnr-top-controls { transform: none; opacity: 1; pointer-events: auto; }
 .dnr-toolbar-dock { position: relative; z-index: 4; height: 46px; flex: 0 0 46px; overflow: hidden; background: var(--dnr-bg); transition: height 180ms, flex-basis 180ms; }
 .dnr-toolbar { height: 46px; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 3px; padding: 5px 10px; border-bottom: 1px solid var(--dnr-line); }
 .dnr-toolbar button { min-width: 0; height: 35px; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 0 4px; border: 0; border-radius: 8px; background: transparent; color: var(--dnr-muted); transition: background 140ms, color 140ms; }
@@ -15869,6 +15892,10 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-search-field button { width: 22px; height: 22px; display: grid; place-items: center; padding: 0; border: 0; background: transparent; color: var(--dnr-muted); }
 .dnr-search-field--small { height: 32px; }
 .dnr-search-field--small input { font-size: 11px; }
+/* Keep native mobile focus from zooming small search text; preserve pinch zoom. */
+@media (max-width: 600px), (pointer: coarse) {
+  .dnr-shell .dnr-search-field input { font-size: 16px; }
+}
 .dnr-search-panel, .dnr-settings, .dnr-bookmarks { width: 100%; max-width: 680px; height: 100%; margin-inline: auto; padding: 24px clamp(16px, 4cqw, 28px) 32px; overflow: auto; }
 .dnr-search-help { margin: 8px 0 12px; color: var(--dnr-muted); font-size: 11px; }
 .dnr-search-results { display: flex; flex-direction: column; gap: 6px; }
@@ -16100,12 +16127,18 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-cloud-url { overflow-wrap:anywhere; }
 .dnr-cloud-empty { padding:30px 20px; border:1px dashed var(--dnr-line); color:var(--dnr-muted); border-radius:12px; }
 .dnr-cloud-message { padding:12px; background:var(--dnr-surface); border-radius:8px; }
-.dnr-sync-slot { min-width: 0; }
-.dnr-sync-slot:empty { display: none; }
-.dnr-toolbar .dnr-sync-button { position: relative; width: 100%; }
-.dnr-sync-dot { position: absolute; top: 6px; right: calc(50% - 10px); width: 5px; height: 5px; border-radius: 50%; background: var(--dnr-error); box-shadow: 0 0 0 2px var(--dnr-bg); }
-.dnr-sync-button.is-syncing svg { animation: dnr-sync-spin 1.2s linear infinite; }
-.dnr-sync-details { position: absolute; z-index: 20; right: 12px; width: min(296px, calc(100% - 24px)); max-height: calc(100% - 90px); overflow: auto; padding: 16px; border: 1px solid var(--dnr-line); border-radius: 12px; background: var(--dnr-bg); box-shadow: 0 8px 30px #0002; color: var(--dnr-text); font-size: 12px; }
+.dnr-sync-control { position: absolute; z-index: 9; left: 4px; bottom: max(2px, env(safe-area-inset-bottom)); width: 40px; height: 40px; }
+.dnr-sync-button { position: relative; display: grid; place-items: center; width: 40px; height: 40px; padding: 6px; border: 0; border-radius: 10px; background: var(--dnr-bg); color: var(--dnr-muted); }
+.dnr-sync-button:hover, .dnr-sync-button[aria-expanded="true"] { background: var(--dnr-surface); }
+.dnr-shell:has(.dnr-sync-control) .dnr-footer { padding-left: 48px; }
+.dnr-shell.is-immersive .dnr-sync-button { background: var(--dnr-reading-bg); color: var(--dnr-reading-text); }
+.dnr-sync-check { stroke: #2f925f; }
+.dnr-shell[data-color-scheme="dark"] .dnr-sync-check { stroke: #79c69b; }
+.dnr-sync-arrows { color: var(--dnr-muted); transform-origin: 12px 13px; }
+.dnr-sync-button.is-syncing .dnr-sync-arrows { animation: dnr-sync-spin 1.2s linear infinite; }
+.dnr-sync-alert { color: var(--dnr-error); }
+.dnr-sync-dot { position: absolute; top: 5px; right: 4px; width: 5px; height: 5px; border-radius: 50%; background: var(--dnr-error); box-shadow: 0 0 0 2px var(--dnr-bg); }
+.dnr-sync-details { position: absolute; z-index: 20; left: 12px; bottom: calc(50px + env(safe-area-inset-bottom)); width: min(296px, calc(100% - 24px)); max-height: calc(100% - 100px); overflow: auto; padding: 16px; border: 1px solid var(--dnr-line); border-radius: 12px; background: var(--dnr-bg); box-shadow: 0 8px 30px #0002; color: var(--dnr-text); font-size: 12px; }
 .dnr-sync-heading { display: flex; align-items: center; justify-content: space-between; }
 .dnr-sync-heading strong { font-size: 13px; font-weight: 600; }
 .dnr-sync-heading button { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--dnr-muted); }
@@ -16116,7 +16149,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-sync-actions { display: flex; gap: 8px; margin-top: 14px; }
 .dnr-sync-actions button { flex: 1; }
 .dnr-sync-conflict { position: absolute; z-index: 9; right: 12px; bottom: 56px; max-width: calc(100% - 24px); padding: 9px 12px; border: 1px solid var(--dnr-line); border-radius: 10px; color: var(--dnr-text); background: var(--dnr-bg); box-shadow: 0 3px 12px #0001; }
-@media (prefers-reduced-motion: reduce) { .dnr-sync-button.is-syncing svg { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .dnr-sync-button.is-syncing .dnr-sync-arrows { animation: none; } }
 .dnr-upload-status { margin:0 0 24px; padding:18px; border:1px solid var(--dnr-line); border-radius:12px; background:var(--dnr-surface); color:var(--dnr-text); }
 .dnr-upload-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
 .dnr-upload-heading > strong { font-size:14px; font-weight:600; }
