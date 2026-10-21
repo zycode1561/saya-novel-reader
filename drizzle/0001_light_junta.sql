@@ -1,0 +1,1 @@
+ALTER TABLE `books` ADD `last_read_at` integer DEFAULT 0 NOT NULL;

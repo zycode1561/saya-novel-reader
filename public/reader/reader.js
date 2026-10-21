@@ -10767,6 +10767,72 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	}
 
 //#endregion
+//#region src/client/cloud/reading-activity.ts
+	function timestamp(value) {
+		return typeof value === "number" && Number.isSafeInteger(value) && value > 0 ? value : 0;
+	}
+	function readingTimes() {
+		const value = read("reading-times", {});
+		return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+	}
+	function sortCloudBooks(books, localTimes = readingTimes()) {
+		return [...books].sort((a, b) => Math.max(timestamp(b.last_read_at), timestamp(localTimes[b.id])) - Math.max(timestamp(a.last_read_at), timestamp(localTimes[a.id])) || b.created_at - a.created_at || a.id.localeCompare(b.id));
+	}
+	function pendingReads() {
+		return read("reading-pending", {});
+	}
+	let flushing = null;
+	function flushReadingActivity() {
+		if (flushing) return flushing;
+		flushing = (async () => {
+			for (;;) {
+				const entry = Object.entries(pendingReads()).find(([id$2, at$1]) => /^[a-f0-9]{64}$/.test(id$2) && timestamp(at$1));
+				if (!entry) break;
+				const [id$1, at] = entry;
+				const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 15e3);
+				try {
+					if (!timestamp((await (await api(`/books/${id$1}/read`, {
+						method: "PUT",
+						headers: { "content-type": "application/json" },
+						body: JSON.stringify({ at }),
+						signal: controller.signal,
+						keepalive: true
+					})).json()).last_read_at)) break;
+					const pending = pendingReads();
+					if (pending[id$1] === at) {
+						delete pending[id$1];
+						write("reading-pending", pending);
+					}
+					window.dispatchEvent(new Event("dnr-cloud-reading-updated"));
+				} catch {
+					break;
+				} finally {
+					clearTimeout(timer);
+				}
+			}
+		})().finally(() => {
+			flushing = null;
+		});
+		return flushing;
+	}
+	function markCloudBookRead(id$1, at = Date.now()) {
+		if (!/^[a-f0-9]{64}$/.test(id$1) || !timestamp(at)) return;
+		try {
+			const times = readingTimes(), pending = pendingReads();
+			if (timestamp(times[id$1]) >= at) {
+				flushReadingActivity();
+				return;
+			}
+			times[id$1] = at;
+			pending[id$1] = Math.max(timestamp(pending[id$1]), at);
+			write("reading-times", times);
+			write("reading-pending", pending);
+			window.dispatchEvent(new Event("dnr-cloud-reading-updated"));
+			flushReadingActivity();
+		} catch {}
+	}
+
+//#endregion
 //#region src/client/cloud/CloudLibrary.tsx
 	function CloudLibrary({ onOpened, onBack }) {
 		const { recents, loadOnlineBook } = useReader();
@@ -10794,9 +10860,21 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				setBooks(read("catalog", []));
 				refresh();
 			};
+			const reorder = () => setBooks((current) => [...current]);
+			const wake = () => {
+				if (document.visibilityState === "visible") refresh();
+			};
 			refresh();
 			window.addEventListener("dnr-cloud-catalog-updated", update);
-			return () => window.removeEventListener("dnr-cloud-catalog-updated", update);
+			window.addEventListener("dnr-cloud-reading-updated", reorder);
+			window.addEventListener("focus", wake);
+			document.addEventListener("visibilitychange", wake);
+			return () => {
+				window.removeEventListener("dnr-cloud-catalog-updated", update);
+				window.removeEventListener("dnr-cloud-reading-updated", reorder);
+				window.removeEventListener("focus", wake);
+				document.removeEventListener("visibilitychange", wake);
+			};
 		}, []);
 		const openBook = async (entry) => {
 			setOpeningId(entry.id);
@@ -10878,14 +10956,14 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					className: "dnr-cloud-message",
 					children: message
 				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", { children: ["云端书库 ", /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [books.length, " 本"] })] }),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", { children: ["云端书库 ", /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [books.length, " 本 · 最近阅读优先"] })] }),
 				!books.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "dnr-cloud-empty",
 					children: "还没有上传书籍。选择文件，开始你的跨设备阅读。"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "dnr-cloud-books",
-					children: books.map((entry) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					children: sortCloudBooks(books).map((entry) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 						"aria-hidden": "true",
 						className: "dnr-cloud-cover",
 						children: entry.name.slice(0, 4)
@@ -11041,6 +11119,53 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				})
 			] })]
 		});
+	}
+
+//#endregion
+//#region src/client/cloud/CloudReadingActivity.tsx
+	function CloudReadingActivity({ active: active$1 }) {
+		const { book, panel } = useReader();
+		(0, import_react.useEffect)(() => {
+			const flush = () => {
+				flushReadingActivity();
+			};
+			flush();
+			window.addEventListener("online", flush);
+			window.addEventListener("focus", flush);
+			return () => {
+				window.removeEventListener("online", flush);
+				window.removeEventListener("focus", flush);
+			};
+		}, []);
+		(0, import_react.useEffect)(() => {
+			if (!active$1 || !book || !panel.expanded) return;
+			let lastRecorded = 0;
+			const record = (force = false) => {
+				if (document.visibilityState !== "visible") return;
+				const id$1 = bindings()[book.id], now = Date.now();
+				if (id$1 && (force || now - lastRecorded >= 3e4)) {
+					lastRecorded = now;
+					markCloudBookRead(id$1, now);
+				}
+			};
+			record(true);
+			const wake = () => record();
+			const timer = window.setInterval(wake, 6e4);
+			window.addEventListener("focus", wake);
+			window.addEventListener("dnr-cloud-catalog-updated", wake);
+			document.addEventListener("visibilitychange", wake);
+			return () => {
+				clearInterval(timer);
+				window.removeEventListener("focus", wake);
+				window.removeEventListener("dnr-cloud-catalog-updated", wake);
+				document.removeEventListener("visibilitychange", wake);
+			};
+		}, [
+			active$1,
+			book?.id,
+			panel.expanded
+		]);
+		return null;
 	}
 
 //#endregion
@@ -15312,6 +15437,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 					children: hostNotice ?? notices[0]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudSync, {}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudReadingActivity, { active: showReader }),
 				view !== "cloud" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(UploadStatus, {
 					compact: true,
 					onOpen: () => setView("cloud")

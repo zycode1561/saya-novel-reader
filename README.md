@@ -9,6 +9,7 @@ Private Sites companion for the local Codex novel reader. This deployment is a *
 - Shared reader bundle from `../codex-novel-reader`, preserving chapter and paragraph parsing.
 - IndexedDB caches opened originals and reader data; service worker caches only the reader shell. API data is never put in the HTTP cache. Offline copies remain on the device.
 - Durable client progress journal, optimistic revision checks, explicit conflict choices, idempotent operation IDs.
+- Cloud books appear in recent-reading order across devices. Actual reader visits update a separate timestamp; existing saved positions provide a fallback for older books, while unread books retain upload order. Offline reading timestamps are queued for the next connection.
 - Uploads show measured byte progress, server-save confirmation, per-file outcomes and retry controls. The upload queue survives in-site navigation; refresh/close still interrupts unfinished work and requires files to be reselected.
 - Local bridge keeps its Site service token in a mode-0600 configuration outside source/browser bundles. Browser requests use same-origin routes only.
 
