@@ -11303,8 +11303,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				turnPage(dx < 0 ? 1 : -1);
 			} else scheduleSettle();
 		};
-		const atFirstPage = chapter.index === 0 && pageIndex === 0;
-		const atLastPage = chapter.index === book.chapters.length - 1 && pageIndex >= pageCount - 1;
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: `dnr-reader-stage ${paged ? "is-paged" : "is-scroll"}`,
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -11392,35 +11390,15 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 						}
 					}, index))
 				})]
-			}), paged && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-					className: "dnr-page-edge dnr-page-edge--previous",
-					type: "button",
-					"aria-label": "上一页",
-					title: "上一页",
-					disabled: atFirstPage || loading,
-					onClick: () => turnPage(-1),
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "chevron-left" })
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-					className: "dnr-page-edge dnr-page-edge--next",
-					type: "button",
-					"aria-label": "下一页",
-					title: "下一页",
-					disabled: atLastPage || loading,
-					onClick: () => turnPage(1),
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "chevron-right" })
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-					className: "dnr-page-number",
-					"aria-live": "polite",
-					children: [
-						pageIndex + 1,
-						" / ",
-						pageCount
-					]
-				})
-			] })]
+			}), paged && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+				className: "dnr-page-number",
+				"aria-live": "polite",
+				children: [
+					pageIndex + 1,
+					" / ",
+					pageCount
+				]
+			})]
 		});
 	});
 
@@ -15080,12 +15058,6 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
   column-gap: calc(var(--dnr-page-pad) + var(--dnr-page-pad)); column-fill: auto;
 }
 .dnr-reader-article[data-page-mode="paged"] header, .dnr-reader-article[data-page-mode="paged"] footer { break-inside: avoid-column; }
-.dnr-page-edge { position: absolute; z-index: 3; top: 50%; width: 28px; height: 64px; display: grid; place-items: center; padding: 0; border: 0; background: color-mix(in srgb, var(--dnr-reading-bg) 92%, transparent); color: var(--dnr-reading-text); opacity: 0; transform: translateY(-50%); transition: opacity 140ms, background 140ms; }
-.dnr-reader-stage.is-paged:hover .dnr-page-edge:not(:disabled), .dnr-page-edge:focus-visible { opacity: .7; }
-.dnr-page-edge:hover:not(:disabled) { opacity: 1; background: color-mix(in srgb, var(--dnr-reading-text) 8%, var(--dnr-reading-bg)); }
-.dnr-page-edge:disabled { opacity: 0; pointer-events: none; }
-.dnr-page-edge--previous { left: 0; border-radius: 0 6px 6px 0; }
-.dnr-page-edge--next { right: 0; border-radius: 6px 0 0 6px; }
 .dnr-page-number { position: absolute; z-index: 2; right: 12px; bottom: 8px; padding: 2px 6px; border-radius: 4px; background: var(--dnr-reading-bg); color: color-mix(in srgb, var(--dnr-reading-text) 55%, transparent); font-size: 11px; font-variant-numeric: tabular-nums; pointer-events: none; }
 
 .dnr-toc { height: 100%; display: flex; flex-direction: column; padding: 16px; overflow: hidden; background: var(--dnr-bg); }
@@ -15276,7 +15248,6 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 @container (max-width: 459px) { .dnr-reader-article { padding-left: 24px; padding-right: 24px; } .dnr-reading-time { display: none; } .dnr-theme-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @container (max-width: 359px) { .dnr-file-hero { padding: 16px; } .dnr-file-hero-heading { gap: 10px; } .dnr-empty-copy h2 { font-size: 17px; } .dnr-empty-copy p { font-size: 11px; } .dnr-file-hero-icon { width: 36px; height: 36px; flex-basis: 36px; } .dnr-file-actions { gap: 6px; margin-top: 20px; } .dnr-file-action { min-height: 76px; font-size: 10px; } .dnr-file-action svg { width: 20px; height: 20px; } .dnr-recent-main { gap: 10px; padding: 10px; } .dnr-online-heading > div { align-items: flex-start; flex-direction: column; gap: 2px; } }
 @container (max-width: 319px) { .dnr-font-grid, .dnr-page-mode-grid { grid-template-columns: 1fr; } .dnr-setting-group { padding: 12px; } .dnr-recent-cover { width: 30px; height: 42px; flex-basis: 30px; } .dnr-theme-grid { gap: 3px; } .dnr-theme-grid button { padding: 3px; } }
-@media (hover: none) { .dnr-reader-stage.is-paged .dnr-page-edge:not(:disabled) { opacity: .65; } }
 @media (prefers-reduced-motion: reduce) { .dnr-reader-scroll { scroll-behavior: auto; } }
 @media (prefers-reduced-motion: reduce) { .dnr-shell, .dnr-shell * { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 
