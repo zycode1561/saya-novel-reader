@@ -6,6 +6,10 @@ import type { ChapterLink, ResolvedOnlineResult } from '../online-runtime/runtim
 export type StoredResult=Omit<ResolvedOnlineResult,'source'>&{sourceId:string;revision?:string};
 export interface Reading { result:StoredResult; links:ChapterLink[] }
 export function pack(result:ResolvedOnlineResult):StoredResult {const {source,...rest}=result;return {...rest,sourceId:source.id,revision:source.revision};}
+// Six parallel sources and an eight-second per-source search budget let all
+// eleven bundled sources start within the aggregate deadline, without exceeding
+// the Worker connection budget. Chapter reads retain their longer timeout.
+export const CLOUD_ENGINE_CONFIG = {searchConcurrency:6,chapterConcurrency:2,requestTimeoutMs:12000,searchTimeoutMs:22000,searchSourceTimeoutMs:8000,maxRetries:1,minRequestIntervalMs:100,maxRequestIntervalMs:300,maxSearchResults:100};
 export async function service() {
   const row=await db().prepare('SELECT payload,revision FROM online_rules WHERE id=?').bind('owner').first<{payload:string;revision:number}>();
   let revision=row?.revision??0;
@@ -15,7 +19,7 @@ export async function service() {
       .bind('owner',JSON.stringify(value),revision).run();
     if(result.meta.changes!==1)throw new Error('书源已在其他页面修改，请刷新后重试。');revision++;
   }});
-  const engine=new OnlineSourceEngine({searchConcurrency:3,chapterConcurrency:2,requestTimeoutMs:12000,searchTimeoutMs:22000,maxRetries:1,minRequestIntervalMs:100,maxRequestIntervalMs:300,maxSearchResults:100},cloudTransport);
+  const engine=new OnlineSourceEngine(CLOUD_ENGINE_CONFIG,cloudTransport);
   engine.setSources(rules.sources());
   const unpack=(saved:StoredResult):ResolvedOnlineResult=>{
     const source=engine.sources.find(s=>s.id===saved.sourceId&&s.revision===saved.revision);

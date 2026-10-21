@@ -6,6 +6,7 @@ export interface OnlineEngineConfig {
     chapterConcurrency: number;
     requestTimeoutMs: number;
     searchTimeoutMs: number;
+    searchSourceTimeoutMs?: number;
     maxRetries: number;
     minRequestIntervalMs: number;
     maxRequestIntervalMs: number;

@@ -14580,7 +14580,7 @@ var import_dist = /* @__PURE__ */ __toESM(require_dist());
 						className: "dnr-online-back",
 						onClick: onBack,
 						children: "‹ 返回搜书"
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "书源管理" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "小说规则 · 保存在本机 Host" })] })]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "书源管理" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["小说规则 · ", cloudHosted ? "保存在云端" : "保存在本机 Host"] })] })]
 				}),
 				error && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "dnr-alert",

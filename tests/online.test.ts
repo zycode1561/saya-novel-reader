@@ -2,6 +2,8 @@ import { DatabaseSync } from 'node:sqlite';
 import { beforeEach, afterEach, expect, it, vi } from '../../codex-novel-reader/node_modules/vitest/dist/index.js';
 import { env } from './cloudflare-env';
 import { GET, POST, PUT, DELETE } from '../app/api/online/[...path]/route';
+import { OnlineSourceEngine, compileRule } from '../lib/online-runtime/runtime.mjs';
+import { CLOUD_ENGINE_CONFIG } from '../lib/online/service';
 import { privateAddress } from '../lib/online/transport';
 let sql:DatabaseSync;
 const objects=new Map<string,string>();
@@ -62,4 +64,24 @@ it('rejects untrusted writes, malformed input and private DNS results',async()=>
  expect(vi.mocked(fetch).mock.calls.some((c:unknown[])=>String(c[0]).includes('https://private-fixture.example/'))).toBe(false);
  for(const ip of ['127.0.0.1','10.0.0.1','169.254.169.254','198.18.0.1','::1','fc00::1','::ffff:7f00:1'])expect(privateAddress(ip)).toBe(true);
  expect(privateAddress('93.184.216.34')).toBe(false);
+});
+
+it('starts the last healthy source before slow earlier sources exhaust the aggregate deadline',async()=>{
+ const sources=Array.from({length:11},(_,i)=>compileRule({...rule,id:`fair-${i}`,host:`https://source-${i}.example`},'any-reader',`fair-${i}`));
+ const requested:string[]=[];
+ const engine=new OnlineSourceEngine({...CLOUD_ENGINE_CONFIG,requestTimeoutMs:20,searchSourceTimeoutMs:25,searchTimeoutMs:55},{
+   validateUrl:async(_source,raw)=>new URL(raw),
+   fetch:async(url,init)=>{
+     requested.push(url.hostname);
+     if(url.hostname==='source-10.example')return new Response('<div class="book"><a href="/book/1">正常结果</a></div>');
+     return new Promise<Response>((_,reject)=>{
+       if(init.signal?.aborted){reject(init.signal.reason);return;}
+       init.signal?.addEventListener('abort',()=>reject(init.signal?.reason),{once:true});
+     });
+   },
+ });
+ engine.setSources(sources);
+ const result=await engine.search('正常',new AbortController().signal);
+ expect(requested).toContain('source-10.example');expect(result.results.map(r=>r.bookName)).toContain('正常结果');expect(result.failedSources).toBe(10);
+ await engine.dispose();
 });
