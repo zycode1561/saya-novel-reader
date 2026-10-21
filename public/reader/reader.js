@@ -10940,16 +10940,56 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	}
 	function pageTotal(container) {
 		const width = Math.max(1, container.clientWidth);
-		return Math.max(1, Math.ceil((container.scrollWidth - 1) / width));
+		const contentWidth = container.querySelector(".dnr-reader-article")?.scrollWidth || container.scrollWidth;
+		return Math.max(1, Math.ceil((contentWidth - 1) / width));
+	}
+	function selectedText(container) {
+		const selection = container.ownerDocument.getSelection();
+		return Boolean(selection && !selection.isCollapsed && (container.contains(selection.anchorNode) || container.contains(selection.focusNode)));
+	}
+	function visibleTextOffset(container, paragraph) {
+		const bounds = container.getBoundingClientRect();
+		let low = 0, high = Math.max(0, (paragraph.textContent?.length ?? 0) - 1);
+		while (low < high) {
+			const middle = Math.floor((low + high) / 2);
+			const rect = textRect(paragraph, middle);
+			if (rect && rect.right <= bounds.left + 24) low = middle + 1;
+			else high = middle;
+		}
+		return low;
+	}
+	function textRect(paragraph, offset) {
+		const walker = paragraph.ownerDocument.createTreeWalker(paragraph, NodeFilter.SHOW_TEXT);
+		let node = walker.nextNode();
+		while (node) {
+			const length = node.textContent?.length ?? 0;
+			if (offset < length) {
+				const range = paragraph.ownerDocument.createRange();
+				range.setStart(node, offset);
+				range.setEnd(node, offset + 1);
+				return range.getClientRects()[0];
+			}
+			offset -= length;
+			node = walker.nextNode();
+		}
+		return paragraph.getClientRects()[0];
 	}
 	const ReaderBody = (0, import_react.forwardRef)(function ReaderBody$1({ searchQuery, glyphFont }, forwardedRef) {
 		const { book, progress, settings, pendingParagraph, clearPendingParagraph, markParagraphVisible, updatePanel, panel, goToChapter, loading, error } = useReader();
 		const scrollerRef = (0, import_react.useRef)(null);
 		const frameRef = (0, import_react.useRef)(null);
 		const measureFrameRef = (0, import_react.useRef)(null);
+		const settleTimerRef = (0, import_react.useRef)(null);
 		const restoreKeyRef = (0, import_react.useRef)("");
 		const landOnLastPageRef = (0, import_react.useRef)(false);
+		const targetPageRef = (0, import_react.useRef)(null);
+		const restoringRef = (0, import_react.useRef)(false);
+		const touchRef = (0, import_react.useRef)(null);
+		const pointerRef = (0, import_react.useRef)(null);
+		const suppressClickUntilRef = (0, import_react.useRef)(0);
+		const anchorRef = (0, import_react.useRef)(null);
 		const [pageWidth, setPageWidth] = (0, import_react.useState)(1);
+		const [layoutRevision, setLayoutRevision] = (0, import_react.useState)(0);
 		const [pageIndex, setPageIndex] = (0, import_react.useState)(0);
 		const [pageCount, setPageCount] = (0, import_react.useState)(1);
 		const chapter = book?.chapters[progress?.chapterIndex ?? 0];
@@ -10961,7 +11001,8 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		const updatePosition = (0, import_react.useCallback)(() => {
 			frameRef.current = null;
 			const container = scrollerRef.current;
-			if (container === null) return;
+			if (container === null || restoringRef.current) return;
+			if (paged && Math.abs(container.scrollLeft / Math.max(1, container.clientWidth) - Math.round(container.scrollLeft / Math.max(1, container.clientWidth))) > .005) return;
 			const bounds = container.getBoundingClientRect();
 			const elements = Array.from(container.querySelectorAll("[data-pindex]"));
 			const visible = elements.find((element) => {
@@ -10970,47 +11011,127 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			}) ?? elements.at(-1);
 			if (visible !== void 0) {
 				const index = Number(visible.dataset.pindex);
-				if (Number.isFinite(index)) markParagraphVisible(index, paged ? container.scrollLeft : container.scrollTop);
+				if (Number.isFinite(index)) {
+					if (chapter) anchorRef.current = {
+						chapterId: chapter.id,
+						paragraphIndex: index,
+						offset: paged ? visibleTextOffset(container, visible) : 0
+					};
+					markParagraphVisible(index, paged ? container.scrollLeft : container.scrollTop);
+				}
 			}
 			if (paged) setPageIndex(Math.max(0, Math.min(pageTotal(container) - 1, Math.round(container.scrollLeft / Math.max(1, container.clientWidth)))));
-		}, [markParagraphVisible, paged]);
+		}, [
+			chapter,
+			markParagraphVisible,
+			paged
+		]);
+		const settlePage = (0, import_react.useCallback)(() => {
+			if (settleTimerRef.current !== null) clearTimeout(settleTimerRef.current);
+			settleTimerRef.current = null;
+			const container = scrollerRef.current;
+			if (!container || !paged || touchRef.current || measureFrameRef.current !== null || restoringRef.current && targetPageRef.current === null) return;
+			const width = Math.max(1, container.clientWidth);
+			const page = Math.max(0, Math.min(pageTotal(container) - 1, targetPageRef.current ?? Math.round(container.scrollLeft / width)));
+			targetPageRef.current = null;
+			if (Math.abs(container.scrollLeft - page * width) > .5) container.scrollTo({
+				left: page * width,
+				top: 0,
+				behavior: "instant"
+			});
+			setPageIndex(page);
+			if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+			frameRef.current = requestAnimationFrame(() => {
+				restoringRef.current = false;
+				updatePosition();
+			});
+		}, [paged, updatePosition]);
+		const scheduleSettle = (0, import_react.useCallback)(() => {
+			if (settleTimerRef.current !== null) clearTimeout(settleTimerRef.current);
+			settleTimerRef.current = setTimeout(settlePage, 180);
+		}, [settlePage]);
+		const scrollToPage = (0, import_react.useCallback)((page) => {
+			const container = scrollerRef.current;
+			if (!container) return;
+			const target = Math.max(0, Math.min(pageTotal(container) - 1, page));
+			targetPageRef.current = target;
+			container.scrollTo({
+				left: target * Math.max(1, container.clientWidth),
+				top: 0,
+				behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth"
+			});
+			setPageIndex(target);
+			scheduleSettle();
+		}, [scheduleSettle]);
 		const turnPage = (0, import_react.useCallback)((direction) => {
 			const container = scrollerRef.current;
 			if (container === null || book === null || chapter === void 0 || !paged || loading) return;
 			const width = Math.max(1, container.clientWidth);
 			const total = pageTotal(container);
-			const next = Math.max(0, Math.min(total - 1, Math.round(container.scrollLeft / width))) + direction;
+			const current = Math.max(0, Math.min(total - 1, targetPageRef.current ?? Math.round(container.scrollLeft / width)));
+			const next = current + direction;
 			if (next >= 0 && next < total) {
-				container.scrollTo({
-					left: next * width,
-					top: 0,
-					behavior: "smooth"
-				});
-				setPageIndex(next);
+				scrollToPage(next);
 				return;
 			}
 			if (direction > 0 && chapter.index < book.chapters.length - 1) goToChapter(chapter.index + 1);
 			else if (direction < 0 && chapter.index > 0) {
 				landOnLastPageRef.current = true;
 				goToChapter(chapter.index - 1);
-			}
+			} else scrollToPage(current);
 		}, [
 			book,
 			chapter,
 			goToChapter,
 			paged,
-			loading
+			loading,
+			scrollToPage
 		]);
 		(0, import_react.useEffect)(() => {
 			if (error !== null) landOnLastPageRef.current = false;
 		}, [error]);
 		(0, import_react.useImperativeHandle)(forwardedRef, () => ({ turnPage }), [turnPage]);
+		(0, import_react.useEffect)(() => {
+			const container = scrollerRef.current;
+			if (!container) return;
+			container.addEventListener("scrollend", settlePage);
+			return () => container.removeEventListener("scrollend", settlePage);
+		}, [
+			book !== null,
+			paged,
+			settlePage
+		]);
+		(0, import_react.useLayoutEffect)(() => {
+			const container = scrollerRef.current;
+			if (!container) return;
+			let width = container.clientWidth, height = container.clientHeight;
+			const invalidate = () => setLayoutRevision((value) => value + 1);
+			const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => {
+				if (width === container.clientWidth && height === container.clientHeight) return;
+				width = container.clientWidth;
+				height = container.clientHeight;
+				invalidate();
+			});
+			observer?.observe(container);
+			window.addEventListener("resize", invalidate);
+			document.fonts?.addEventListener("loadingdone", invalidate);
+			return () => {
+				observer?.disconnect();
+				window.removeEventListener("resize", invalidate);
+				document.fonts?.removeEventListener("loadingdone", invalidate);
+			};
+		}, [book !== null]);
 		(0, import_react.useLayoutEffect)(() => {
 			const container = scrollerRef.current;
 			if (container === null || book === null || progress === null || chapter === void 0) return;
 			if (book.onlineReading && loading) return;
 			const width = Math.max(1, container.clientWidth);
 			if (width !== pageWidth) {
+				restoringRef.current = true;
+				if (frameRef.current !== null) {
+					cancelAnimationFrame(frameRef.current);
+					frameRef.current = null;
+				}
 				restoreKeyRef.current = "";
 				setPageWidth(width);
 				return;
@@ -11019,7 +11140,12 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			measureFrameRef.current = requestAnimationFrame(() => {
 				measureFrameRef.current = null;
 				const total = paged ? pageTotal(container) : 1;
-				setPageCount(total);
+				if (total !== pageCount) {
+					restoringRef.current = true;
+					restoreKeyRef.current = "";
+					setPageCount(total);
+					return;
+				}
 				const restoreKey = [
 					book.id,
 					chapter.id,
@@ -11029,32 +11155,43 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					settings.fontFamily,
 					settings.lineSpacing,
 					settings.firstLineIndent,
-					panel.toolsVisible
+					panel.toolsVisible,
+					container.clientHeight,
+					layoutRevision
 				].join(":");
 				if (!(pendingParagraph !== null || restoreKeyRef.current !== restoreKey || landOnLastPageRef.current)) {
 					if (paged) setPageIndex(Math.max(0, Math.min(total - 1, Math.round(container.scrollLeft / width))));
 					return;
 				}
+				targetPageRef.current = null;
+				touchRef.current = null;
+				if (settleTimerRef.current !== null) clearTimeout(settleTimerRef.current);
 				if (paged && landOnLastPageRef.current) {
 					const last = total - 1;
 					landOnLastPageRef.current = false;
+					targetPageRef.current = last;
 					container.scrollTo({
 						left: last * width,
-						top: 0
+						top: 0,
+						behavior: "instant"
 					});
 					setPageIndex(last);
 				} else {
-					const targetIndex = pendingParagraph ?? progress.paragraphIndex;
+					const anchor = pendingParagraph === null && anchorRef.current?.chapterId === chapter.id ? anchorRef.current : null;
+					const targetIndex = pendingParagraph ?? anchor?.paragraphIndex ?? progress.paragraphIndex;
 					const exact = container.querySelector(`[data-pindex="${targetIndex}"]`);
 					const fallback = paragraphs.find((paragraph) => paragraph.index >= targetIndex);
 					const target = exact ?? (fallback === void 0 ? null : container.querySelector(`[data-pindex="${fallback.index}"]`));
 					if (paged) {
 						const bounds = container.getBoundingClientRect();
-						const targetLeft = target === null ? 0 : container.scrollLeft + target.getBoundingClientRect().left - bounds.left;
+						const rect = target === null ? null : textRect(target, anchor?.offset ?? 0) ?? target.getBoundingClientRect();
+						const targetLeft = rect === null ? 0 : container.scrollLeft + rect.left - bounds.left;
 						const targetPage = Math.max(0, Math.min(total - 1, Math.floor(Math.max(0, targetLeft) / width)));
+						targetPageRef.current = targetPage;
 						container.scrollTo({
 							left: targetPage * width,
-							top: 0
+							top: 0,
+							behavior: "instant"
 						});
 						setPageIndex(targetPage);
 					} else if (target === null) container.scrollTo({
@@ -11065,6 +11202,15 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				}
 				restoreKeyRef.current = restoreKey;
 				if (pendingParagraph !== null) clearPendingParagraph();
+				if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+				if (paged) {
+					restoringRef.current = false;
+					updatePosition();
+					scheduleSettle();
+				} else frameRef.current = requestAnimationFrame(() => {
+					restoringRef.current = false;
+					updatePosition();
+				});
 			});
 			return () => {
 				if (measureFrameRef.current !== null) {
@@ -11089,32 +11235,114 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			settings.fontSize,
 			settings.lineSpacing,
 			settings.pageMode,
-			settings.tocPosition
+			settings.tocPosition,
+			layoutRevision,
+			pageCount,
+			scheduleSettle,
+			updatePosition
 		]);
 		(0, import_react.useEffect)(() => () => {
 			if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
 			if (measureFrameRef.current !== null) cancelAnimationFrame(measureFrameRef.current);
+			if (settleTimerRef.current !== null) clearTimeout(settleTimerRef.current);
 		}, []);
 		if (book === null || progress === null || chapter === void 0) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {});
-		const onArticleClick = (event) => {
-			if (event.target.closest("button,input,a,mark") !== null) return;
+		const onReaderClick = (event) => {
+			const container = scrollerRef.current;
+			if (!container || Date.now() < suppressClickUntilRef.current || selectedText(container) || event.detail > 1 || event.target.closest("button,input,a,mark") !== null) return;
+			if (paged) {
+				const bounds = container.getBoundingClientRect();
+				const ratio = (event.clientX - bounds.left) / Math.max(1, bounds.width);
+				if (ratio < .3) {
+					turnPage(-1);
+					return;
+				}
+				if (ratio > .7) {
+					turnPage(1);
+					return;
+				}
+			}
 			updatePanel({
 				toolsVisible: !panel.toolsVisible,
 				immersive: panel.toolsVisible
 			});
 		};
+		const onTouchStart = (event) => {
+			if (!paged) return;
+			targetPageRef.current = null;
+			const touch = event.touches[0];
+			if (event.touches.length !== 1 || !touch) {
+				if (touchRef.current) touchRef.current.cancelled = true;
+				return;
+			}
+			const container = event.currentTarget;
+			const selecting = selectedText(container);
+			if (selecting) suppressClickUntilRef.current = Date.now() + 500;
+			touchRef.current = {
+				id: touch.identifier,
+				x: touch.clientX,
+				y: touch.clientY,
+				page: Math.round(container.scrollLeft / Math.max(1, container.clientWidth)),
+				started: Date.now(),
+				cancelled: selecting
+			};
+		};
+		const onTouchEnd = (event) => {
+			if (event.touches.length > 0) return;
+			const start = touchRef.current;
+			touchRef.current = null;
+			const touch = Array.from(event.changedTouches).find((touch$1) => touch$1.identifier === start?.id);
+			if (!start || !touch) {
+				scheduleSettle();
+				return;
+			}
+			const dx = touch.clientX - start.x, dy = touch.clientY - start.y;
+			if (Math.abs(dx) > 8 || Math.abs(dy) > 8 || Date.now() - start.started >= 450) suppressClickUntilRef.current = Date.now() + 500;
+			if (!start.cancelled && Math.abs(dx) >= 40 && Math.abs(dx) > Math.abs(dy) * 1.3 && !selectedText(event.currentTarget) && !loading) {
+				targetPageRef.current = start.page;
+				turnPage(dx < 0 ? 1 : -1);
+			} else scheduleSettle();
+		};
 		const atFirstPage = chapter.index === 0 && pageIndex === 0;
 		const atLastPage = chapter.index === book.chapters.length - 1 && pageIndex >= pageCount - 1;
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: `dnr-reader-stage ${paged ? "is-paged" : "is-scroll"}`,
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				ref: scrollerRef,
 				className: `dnr-reader-scroll ${paged ? "dnr-reader-scroll--paged" : ""}`,
 				"aria-busy": Boolean(book.onlineReading && loading),
-				onScroll: () => {
-					if (frameRef.current === null) frameRef.current = requestAnimationFrame(updatePosition);
+				onClick: onReaderClick,
+				onTouchStart,
+				onTouchEnd,
+				onTouchCancel: () => {
+					touchRef.current = null;
+					suppressClickUntilRef.current = Date.now() + 500;
+					scheduleSettle();
 				},
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", {
+				onWheel: () => {
+					targetPageRef.current = null;
+				},
+				onPointerDown: (event) => {
+					if (event.pointerType === "mouse" || event.pointerType === "pen") pointerRef.current = {
+						x: event.clientX,
+						y: event.clientY,
+						started: Date.now()
+					};
+					if (selectedText(event.currentTarget)) suppressClickUntilRef.current = Date.now() + 500;
+				},
+				onPointerCancel: () => {
+					pointerRef.current = null;
+				},
+				onPointerUp: (event) => {
+					const start = pointerRef.current;
+					pointerRef.current = null;
+					if (start && (Math.abs(event.clientX - start.x) > 8 || Math.abs(event.clientY - start.y) > 8 || Date.now() - start.started >= 450)) suppressClickUntilRef.current = Date.now() + 500;
+				},
+				onScroll: () => {
+					if (paged) scheduleSettle();
+					else if (frameRef.current === null) frameRef.current = requestAnimationFrame(updatePosition);
+				},
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", {
 					className: "dnr-reader-article",
 					"data-font": settings.fontFamily,
 					"data-spacing": settings.lineSpacing,
@@ -11129,7 +11357,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 						"--dnr-font-size": `${settings.fontSize}px`,
 						"--dnr-page-width": `${pageWidth}px`
 					},
-					onClick: onArticleClick,
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
@@ -11153,7 +11380,18 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("footer", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "本章完" }) })
 					]
-				})
+				}), paged && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "dnr-page-snap-rail",
+					"aria-hidden": "true",
+					style: { width: pageCount * pageWidth },
+					children: Array.from({ length: pageCount }, (_, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "dnr-page-snap",
+						style: {
+							left: index * pageWidth,
+							width: pageWidth
+						}
+					}, index))
+				})]
 			}), paged && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 					className: "dnr-page-edge dnr-page-edge--previous",
@@ -14831,8 +15069,10 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-reader-article mark { padding: 0 .06em; color: inherit; background: var(--dnr-mark); border-radius: 2px; }
 .dnr-reader-article footer { display: flex; align-items: center; gap: 12px; margin-top: 3em; color: color-mix(in srgb, var(--dnr-reading-text) 55%, transparent); font-size: 11px; }
 .dnr-reader-article footer::before, .dnr-reader-article footer::after { content: ""; height: 1px; flex: 1; background: color-mix(in srgb, var(--dnr-reading-text) 8%, transparent); }
-.dnr-reader-scroll--paged { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior: contain; }
+.dnr-reader-scroll--paged { position: relative; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior: contain; scroll-snap-type: x mandatory; touch-action: pan-x pinch-zoom; }
 .dnr-reader-scroll--paged::-webkit-scrollbar { display: none; }
+.dnr-page-snap-rail { position: absolute; top: 0; left: 0; height: 1px; pointer-events: none; }
+.dnr-page-snap { position: absolute; top: 0; height: 1px; scroll-snap-align: start; scroll-snap-stop: always; }
 .dnr-reader-article[data-page-mode="paged"] {
   --dnr-page-pad: clamp(24px, 6cqw, 56px); height: 100%; min-height: 0; width: 100%; max-width: none;
   margin: 0; padding: clamp(24px, 5cqw, 48px) var(--dnr-page-pad) 48px; overflow: visible;
@@ -15037,6 +15277,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 @container (max-width: 359px) { .dnr-file-hero { padding: 16px; } .dnr-file-hero-heading { gap: 10px; } .dnr-empty-copy h2 { font-size: 17px; } .dnr-empty-copy p { font-size: 11px; } .dnr-file-hero-icon { width: 36px; height: 36px; flex-basis: 36px; } .dnr-file-actions { gap: 6px; margin-top: 20px; } .dnr-file-action { min-height: 76px; font-size: 10px; } .dnr-file-action svg { width: 20px; height: 20px; } .dnr-recent-main { gap: 10px; padding: 10px; } .dnr-online-heading > div { align-items: flex-start; flex-direction: column; gap: 2px; } }
 @container (max-width: 319px) { .dnr-font-grid, .dnr-page-mode-grid { grid-template-columns: 1fr; } .dnr-setting-group { padding: 12px; } .dnr-recent-cover { width: 30px; height: 42px; flex-basis: 30px; } .dnr-theme-grid { gap: 3px; } .dnr-theme-grid button { padding: 3px; } }
 @media (hover: none) { .dnr-reader-stage.is-paged .dnr-page-edge:not(:disabled) { opacity: .65; } }
+@media (prefers-reduced-motion: reduce) { .dnr-reader-scroll { scroll-behavior: auto; } }
 @media (prefers-reduced-motion: reduce) { .dnr-shell, .dnr-shell * { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
 
 /* Added library features use the existing Codex palette, density and controls. */
