@@ -22,4 +22,8 @@ assert conn.execute('SELECT last_read_at FROM books WHERE id=?',('c',)).fetchone
 assert conn.execute('SELECT last_read_at FROM books WHERE id=?',('b',)).fetchone()[0]==100
 assert conn.execute('SELECT * FROM progress WHERE id=?',('b',)).fetchone()==old
 assert conn.execute('SELECT COUNT(*) FROM books').fetchone()[0]==4
-print('PASS: migration preserves books/progress; legacy reading fallback, unread ordering and monotonic reading time.')
+conn.execute('INSERT INTO books(id,name,filename,size,created_at) VALUES (?,?,?,?,?)',('e','new','new.txt',10,300))
+assert [row[0] for row in conn.execute(query)]==['e','c','b','d','a']
+conn.execute(mark,(400,'a'))
+assert [row[0] for row in conn.execute(query)]==['a','e','c','b','d']
+print('PASS: new uploads lead, later reads take priority, legacy fallback and monotonic reads preserve books/progress.')

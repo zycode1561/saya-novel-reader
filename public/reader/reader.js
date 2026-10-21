@@ -10776,7 +10776,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		return value && typeof value === "object" && !Array.isArray(value) ? value : {};
 	}
 	function sortCloudBooks(books, localTimes = readingTimes()) {
-		return [...books].sort((a, b) => Math.max(timestamp(b.last_read_at), timestamp(localTimes[b.id])) - Math.max(timestamp(a.last_read_at), timestamp(localTimes[a.id])) || b.created_at - a.created_at || a.id.localeCompare(b.id));
+		return [...books].sort((a, b) => Math.max(timestamp(b.created_at), timestamp(b.last_read_at), timestamp(localTimes[b.id])) - Math.max(timestamp(a.created_at), timestamp(a.last_read_at), timestamp(localTimes[a.id])) || b.created_at - a.created_at || a.id.localeCompare(b.id));
 	}
 	function pendingReads() {
 		return read("reading-pending", {});
@@ -10956,7 +10956,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					className: "dnr-cloud-message",
 					children: message
 				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", { children: ["云端书库 ", /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [books.length, " 本 · 最近阅读优先"] })] }),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", { children: ["云端书库 ", /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [books.length, " 本 · 最近上传或阅读优先"] })] }),
 				!books.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "dnr-cloud-empty",
 					children: "还没有上传书籍。选择文件，开始你的跨设备阅读。"
