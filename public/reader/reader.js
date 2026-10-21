@@ -11313,8 +11313,8 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
 						className: "dnr-sync-cloud",
 						viewBox: "0 0 24 24",
-						width: "26",
-						height: "26",
+						width: "18",
+						height: "18",
 						fill: "none",
 						stroke: "currentColor",
 						strokeWidth: "1.6",
@@ -16137,7 +16137,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-sync-arrows { color: var(--dnr-muted); transform-origin: 12px 13px; }
 .dnr-sync-button.is-syncing .dnr-sync-arrows { animation: dnr-sync-spin 1.2s linear infinite; }
 .dnr-sync-alert { color: var(--dnr-error); }
-.dnr-sync-dot { position: absolute; top: 5px; right: 4px; width: 5px; height: 5px; border-radius: 50%; background: var(--dnr-error); box-shadow: 0 0 0 2px var(--dnr-bg); }
+.dnr-sync-dot { position: absolute; top: 9px; right: 8px; width: 4px; height: 4px; border-radius: 50%; background: var(--dnr-error); box-shadow: 0 0 0 2px var(--dnr-bg); }
 .dnr-sync-details { position: absolute; z-index: 20; left: 12px; bottom: calc(50px + env(safe-area-inset-bottom)); width: min(296px, calc(100% - 24px)); max-height: calc(100% - 100px); overflow: auto; padding: 16px; border: 1px solid var(--dnr-line); border-radius: 12px; background: var(--dnr-bg); box-shadow: 0 8px 30px #0002; color: var(--dnr-text); font-size: 12px; }
 .dnr-sync-heading { display: flex; align-items: center; justify-content: space-between; }
 .dnr-sync-heading strong { font-size: 13px; font-weight: 600; }
