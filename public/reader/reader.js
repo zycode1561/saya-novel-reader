@@ -11707,6 +11707,452 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	}
 
 //#endregion
+//#region src/client/components/readerText.tsx
+	function highlighted(text, rawQuery) {
+		const query = rawQuery.trim();
+		if (query === "") return text;
+		const lower = text.toLocaleLowerCase();
+		const needle = query.toLocaleLowerCase();
+		const nodes = [];
+		let cursor = 0;
+		let key = 0;
+		while (cursor < text.length) {
+			const index = lower.indexOf(needle, cursor);
+			if (index < 0) break;
+			if (index > cursor) nodes.push(text.slice(cursor, index));
+			nodes.push(/* @__PURE__ */ (0, import_jsx_runtime.jsx)("mark", { children: text.slice(index, index + needle.length) }, key++));
+			cursor = index + needle.length;
+		}
+		if (cursor < text.length) nodes.push(text.slice(cursor));
+		return nodes.map((node, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_react.Fragment, { children: node }, index));
+	}
+	function selectedText(container) {
+		const selection = container.ownerDocument.getSelection();
+		return Boolean(selection && !selection.isCollapsed && (container.contains(selection.anchorNode) || container.contains(selection.focusNode)));
+	}
+	function visibleTextOffset(container, paragraph) {
+		const bounds = container.getBoundingClientRect();
+		let low = 0, high = Math.max(0, (paragraph.textContent?.length ?? 0) - 1);
+		while (low < high) {
+			const middle = Math.floor((low + high) / 2);
+			const rect = textRect(paragraph, middle);
+			if (rect && rect.right <= bounds.left + 24) low = middle + 1;
+			else high = middle;
+		}
+		return low;
+	}
+	function textRect(paragraph, offset) {
+		const walker = paragraph.ownerDocument.createTreeWalker(paragraph, NodeFilter.SHOW_TEXT);
+		let node = walker.nextNode();
+		while (node) {
+			const length = node.textContent?.length ?? 0;
+			if (offset < length) {
+				const range = paragraph.ownerDocument.createRange();
+				range.setStart(node, offset);
+				range.setEnd(node, offset + 1);
+				return range.getClientRects()[0];
+			}
+			offset -= length;
+			node = walker.nextNode();
+		}
+		return paragraph.getClientRects()[0];
+	}
+
+//#endregion
+//#region src/client/components/ContinuousPagedReader.tsx
+	const ContinuousPagedReader = (0, import_react.forwardRef)(function ContinuousPagedReader$1({ searchQuery, glyphFont }, ref) {
+		const { book, progress, settings, panel, pendingParagraph, clearPendingParagraph, markParagraphVisible, updatePanel, goToChapter } = useReader();
+		const scrollerRef = (0, import_react.useRef)(null);
+		const [center, setCenter] = (0, import_react.useState)(progress?.chapterIndex ?? 0);
+		const [width, setWidth] = (0, import_react.useState)(1);
+		const [counts, setCounts] = (0, import_react.useState)({});
+		const [revision, setRevision] = (0, import_react.useState)(0);
+		const [view, setView] = (0, import_react.useState)({
+			chapter: center,
+			page: 0
+		});
+		const target = (0, import_react.useRef)(null);
+		const anchor = (0, import_react.useRef)(null);
+		const preserveAnchor = (0, import_react.useRef)(false);
+		const seek = (0, import_react.useRef)(null);
+		const layoutKey = (0, import_react.useRef)("");
+		const bookKey = (0, import_react.useRef)("");
+		const consumedPending = (0, import_react.useRef)(null);
+		const timer = (0, import_react.useRef)(null);
+		const touch = (0, import_react.useRef)(null);
+		const pointer = (0, import_react.useRef)(null);
+		const suppressClick = (0, import_react.useRef)(0);
+		const grouped = (0, import_react.useMemo)(() => {
+			const result = /* @__PURE__ */ new Map();
+			for (const p$4 of book?.paragraphs ?? []) {
+				if (p$4.isHeading) continue;
+				const list = result.get(p$4.chapterId) ?? [];
+				list.push(p$4);
+				result.set(p$4.chapterId, list);
+			}
+			return result;
+		}, [book]);
+		const chapters = book?.chapters.slice(Math.max(0, center - 1), center + 3) ?? [];
+		let total = 0;
+		const panes = chapters.map((chapter) => {
+			const count = counts[chapter.id] ?? 1, start = total;
+			total += count;
+			return {
+				chapter,
+				count,
+				start
+			};
+		});
+		const locate = (page) => {
+			const bounded$1 = Math.max(0, Math.min(total - 1, page));
+			const pane = panes.find((p$4) => bounded$1 < p$4.start + p$4.count) ?? panes[0];
+			return {
+				chapter: pane?.chapter.index ?? center,
+				page: bounded$1 - (pane?.start ?? 0)
+			};
+		};
+		const recordPosition = (position) => {
+			const el$1 = scrollerRef.current;
+			if (!el$1 || !book) return;
+			const pane = el$1.querySelector(`[data-chapter="${position.chapter}"]`);
+			const bounds = el$1.getBoundingClientRect();
+			const visible = Array.from(pane?.querySelectorAll("[data-pindex]") ?? []).find((p$4) => Array.from(p$4.getClientRects()).some((r$2) => r$2.right > bounds.left + 24 && r$2.left < bounds.right - 24));
+			const index = visible ? Number(visible.dataset.pindex) : book.chapters[position.chapter]?.paragraphStart;
+			if (index === void 0) return;
+			if (!preserveAnchor.current) anchor.current = {
+				paragraph: index,
+				offset: visible ? visibleTextOffset(el$1, visible) : 0
+			};
+			markParagraphVisible(index, position.page * el$1.clientWidth);
+		};
+		const settle = () => {
+			if (timer.current !== null) clearTimeout(timer.current);
+			timer.current = null;
+			const el$1 = scrollerRef.current;
+			if (!el$1 || touch.current || !layoutKey.current) return;
+			const page = Math.max(0, Math.min(total - 1, target.current ?? Math.round(el$1.scrollLeft / Math.max(1, el$1.clientWidth))));
+			target.current = null;
+			if (Math.abs(el$1.scrollLeft - page * el$1.clientWidth) > .5) el$1.scrollTo({
+				left: page * el$1.clientWidth,
+				top: 0,
+				behavior: "instant"
+			});
+			const position = locate(page);
+			setView(position);
+			recordPosition(position);
+			if (position.chapter !== center) {
+				seek.current = position;
+				setCenter(position.chapter);
+			}
+		};
+		const latestSettle = (0, import_react.useRef)(settle);
+		latestSettle.current = settle;
+		const scheduleSettle = (0, import_react.useCallback)(() => {
+			if (timer.current !== null) clearTimeout(timer.current);
+			timer.current = setTimeout(() => latestSettle.current(), 180);
+		}, []);
+		const move = (page) => {
+			const el$1 = scrollerRef.current;
+			if (!el$1) return;
+			const next = Math.max(0, Math.min(total - 1, page));
+			preserveAnchor.current = false;
+			target.current = next;
+			el$1.scrollTo({
+				left: next * el$1.clientWidth,
+				top: 0,
+				behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth"
+			});
+			setView(locate(next));
+			scheduleSettle();
+		};
+		const turnPage = (direction) => {
+			const el$1 = scrollerRef.current;
+			if (el$1) move((target.current ?? Math.round(el$1.scrollLeft / Math.max(1, el$1.clientWidth))) + direction);
+		};
+		(0, import_react.useImperativeHandle)(ref, () => ({
+			turnPage,
+			goToChapter
+		}), [panes, goToChapter]);
+		(0, import_react.useEffect)(() => {
+			const el$1 = scrollerRef.current;
+			if (!el$1) return;
+			const end = () => latestSettle.current();
+			el$1.addEventListener("scrollend", end);
+			let w$1 = el$1.clientWidth, h$1 = el$1.clientHeight;
+			const invalidate = () => setRevision((n$2) => n$2 + 1);
+			const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => {
+				if (w$1 === el$1.clientWidth && h$1 === el$1.clientHeight) return;
+				w$1 = el$1.clientWidth;
+				h$1 = el$1.clientHeight;
+				invalidate();
+			});
+			observer?.observe(el$1);
+			window.addEventListener("resize", invalidate);
+			document.fonts?.addEventListener("loadingdone", invalidate);
+			return () => {
+				observer?.disconnect();
+				el$1.removeEventListener("scrollend", end);
+				window.removeEventListener("resize", invalidate);
+				document.fonts?.removeEventListener("loadingdone", invalidate);
+				if (timer.current !== null) clearTimeout(timer.current);
+			};
+		}, []);
+		(0, import_react.useLayoutEffect)(() => {
+			const el$1 = scrollerRef.current;
+			if (!el$1 || !book || !progress || !el$1.clientWidth) return;
+			if (bookKey.current !== book.id) {
+				bookKey.current = book.id;
+				anchor.current = null;
+				consumedPending.current = null;
+				seek.current = {
+					chapter: progress.chapterIndex,
+					paragraph: pendingParagraph ?? progress.paragraphIndex
+				};
+				layoutKey.current = "";
+				if (center !== progress.chapterIndex) {
+					setCenter(progress.chapterIndex);
+					return;
+				}
+			}
+			if (pendingParagraph === null) consumedPending.current = null;
+			else if (consumedPending.current !== pendingParagraph) {
+				const chapter = book.chapters.find((c) => pendingParagraph >= c.paragraphStart && pendingParagraph <= c.paragraphEnd);
+				if (chapter) {
+					seek.current = {
+						chapter: chapter.index,
+						paragraph: pendingParagraph
+					};
+					consumedPending.current = pendingParagraph;
+					anchor.current = null;
+					if (center !== chapter.index) {
+						setCenter(chapter.index);
+						return;
+					}
+				}
+			}
+			if (el$1.clientWidth !== width) {
+				setWidth(el$1.clientWidth);
+				return;
+			}
+			const measured = {};
+			let changed = false;
+			for (const { chapter } of panes) {
+				const article = el$1.querySelector(`[data-chapter="${chapter.index}"] article`);
+				const count = Math.max(1, Math.ceil(((article?.scrollWidth ?? width) - 1) / width));
+				measured[chapter.id] = count;
+				if (count !== counts[chapter.id]) changed = true;
+			}
+			if (changed) {
+				setCounts(measured);
+				return;
+			}
+			const key = [
+				book.id,
+				center,
+				width,
+				el$1.clientHeight,
+				revision,
+				settings.fontSize,
+				settings.fontFamily,
+				settings.lineSpacing,
+				settings.firstLineIndent,
+				panel.toolsVisible,
+				glyphFont,
+				searchQuery,
+				...panes.map((p$4) => p$4.count)
+			].join(":");
+			if (key === layoutKey.current && !seek.current) return;
+			if (timer.current !== null) clearTimeout(timer.current);
+			target.current = null;
+			const intent = seek.current;
+			const chapterIndex = intent?.chapter ?? view.chapter;
+			const pane = panes.find((p$4) => p$4.chapter.index === chapterIndex) ?? panes[0];
+			if (!pane) return;
+			let page = intent && "page" in intent ? intent.page : view.page;
+			const saved = intent && "paragraph" in intent ? {
+				paragraph: intent.paragraph,
+				offset: 0
+			} : !intent ? anchor.current : null;
+			if (saved) {
+				const node = el$1.querySelector(`[data-pindex="${saved.paragraph}"]`);
+				if (node) {
+					const rect = textRect(node, saved.offset);
+					const left = rect ? el$1.scrollLeft + rect.left - el$1.getBoundingClientRect().left : pane.start * width;
+					page = Math.floor(Math.max(0, left - pane.start * width) / width);
+				} else page = 0;
+				anchor.current = saved;
+				preserveAnchor.current = true;
+			}
+			page = Math.max(0, Math.min(pane.count - 1, page));
+			const snap = el$1.style.scrollSnapType;
+			el$1.style.scrollSnapType = "none";
+			el$1.scrollTo({
+				left: (pane.start + page) * width,
+				top: 0,
+				behavior: "instant"
+			});
+			el$1.style.scrollSnapType = snap;
+			layoutKey.current = key;
+			seek.current = null;
+			setView((previous) => previous.chapter === pane.chapter.index && previous.page === page ? previous : {
+				chapter: pane.chapter.index,
+				page
+			});
+			if (pendingParagraph !== null) clearPendingParagraph();
+		});
+		const onTouchStart = (event) => {
+			const point = event.touches[0];
+			if (event.touches.length !== 1 || !point) {
+				if (touch.current) touch.current.cancelled = true;
+				return;
+			}
+			const el$1 = event.currentTarget;
+			const page = target.current ?? Math.round(el$1.scrollLeft / Math.max(1, el$1.clientWidth));
+			if (target.current !== null) el$1.scrollTo({
+				left: page * el$1.clientWidth,
+				behavior: "instant"
+			});
+			target.current = null;
+			touch.current = {
+				id: point.identifier,
+				x: point.clientX,
+				y: point.clientY,
+				page,
+				started: Date.now(),
+				cancelled: selectedText(el$1)
+			};
+		};
+		const onTouchEnd = (event) => {
+			if (event.touches.length) return;
+			const start = touch.current;
+			touch.current = null;
+			const point = Array.from(event.changedTouches).find((p$4) => p$4.identifier === start?.id);
+			if (!start || !point) {
+				scheduleSettle();
+				return;
+			}
+			const dx = point.clientX - start.x, dy = point.clientY - start.y;
+			if (Math.abs(dx) > 8 || Math.abs(dy) > 8 || Date.now() - start.started >= 450) suppressClick.current = Date.now() + 500;
+			if (!start.cancelled && Math.abs(dx) >= 40 && Math.abs(dx) > Math.abs(dy) * 1.3 && !selectedText(event.currentTarget)) move(start.page + (dx < 0 ? 1 : -1));
+			else scheduleSettle();
+		};
+		if (!book || !progress) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {});
+		const visibleCount = counts[book.chapters[view.chapter]?.id ?? ""] ?? 1;
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "dnr-reader-stage is-paged",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				ref: scrollerRef,
+				className: "dnr-reader-scroll dnr-reader-scroll--paged dnr-continuous-scroll",
+				onScroll: scheduleSettle,
+				onTouchStart,
+				onTouchEnd,
+				onTouchCancel: () => {
+					touch.current = null;
+					suppressClick.current = Date.now() + 500;
+					scheduleSettle();
+				},
+				onWheel: () => {
+					target.current = null;
+					preserveAnchor.current = false;
+				},
+				onPointerDown: (e) => {
+					if (e.pointerType === "mouse" || e.pointerType === "pen") pointer.current = {
+						x: e.clientX,
+						y: e.clientY,
+						started: Date.now()
+					};
+				},
+				onPointerCancel: () => {
+					pointer.current = null;
+				},
+				onPointerUp: (e) => {
+					const p$4 = pointer.current;
+					pointer.current = null;
+					if (p$4 && (Math.abs(e.clientX - p$4.x) > 8 || Math.abs(e.clientY - p$4.y) > 8 || Date.now() - p$4.started >= 450)) suppressClick.current = Date.now() + 500;
+				},
+				onClick: (e) => {
+					const el$1 = e.currentTarget;
+					if (Date.now() < suppressClick.current || selectedText(el$1) || e.detail > 1 || e.target.closest("button,input,a,mark")) return;
+					const ratio = (e.clientX - el$1.getBoundingClientRect().left) / Math.max(1, el$1.clientWidth);
+					if (ratio < .3) turnPage(-1);
+					else if (ratio > .7) turnPage(1);
+					else if (!settings.keepNavigationVisible) updatePanel({
+						toolsVisible: !panel.toolsVisible,
+						immersive: panel.toolsVisible
+					});
+				},
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "dnr-chapter-track",
+					style: { width: total * width },
+					children: panes.map(({ chapter, count }) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("section", {
+						"data-chapter": chapter.index,
+						className: "dnr-chapter-pane",
+						style: { width: count * width },
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", {
+							className: "dnr-reader-article",
+							"data-font": settings.fontFamily,
+							"data-spacing": settings.lineSpacing,
+							"data-indent": settings.firstLineIndent || void 0,
+							"data-page-mode": "paged",
+							style: {
+								width,
+								"--dnr-page-width": `${width}px`,
+								"--dnr-font-size": `${settings.fontSize}px`,
+								...glyphFont ? {
+									fontFamily: `"${glyphFont}", ${settings.fontFamily === "system" || settings.fontFamily === "heiti" ? "sans-serif" : "serif"}`,
+									textAlign: "start",
+									textJustify: "auto"
+								} : {}
+							},
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+										"第 ",
+										chapter.index + 1,
+										" / ",
+										book.chapters.length,
+										" 章"
+									] }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: chapter.title }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", {})
+								] }),
+								(grouped.get(chapter.id) ?? []).map((p$4) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+									id: p$4.id,
+									"data-pindex": p$4.index,
+									children: highlighted(p$4.text, searchQuery)
+								}, p$4.id)),
+								!grouped.get(chapter.id)?.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "dnr-empty-small",
+									children: "本章没有可显示的正文。"
+								})
+							]
+						})
+					}, chapter.id))
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "dnr-page-snap-rail",
+					"aria-hidden": "true",
+					style: { width: total * width },
+					children: Array.from({ length: total }, (_, i$1) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "dnr-page-snap",
+						style: {
+							left: i$1 * width,
+							width
+						}
+					}, i$1))
+				})]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+				className: "dnr-page-number",
+				"aria-live": "polite",
+				children: [
+					view.page + 1,
+					" / ",
+					visibleCount
+				]
+			})]
+		});
+	});
+
+//#endregion
 //#region src/client/useChapterTransition.ts
 /** Hold the outgoing viewport until the incoming chapter has been paginated. */
 	function useChapterTransition(scroller, onSettled) {
@@ -11783,61 +12229,12 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 
 //#endregion
 //#region src/client/components/ReaderBody.tsx
-	function highlighted(text, rawQuery) {
-		const query = rawQuery.trim();
-		if (query === "") return text;
-		const lower = text.toLocaleLowerCase();
-		const needle = query.toLocaleLowerCase();
-		const nodes = [];
-		let cursor = 0;
-		let key = 0;
-		while (cursor < text.length) {
-			const index = lower.indexOf(needle, cursor);
-			if (index < 0) break;
-			if (index > cursor) nodes.push(text.slice(cursor, index));
-			nodes.push(/* @__PURE__ */ (0, import_jsx_runtime.jsx)("mark", { children: text.slice(index, index + needle.length) }, key++));
-			cursor = index + needle.length;
-		}
-		if (cursor < text.length) nodes.push(text.slice(cursor));
-		return nodes.map((node, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_react.Fragment, { children: node }, index));
-	}
 	function pageTotal(container) {
 		const width = Math.max(1, container.clientWidth);
 		const contentWidth = container.querySelector(".dnr-reader-article")?.scrollWidth || container.scrollWidth;
 		return Math.max(1, Math.ceil((contentWidth - 1) / width));
 	}
-	function selectedText(container) {
-		const selection = container.ownerDocument.getSelection();
-		return Boolean(selection && !selection.isCollapsed && (container.contains(selection.anchorNode) || container.contains(selection.focusNode)));
-	}
-	function visibleTextOffset(container, paragraph) {
-		const bounds = container.getBoundingClientRect();
-		let low = 0, high = Math.max(0, (paragraph.textContent?.length ?? 0) - 1);
-		while (low < high) {
-			const middle = Math.floor((low + high) / 2);
-			const rect = textRect(paragraph, middle);
-			if (rect && rect.right <= bounds.left + 24) low = middle + 1;
-			else high = middle;
-		}
-		return low;
-	}
-	function textRect(paragraph, offset) {
-		const walker = paragraph.ownerDocument.createTreeWalker(paragraph, NodeFilter.SHOW_TEXT);
-		let node = walker.nextNode();
-		while (node) {
-			const length = node.textContent?.length ?? 0;
-			if (offset < length) {
-				const range = paragraph.ownerDocument.createRange();
-				range.setStart(node, offset);
-				range.setEnd(node, offset + 1);
-				return range.getClientRects()[0];
-			}
-			offset -= length;
-			node = walker.nextNode();
-		}
-		return paragraph.getClientRects()[0];
-	}
-	const ReaderBody = (0, import_react.forwardRef)(function ReaderBody$1({ searchQuery, glyphFont }, forwardedRef) {
+	const LegacyReaderBody = (0, import_react.forwardRef)(function ReaderBody$1({ searchQuery, glyphFont }, forwardedRef) {
 		const { book, progress, settings, pendingParagraph, clearPendingParagraph, markParagraphVisible, updatePanel, panel, goToChapter, loading, error } = useReader();
 		const scrollerRef = (0, import_react.useRef)(null);
 		const frameRef = (0, import_react.useRef)(null);
@@ -12351,6 +12748,16 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					pageCount
 				]
 			})]
+		});
+	});
+	const ReaderBody = (0, import_react.forwardRef)(function ReaderBody$1(props, ref) {
+		const { book, settings } = useReader();
+		return settings.pageMode === "paged" && book && !book.onlineReading ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ContinuousPagedReader, {
+			...props,
+			ref
+		}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LegacyReaderBody, {
+			...props,
+			ref
 		});
 	});
 
@@ -16021,6 +16428,9 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-reader-article footer { display: flex; align-items: center; gap: 12px; margin-top: 3em; color: color-mix(in srgb, var(--dnr-reading-text) 55%, transparent); font-size: 11px; }
 .dnr-reader-article footer::before, .dnr-reader-article footer::after { content: ""; height: 1px; flex: 1; background: color-mix(in srgb, var(--dnr-reading-text) 8%, transparent); }
 .dnr-reader-scroll--paged { position: relative; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior: contain; scroll-snap-type: x mandatory; touch-action: pan-x pinch-zoom; }
+.dnr-continuous-scroll { overflow-anchor: none; }
+.dnr-chapter-track { display: flex; height: 100%; position: relative; }
+.dnr-chapter-pane { flex: none; height: 100%; min-width: 0; overflow: hidden; }
 .dnr-reader-scroll--paged::-webkit-scrollbar { display: none; }
 .dnr-page-snap-rail { position: absolute; top: 0; left: 0; height: 1px; pointer-events: none; }
 .dnr-page-snap { position: absolute; top: 0; height: 1px; scroll-snap-align: start; scroll-snap-stop: always; }
