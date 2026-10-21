@@ -7279,9 +7279,201 @@
 	}) });
 
 //#endregion
-//#region src/shared/constants.ts
+//#region node_modules/.pnpm/react@18.3.1/node_modules/react/cjs/react-jsx-runtime.production.min.js
+	var require_react_jsx_runtime_production_min = /* @__PURE__ */ __commonJS({ "node_modules/.pnpm/react@18.3.1/node_modules/react/cjs/react-jsx-runtime.production.min.js": ((exports) => {
+		var f = require_react(), k = Symbol.for("react.element"), l = Symbol.for("react.fragment"), m = Object.prototype.hasOwnProperty, n = f.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner, p = {
+			key: !0,
+			ref: !0,
+			__self: !0,
+			__source: !0
+		};
+		function q(c, a, g$1) {
+			var b, d = {}, e = null, h$1 = null;
+			void 0 !== g$1 && (e = "" + g$1);
+			void 0 !== a.key && (e = "" + a.key);
+			void 0 !== a.ref && (h$1 = a.ref);
+			for (b in a) m.call(a, b) && !p.hasOwnProperty(b) && (d[b] = a[b]);
+			if (c && c.defaultProps) for (b in a = c.defaultProps, a) void 0 === d[b] && (d[b] = a[b]);
+			return {
+				$$typeof: k,
+				type: c,
+				key: e,
+				ref: h$1,
+				props: d,
+				_owner: n.current
+			};
+		}
+		exports.Fragment = l;
+		exports.jsx = q;
+		exports.jsxs = q;
+	}) });
+
+//#endregion
+//#region node_modules/.pnpm/react@18.3.1/node_modules/react/jsx-runtime.js
+	var require_jsx_runtime = /* @__PURE__ */ __commonJS({ "node_modules/.pnpm/react@18.3.1/node_modules/react/jsx-runtime.js": ((exports, module) => {
+		module.exports = require_react_jsx_runtime_production_min();
+	}) });
+
+//#endregion
+//#region src/client/components/Icon.tsx
 var import_client = /* @__PURE__ */ __toESM(require_client());
 var import_react = /* @__PURE__ */ __toESM(require_react());
+	var import_jsx_runtime = /* @__PURE__ */ __toESM(require_jsx_runtime());
+	const paths = {
+		cloud: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M7 18a5 5 0 0 1-1-9.9A6 6 0 0 1 17.6 7a5.5 5.5 0 0 1 .9 11H7Z" }),
+		library: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M4 4v16M8 4v16M12 4v16M16 5l4 14" }) }),
+		sync: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M20 7v5h-5M4 17v-5h5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M6.1 7a7 7 0 0 1 11.6-1.4L20 8M4 16l2.3 2.4A7 7 0 0 0 17.9 17" })] }),
+		pip: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+			x: "3",
+			y: "4",
+			width: "18",
+			height: "16",
+			rx: "2"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+			x: "12",
+			y: "12",
+			width: "7",
+			height: "6",
+			rx: "1"
+		})] }),
+		fullscreen: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5" }),
+		book: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M4 5.5A2.5 2.5 0 0 1 6.5 3H11v15H6.5A2.5 2.5 0 0 0 4 20.5z" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M20 5.5A2.5 2.5 0 0 0 17.5 3H13v15h4.5a2.5 2.5 0 0 1 2.5 2.5z" })] }),
+		"chevron-left": /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "m15 18-6-6 6-6" }),
+		"chevron-right": /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "m9 18 6-6-6-6" }),
+		close: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "m18 6-12 12" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "m6 6 12 12" })] }),
+		file: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M14 2v6h6" }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M8 13h8M8 17h6" })
+		] }),
+		search: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+			cx: "11",
+			cy: "11",
+			r: "7"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "m20 20-4-4" })] }),
+		settings: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+			cx: "12",
+			cy: "12",
+			r: "3"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.1A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.1A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.1A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.13.37.34.72.6 1 .3.3.68.46 1.1.48h.1v4h-.1A1.7 1.7 0 0 0 19.4 15z" })] }),
+		toc: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M9 6h11M9 12h11M9 18h11" }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+				cx: "4",
+				cy: "6",
+				r: "1"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+				cx: "4",
+				cy: "12",
+				r: "1"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+				cx: "4",
+				cy: "18",
+				r: "1"
+			})
+		] }),
+		trash: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M3 6h18M8 6V4h8v2M19 6l-1 15H6L5 6M10 11v6M14 11v6" }) }),
+		panel: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+			x: "3",
+			y: "3",
+			width: "18",
+			height: "18",
+			rx: "2"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M15 3v18" })] }),
+		clock: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+			cx: "12",
+			cy: "12",
+			r: "9"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M12 7v5l3 2" })] }),
+		menu: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M4 7h16M4 12h16M4 17h16" }) }),
+		globe: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+			cx: "12",
+			cy: "12",
+			r: "9"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" })] })
+	};
+	function Icon({ name,...props }) {
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
+			viewBox: "0 0 24 24",
+			width: "18",
+			height: "18",
+			fill: "none",
+			stroke: "currentColor",
+			strokeWidth: "1.8",
+			strokeLinecap: "round",
+			strokeLinejoin: "round",
+			"aria-hidden": "true",
+			...props,
+			children: paths[name]
+		});
+	}
+
+//#endregion
+//#region src/client/cloud/storage.ts
+	function read(key, fallback) {
+		try {
+			return JSON.parse(localStorage.getItem(`dnr-cloud:${key}`) ?? "null") ?? fallback;
+		} catch {
+			return fallback;
+		}
+	}
+	function write(key, value) {
+		localStorage.setItem(`dnr-cloud:${key}`, JSON.stringify(value));
+	}
+	async function original(id$1, file) {
+		const db$1 = await new Promise((resolve, reject) => {
+			const req = indexedDB.open("dnr-originals", 1);
+			req.onupgradeneeded = () => req.result.createObjectStore("files");
+			req.onsuccess = () => resolve(req.result);
+			req.onerror = () => reject(req.error);
+		});
+		return new Promise((resolve, reject) => {
+			const tx = db$1.transaction("files", file ? "readwrite" : "readonly");
+			const req = file ? tx.objectStore("files").put(file, id$1) : tx.objectStore("files").get(id$1);
+			tx.oncomplete = () => {
+				db$1.close();
+				resolve(file ?? req.result);
+			};
+			tx.onerror = () => {
+				db$1.close();
+				reject(tx.error);
+			};
+		});
+	}
+	const SITE_URL = "https://saya-novel-library.zycode1561.chatgpt.site";
+	const cloudHosted = typeof window !== "undefined" && window.__CODEX_NOVEL_READER_CLOUD__ === true;
+	async function api(path, init) {
+		const response = await fetch(`/api/cloud${path}`, {
+			...init,
+			headers: {
+				"x-reader-request": "1",
+				...init?.headers
+			},
+			cache: "no-store"
+		});
+		if (!response.ok && response.status !== 409) {
+			let message = `云端请求失败（${response.status}）`;
+			try {
+				message = (await response.json()).error ?? message;
+			} catch {}
+			throw new Error(message);
+		}
+		return response;
+	}
+	function bindings() {
+		return read("bindings", {});
+	}
+	function bind(localId, cloudId) {
+		write("bindings", {
+			...bindings(),
+			[localId]: cloudId
+		});
+	}
+
+//#endregion
+//#region src/shared/constants.ts
 	const MIN_PANEL_WIDTH = 280;
 	const MAX_PANEL_WIDTH = 600;
 	const DEFAULT_PANEL_WIDTH = 420;
@@ -8866,68 +9058,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	}
 
 //#endregion
-//#region src/client/cloud/storage.ts
-	function read(key, fallback) {
-		try {
-			return JSON.parse(localStorage.getItem(`dnr-cloud:${key}`) ?? "null") ?? fallback;
-		} catch {
-			return fallback;
-		}
-	}
-	function write(key, value) {
-		localStorage.setItem(`dnr-cloud:${key}`, JSON.stringify(value));
-	}
-	async function original(id$1, file) {
-		const db$1 = await new Promise((resolve, reject) => {
-			const req = indexedDB.open("dnr-originals", 1);
-			req.onupgradeneeded = () => req.result.createObjectStore("files");
-			req.onsuccess = () => resolve(req.result);
-			req.onerror = () => reject(req.error);
-		});
-		return new Promise((resolve, reject) => {
-			const tx = db$1.transaction("files", file ? "readwrite" : "readonly");
-			const req = file ? tx.objectStore("files").put(file, id$1) : tx.objectStore("files").get(id$1);
-			tx.oncomplete = () => {
-				db$1.close();
-				resolve(file ?? req.result);
-			};
-			tx.onerror = () => {
-				db$1.close();
-				reject(tx.error);
-			};
-		});
-	}
-	const SITE_URL = "https://saya-novel-library.zycode1561.chatgpt.site";
-	const cloudHosted = typeof window !== "undefined" && window.__CODEX_NOVEL_READER_CLOUD__ === true;
-	async function api(path, init) {
-		const response = await fetch(`/api/cloud${path}`, {
-			...init,
-			headers: {
-				"x-reader-request": "1",
-				...init?.headers
-			},
-			cache: "no-store"
-		});
-		if (!response.ok && response.status !== 409) {
-			let message = `云端请求失败（${response.status}）`;
-			try {
-				message = (await response.json()).error ?? message;
-			} catch {}
-			throw new Error(message);
-		}
-		return response;
-	}
-	function bindings() {
-		return read("bindings", {});
-	}
-	function bind(localId, cloudId) {
-		write("bindings", {
-			...bindings(),
-			[localId]: cloudId
-		});
-	}
-
-//#endregion
 //#region src/shared/progress.ts
 	function clampPercent(value) {
 		return Math.max(0, Math.min(100, value));
@@ -9091,7 +9221,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 
 //#endregion
 //#region src/client/online/api.ts
-	const BASE_PATH = "/dsh-novel-reader/online";
+	const BASE_PATH = cloudHosted ? "/api/online" : "/dsh-novel-reader/online";
 	var OnlineApiError = class extends Error {
 		constructor(message, code = "REQUEST_FAILED") {
 			super(message);
@@ -9104,11 +9234,15 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		try {
 			response = await fetch(`${BASE_PATH}${path}`, {
 				cache: "no-store",
-				...init
+				...init,
+				headers: {
+					...cloudHosted ? { "x-reader-request": "1" } : {},
+					...init?.headers
+				}
 			});
 		} catch (error) {
 			if (error instanceof DOMException && error.name === "AbortError") throw error;
-			throw new OnlineApiError("无法连接阅读器 Host，请确认插件仍在运行。");
+			throw new OnlineApiError(cloudHosted ? "无法连接在线书源服务，请检查网络后重试。" : "无法连接阅读器 Host，请确认插件仍在运行。");
 		}
 		if (!response.ok) {
 			let detail = {};
@@ -9524,44 +9658,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	}
 
 //#endregion
-//#region node_modules/.pnpm/react@18.3.1/node_modules/react/cjs/react-jsx-runtime.production.min.js
-	var require_react_jsx_runtime_production_min = /* @__PURE__ */ __commonJS({ "node_modules/.pnpm/react@18.3.1/node_modules/react/cjs/react-jsx-runtime.production.min.js": ((exports) => {
-		var f = require_react(), k = Symbol.for("react.element"), l = Symbol.for("react.fragment"), m = Object.prototype.hasOwnProperty, n = f.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner, p = {
-			key: !0,
-			ref: !0,
-			__self: !0,
-			__source: !0
-		};
-		function q(c, a, g$1) {
-			var b, d = {}, e = null, h$1 = null;
-			void 0 !== g$1 && (e = "" + g$1);
-			void 0 !== a.key && (e = "" + a.key);
-			void 0 !== a.ref && (h$1 = a.ref);
-			for (b in a) m.call(a, b) && !p.hasOwnProperty(b) && (d[b] = a[b]);
-			if (c && c.defaultProps) for (b in a = c.defaultProps, a) void 0 === d[b] && (d[b] = a[b]);
-			return {
-				$$typeof: k,
-				type: c,
-				key: e,
-				ref: h$1,
-				props: d,
-				_owner: n.current
-			};
-		}
-		exports.Fragment = l;
-		exports.jsx = q;
-		exports.jsxs = q;
-	}) });
-
-//#endregion
-//#region node_modules/.pnpm/react@18.3.1/node_modules/react/jsx-runtime.js
-	var require_jsx_runtime = /* @__PURE__ */ __commonJS({ "node_modules/.pnpm/react@18.3.1/node_modules/react/jsx-runtime.js": ((exports, module) => {
-		module.exports = require_react_jsx_runtime_production_min();
-	}) });
-
-//#endregion
 //#region src/client/state/ReaderContext.tsx
-	var import_jsx_runtime = /* @__PURE__ */ __toESM(require_jsx_runtime());
 	const ReaderContext = (0, import_react.createContext)(null);
 	function initialPosition(book, saved) {
 		const position = saved[book.id] ?? {
@@ -10277,6 +10374,415 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	};
 
 //#endregion
+//#region src/client/cloud/CloudSync.tsx
+	const initialStatus = {
+		phase: "idle",
+		pending: false,
+		lastSyncedAt: 0
+	};
+	function CloudSync() {
+		const { book, progress, bookmarks } = useReader();
+		const [status, setStatus] = (0, import_react.useState)(initialStatus);
+		const [conflict, setConflict] = (0, import_react.useState)(null);
+		const [open, setOpen] = (0, import_react.useState)(false);
+		const [slow, setSlow] = (0, import_react.useState)(false);
+		const buttonRef = (0, import_react.useRef)(null);
+		const detailsRef = (0, import_react.useRef)(null);
+		const controls = (0, import_react.useRef)(null);
+		const latest = (0, import_react.useRef)(null);
+		const currentCloudId = book ? bindings()[book.id] : void 0;
+		latest.current = progress ? {
+			position: progress,
+			bookmarks
+		} : null;
+		(0, import_react.useEffect)(() => {
+			setOpen(false);
+			setConflict(null);
+			setSlow(false);
+			if (!book || !currentCloudId) {
+				controls.current = null;
+				setStatus(initialStatus);
+				return;
+			}
+			const localId = book.id;
+			const engine = new SyncSession(currentCloudId);
+			const initialSignature = latest.current ? signature(latest.current) : "";
+			let initialized = false, disposed = false;
+			let pendingSince = engine.state.pending ? Date.now() : null;
+			let debounce;
+			let request$2 = null;
+			const publish = (phase) => {
+				if (disposed) return;
+				setConflict(engine.state.conflict);
+				setStatus({
+					phase: engine.state.conflict ? "conflict" : phase,
+					pending: Boolean(engine.state.pending),
+					lastSyncedAt: engine.state.lastSyncedAt ?? 0
+				});
+			};
+			const apply = (snapshot) => {
+				if (!snapshot?.payload) return;
+				latest.current = snapshot.payload;
+				window.dispatchEvent(new CustomEvent("dnr-cloud-position", { detail: {
+					...snapshot.payload,
+					localId
+				} }));
+			};
+			const schedule = () => {
+				clearTimeout(debounce);
+				if (!engine.state.pending || engine.state.conflict || disposed) return;
+				pendingSince ??= Date.now();
+				debounce = setTimeout(() => {
+					run();
+				}, Math.min(1e3, Math.max(0, 5e3 - (Date.now() - pendingSince))));
+			};
+			const run = async (keepalive = false) => {
+				if (disposed || engine.busy || engine.state.conflict) return;
+				clearTimeout(debounce);
+				pendingSince = engine.state.pending ? Date.now() : null;
+				publish("syncing");
+				const abort = new AbortController();
+				request$2 = abort;
+				const timeout = setTimeout(() => abort.abort(), 15e3);
+				let failed = false;
+				try {
+					const snapshot = await engine.sync(abort.signal, keepalive);
+					if (disposed) return;
+					if (snapshot?.payload && (!latest.current || signature(snapshot.payload) !== signature(latest.current))) apply(snapshot);
+					if (!initialized && snapshot && !snapshot.payload && !engine.state.pending && latest.current) engine.queue(latest.current);
+					publish(engine.state.pending ? "pending" : "idle");
+				} catch {
+					failed = true;
+					if (!disposed) publish("error");
+				} finally {
+					clearTimeout(timeout);
+					if (request$2 === abort) request$2 = null;
+					initialized = true;
+					if (!engine.state.pending) pendingSince = null;
+					if (!disposed && !failed && engine.state.pending) schedule();
+				}
+			};
+			const queue = (payload) => {
+				if (!initialized && !engine.state.pending && signature(payload) === initialSignature) return;
+				const operation = engine.state.operation;
+				engine.queue(payload);
+				if (!engine.state.pending || operation === engine.state.operation) return;
+				publish(engine.busy ? "syncing" : "pending");
+				schedule();
+			};
+			const resolve = (choice) => {
+				const snapshot = engine.resolve(choice);
+				if (choice === "remote") apply(snapshot);
+				publish(engine.state.pending ? "pending" : "idle");
+				if (choice === "local") run();
+			};
+			controls.current = {
+				queue,
+				run,
+				resolve
+			};
+			publish(engine.state.pending ? "pending" : "idle");
+			run();
+			const poll = setInterval(() => {
+				if (document.visibilityState === "visible") run();
+			}, 5e3);
+			const wake = () => {
+				if (document.visibilityState === "visible") run();
+			};
+			const flush = () => {
+				if (engine.state.pending) run(true);
+			};
+			const visibility = () => {
+				if (document.visibilityState === "hidden") flush();
+				else wake();
+			};
+			window.addEventListener("online", wake);
+			window.addEventListener("focus", wake);
+			window.addEventListener("pagehide", flush);
+			document.addEventListener("visibilitychange", visibility);
+			return () => {
+				disposed = true;
+				controls.current = null;
+				clearInterval(poll);
+				clearTimeout(debounce);
+				request$2?.abort();
+				window.removeEventListener("online", wake);
+				window.removeEventListener("focus", wake);
+				window.removeEventListener("pagehide", flush);
+				document.removeEventListener("visibilitychange", visibility);
+			};
+		}, [book?.id, currentCloudId]);
+		(0, import_react.useEffect)(() => {
+			if (progress) controls.current?.queue({
+				position: progress,
+				bookmarks
+			});
+		}, [progress, bookmarks]);
+		const working = status.phase === "pending" || status.phase === "syncing";
+		(0, import_react.useEffect)(() => {
+			if (!working) {
+				setSlow(false);
+				return;
+			}
+			const timer = setTimeout(() => setSlow(true), 2e3);
+			return () => clearTimeout(timer);
+		}, [working]);
+		(0, import_react.useEffect)(() => {
+			if (!open) return;
+			const outside = (event) => {
+				if (!detailsRef.current?.contains(event.target) && !buttonRef.current?.contains(event.target)) setOpen(false);
+			};
+			const escape$1 = (event) => {
+				if (event.key === "Escape") {
+					event.stopPropagation();
+					setOpen(false);
+					buttonRef.current?.focus();
+				}
+			};
+			document.addEventListener("pointerdown", outside);
+			window.addEventListener("keydown", escape$1, { capture: true });
+			return () => {
+				document.removeEventListener("pointerdown", outside);
+				window.removeEventListener("keydown", escape$1, { capture: true });
+			};
+		}, [open]);
+		if (!currentCloudId) return null;
+		const showDetails = () => {
+			setOpen((value) => !value);
+		};
+		const busy = status.pending || slow && working || !status.lastSyncedAt;
+		const visualState = status.phase === "conflict" || status.phase === "error" ? status.phase : busy ? "pending" : "synced";
+		const label = status.phase === "conflict" ? "阅读进度有冲突" : status.phase === "error" ? "暂未连接云端" : status.phase === "syncing" && slow ? status.pending ? "正在同步进度…" : "正在检查云端进度…" : status.pending ? "进度已存本机，待同步" : status.lastSyncedAt ? "进度已同步" : "正在检查云端进度";
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "dnr-sync-control",
+				"data-sync-state": visualState,
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+					ref: buttonRef,
+					type: "button",
+					className: `dnr-sync-button ${slow && working ? "is-syncing" : ""}`,
+					"aria-label": "同步详情",
+					title: label,
+					"aria-expanded": open,
+					"aria-haspopup": "dialog",
+					onClick: showDetails,
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+						className: "dnr-sync-cloud",
+						viewBox: "0 0 24 24",
+						width: "18",
+						height: "18",
+						fill: "none",
+						stroke: "currentColor",
+						strokeWidth: "1.6",
+						strokeLinecap: "round",
+						strokeLinejoin: "round",
+						"aria-hidden": "true",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M7 19a5 5 0 0 1-1-9.9A6 6 0 0 1 17.6 8a5.5 5.5 0 0 1 .9 11H7Z" }), visualState === "synced" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+							className: "dnr-sync-check",
+							d: "m8.5 13 2.3 2.3 4.7-4.7",
+							strokeWidth: "2"
+						}) : visualState === "pending" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("g", {
+							className: "dnr-sync-arrows",
+							strokeWidth: "1.3",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M8.8 12a3.5 3.5 0 0 1 6-1.1L16 12m0-2.5V12h-2.5M15.2 14a3.5 3.5 0 0 1-6 1.1L8 14m0 2.5V14h2.5" })
+						}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("g", {
+							className: "dnr-sync-alert",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M12 10.5v3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+								cx: "12",
+								cy: "16.2",
+								r: ".7",
+								fill: "currentColor",
+								stroke: "none"
+							})]
+						})]
+					}), (status.phase === "error" || status.phase === "conflict") && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { className: "dnr-sync-dot" })]
+				})
+			}),
+			conflict && !open && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+				type: "button",
+				className: "dnr-sync-conflict",
+				onClick: showDetails,
+				children: "阅读进度有冲突 · 选择位置"
+			}),
+			open && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				ref: detailsRef,
+				className: "dnr-sync-details",
+				role: "dialog",
+				"aria-label": "同步详情",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "dnr-sync-heading",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "阅读进度" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							"aria-label": "关闭同步详情",
+							onClick: () => setOpen(false),
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "close" })
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						role: "status",
+						children: label
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: ["最近同步：", status.lastSyncedAt ? new Date(status.lastSyncedAt).toLocaleString("zh-CN", {
+						month: "numeric",
+						day: "numeric",
+						hour: "2-digit",
+						minute: "2-digit"
+					}) : "尚未完成"] }),
+					status.phase === "error" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "dnr-sync-hint",
+						children: "离线或连接失败。进度已存本机，联网后自动同步。"
+					}),
+					conflict ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+						className: "dnr-sync-hint",
+						children: [
+							"本机：第 ",
+							(progress?.chapterIndex ?? 0) + 1,
+							" 章",
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
+							"云端：第 ",
+							(conflict.payload?.position.chapterIndex ?? 0) + 1,
+							" 章",
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
+							"请选择继续的位置。"
+						]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "dnr-sync-actions",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							onClick: () => controls.current?.resolve("remote"),
+							children: "采用云端"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							onClick: () => controls.current?.resolve("local"),
+							children: "保留本机"
+						})]
+					})] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						type: "button",
+						className: "dnr-sync-retry",
+						disabled: status.phase === "syncing",
+						onClick: () => void controls.current?.run(),
+						children: status.phase === "syncing" ? "正在同步…" : status.phase === "error" ? "重试同步" : "立即同步"
+					})
+				]
+			})
+		] });
+	}
+
+//#endregion
+//#region src/client/cloud/reading-activity.ts
+	function timestamp(value) {
+		return typeof value === "number" && Number.isSafeInteger(value) && value > 0 ? value : 0;
+	}
+	function readingTimes() {
+		const value = read("reading-times", {});
+		return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+	}
+	function sortCloudBooks(books, localTimes = readingTimes()) {
+		return [...books].sort((a, b) => Math.max(timestamp(b.created_at), timestamp(b.last_read_at), timestamp(localTimes[b.id])) - Math.max(timestamp(a.created_at), timestamp(a.last_read_at), timestamp(localTimes[a.id])) || b.created_at - a.created_at || a.id.localeCompare(b.id));
+	}
+	function pendingReads() {
+		return read("reading-pending", {});
+	}
+	let flushing = null;
+	function flushReadingActivity() {
+		if (flushing) return flushing;
+		flushing = (async () => {
+			for (;;) {
+				const entry = Object.entries(pendingReads()).find(([id$2, at$1]) => /^[a-f0-9]{64}$/.test(id$2) && timestamp(at$1));
+				if (!entry) break;
+				const [id$1, at] = entry;
+				const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 15e3);
+				try {
+					if (!timestamp((await (await api(`/books/${id$1}/read`, {
+						method: "PUT",
+						headers: { "content-type": "application/json" },
+						body: JSON.stringify({ at }),
+						signal: controller.signal,
+						keepalive: true
+					})).json()).last_read_at)) break;
+					const pending = pendingReads();
+					if (pending[id$1] === at) {
+						delete pending[id$1];
+						write("reading-pending", pending);
+					}
+					window.dispatchEvent(new Event("dnr-cloud-reading-updated"));
+				} catch {
+					break;
+				} finally {
+					clearTimeout(timer);
+				}
+			}
+		})().finally(() => {
+			flushing = null;
+		});
+		return flushing;
+	}
+	function markCloudBookRead(id$1, at = Date.now()) {
+		if (!/^[a-f0-9]{64}$/.test(id$1) || !timestamp(at)) return;
+		try {
+			const times = readingTimes(), pending = pendingReads();
+			if (timestamp(times[id$1]) >= at) {
+				flushReadingActivity();
+				return;
+			}
+			times[id$1] = at;
+			pending[id$1] = Math.max(timestamp(pending[id$1]), at);
+			write("reading-times", times);
+			write("reading-pending", pending);
+			window.dispatchEvent(new Event("dnr-cloud-reading-updated"));
+			flushReadingActivity();
+		} catch {}
+	}
+
+//#endregion
+//#region src/client/cloud/CloudReadingActivity.tsx
+	function CloudReadingActivity({ active: active$1 }) {
+		const { book, panel } = useReader();
+		(0, import_react.useEffect)(() => {
+			const flush = () => {
+				flushReadingActivity();
+			};
+			flush();
+			window.addEventListener("online", flush);
+			window.addEventListener("focus", flush);
+			return () => {
+				window.removeEventListener("online", flush);
+				window.removeEventListener("focus", flush);
+			};
+		}, []);
+		(0, import_react.useEffect)(() => {
+			if (!active$1 || !book || !panel.expanded) return;
+			let lastRecorded = 0;
+			const record = (force = false) => {
+				if (document.visibilityState !== "visible") return;
+				const id$1 = bindings()[book.id], now = Date.now();
+				if (id$1 && (force || now - lastRecorded >= 3e4)) {
+					lastRecorded = now;
+					markCloudBookRead(id$1, now);
+				}
+			};
+			record(true);
+			const wake = () => record();
+			const timer = window.setInterval(wake, 6e4);
+			window.addEventListener("focus", wake);
+			window.addEventListener("dnr-cloud-catalog-updated", wake);
+			document.addEventListener("visibilitychange", wake);
+			return () => {
+				clearInterval(timer);
+				window.removeEventListener("focus", wake);
+				window.removeEventListener("dnr-cloud-catalog-updated", wake);
+				document.removeEventListener("visibilitychange", wake);
+			};
+		}, [
+			active$1,
+			book?.id,
+			panel.expanded
+		]);
+		return null;
+	}
+
+//#endregion
 //#region src/client/cloud/upload-request.ts
 /** Monitor bytes sent separately from the server's durable-save acknowledgement. */
 	function uploadBookRequest(hash, file, name, onProgress, signal) {
@@ -10747,69 +11253,46 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	}
 
 //#endregion
-//#region src/client/cloud/reading-activity.ts
-	function timestamp(value) {
-		return typeof value === "number" && Number.isSafeInteger(value) && value > 0 ? value : 0;
-	}
-	function readingTimes() {
-		const value = read("reading-times", {});
-		return value && typeof value === "object" && !Array.isArray(value) ? value : {};
-	}
-	function sortCloudBooks(books, localTimes = readingTimes()) {
-		return [...books].sort((a, b) => Math.max(timestamp(b.created_at), timestamp(b.last_read_at), timestamp(localTimes[b.id])) - Math.max(timestamp(a.created_at), timestamp(a.last_read_at), timestamp(localTimes[a.id])) || b.created_at - a.created_at || a.id.localeCompare(b.id));
-	}
-	function pendingReads() {
-		return read("reading-pending", {});
-	}
-	let flushing = null;
-	function flushReadingActivity() {
-		if (flushing) return flushing;
-		flushing = (async () => {
-			for (;;) {
-				const entry = Object.entries(pendingReads()).find(([id$2, at$1]) => /^[a-f0-9]{64}$/.test(id$2) && timestamp(at$1));
-				if (!entry) break;
-				const [id$1, at] = entry;
-				const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 15e3);
-				try {
-					if (!timestamp((await (await api(`/books/${id$1}/read`, {
-						method: "PUT",
-						headers: { "content-type": "application/json" },
-						body: JSON.stringify({ at }),
-						signal: controller.signal,
-						keepalive: true
-					})).json()).last_read_at)) break;
-					const pending = pendingReads();
-					if (pending[id$1] === at) {
-						delete pending[id$1];
-						write("reading-pending", pending);
-					}
-					window.dispatchEvent(new Event("dnr-cloud-reading-updated"));
-				} catch {
-					break;
-				} finally {
-					clearTimeout(timer);
-				}
+//#region src/client/host.ts
+/** Request extra space only when the current host exposes the optional API. */
+	async function requestDisplayMode(mode) {
+		if (window.openai?.requestDisplayMode === void 0) {
+			if (mode === "fullscreen" && document.documentElement.requestFullscreen) {
+				if (document.fullscreenElement) await document.exitFullscreen();
+				else await document.documentElement.requestFullscreen();
+				return true;
 			}
-		})().finally(() => {
-			flushing = null;
-		});
-		return flushing;
+			return false;
+		}
+		await window.openai.requestDisplayMode({ mode });
+		return true;
 	}
-	function markCloudBookRead(id$1, at = Date.now()) {
-		if (!/^[a-f0-9]{64}$/.test(id$1) || !timestamp(at)) return;
-		try {
-			const times = readingTimes(), pending = pendingReads();
-			if (timestamp(times[id$1]) >= at) {
-				flushReadingActivity();
-				return;
-			}
-			times[id$1] = at;
-			pending[id$1] = Math.max(timestamp(pending[id$1]), at);
-			write("reading-times", times);
-			write("reading-pending", pending);
-			window.dispatchEvent(new Event("dnr-cloud-reading-updated"));
-			flushReadingActivity();
-		} catch {}
+	function notifyReaderHeight() {
+		window.openai?.notifyIntrinsicHeight?.(Math.max(560, document.documentElement.scrollHeight));
+	}
+
+//#endregion
+//#region src/client/useHostTheme.ts
+/** MCP hosts expose their theme; browser panels expose their preferred color scheme. */
+	function useHostTheme() {
+		const readTheme = () => window.openai?.theme ?? (window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+		const [theme, setTheme] = (0, import_react.useState)(readTheme);
+		(0, import_react.useEffect)(() => {
+			const media = window.matchMedia?.("(prefers-color-scheme: dark)");
+			const onMediaChange = () => setTheme(readTheme());
+			const onHostChange = (event) => {
+				const hostTheme = event.detail?.globals?.theme;
+				setTheme(hostTheme ?? readTheme());
+			};
+			media?.addEventListener("change", onMediaChange);
+			window.addEventListener("openai:set_globals", onHostChange);
+			onMediaChange();
+			return () => {
+				media?.removeEventListener("change", onMediaChange);
+				window.removeEventListener("openai:set_globals", onHostChange);
+			};
+		}, []);
+		return theme;
 	}
 
 //#endregion
@@ -10998,485 +11481,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	}
 
 //#endregion
-//#region src/client/components/Icon.tsx
-	const paths = {
-		cloud: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M7 18a5 5 0 0 1-1-9.9A6 6 0 0 1 17.6 7a5.5 5.5 0 0 1 .9 11H7Z" }),
-		library: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M4 4v16M8 4v16M12 4v16M16 5l4 14" }) }),
-		sync: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M20 7v5h-5M4 17v-5h5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M6.1 7a7 7 0 0 1 11.6-1.4L20 8M4 16l2.3 2.4A7 7 0 0 0 17.9 17" })] }),
-		pip: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
-			x: "3",
-			y: "4",
-			width: "18",
-			height: "16",
-			rx: "2"
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
-			x: "12",
-			y: "12",
-			width: "7",
-			height: "6",
-			rx: "1"
-		})] }),
-		fullscreen: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5" }),
-		book: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M4 5.5A2.5 2.5 0 0 1 6.5 3H11v15H6.5A2.5 2.5 0 0 0 4 20.5z" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M20 5.5A2.5 2.5 0 0 0 17.5 3H13v15h4.5a2.5 2.5 0 0 1 2.5 2.5z" })] }),
-		"chevron-left": /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "m15 18-6-6 6-6" }),
-		"chevron-right": /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "m9 18 6-6-6-6" }),
-		close: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "m18 6-12 12" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "m6 6 12 12" })] }),
-		file: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M14 2v6h6" }),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M8 13h8M8 17h6" })
-		] }),
-		search: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
-			cx: "11",
-			cy: "11",
-			r: "7"
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "m20 20-4-4" })] }),
-		settings: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
-			cx: "12",
-			cy: "12",
-			r: "3"
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.1A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.1A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.1A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.13.37.34.72.6 1 .3.3.68.46 1.1.48h.1v4h-.1A1.7 1.7 0 0 0 19.4 15z" })] }),
-		toc: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M9 6h11M9 12h11M9 18h11" }),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
-				cx: "4",
-				cy: "6",
-				r: "1"
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
-				cx: "4",
-				cy: "12",
-				r: "1"
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
-				cx: "4",
-				cy: "18",
-				r: "1"
-			})
-		] }),
-		trash: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M3 6h18M8 6V4h8v2M19 6l-1 15H6L5 6M10 11v6M14 11v6" }) }),
-		panel: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
-			x: "3",
-			y: "3",
-			width: "18",
-			height: "18",
-			rx: "2"
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M15 3v18" })] }),
-		clock: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
-			cx: "12",
-			cy: "12",
-			r: "9"
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M12 7v5l3 2" })] }),
-		menu: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M4 7h16M4 12h16M4 17h16" }) }),
-		globe: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
-			cx: "12",
-			cy: "12",
-			r: "9"
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" })] })
-	};
-	function Icon({ name,...props }) {
-		return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
-			viewBox: "0 0 24 24",
-			width: "18",
-			height: "18",
-			fill: "none",
-			stroke: "currentColor",
-			strokeWidth: "1.8",
-			strokeLinecap: "round",
-			strokeLinejoin: "round",
-			"aria-hidden": "true",
-			...props,
-			children: paths[name]
-		});
-	}
-
-//#endregion
-//#region src/client/cloud/CloudSync.tsx
-	const initialStatus = {
-		phase: "idle",
-		pending: false,
-		lastSyncedAt: 0
-	};
-	function CloudSync() {
-		const { book, progress, bookmarks } = useReader();
-		const [status, setStatus] = (0, import_react.useState)(initialStatus);
-		const [conflict, setConflict] = (0, import_react.useState)(null);
-		const [open, setOpen] = (0, import_react.useState)(false);
-		const [slow, setSlow] = (0, import_react.useState)(false);
-		const buttonRef = (0, import_react.useRef)(null);
-		const detailsRef = (0, import_react.useRef)(null);
-		const controls = (0, import_react.useRef)(null);
-		const latest = (0, import_react.useRef)(null);
-		const currentCloudId = book ? bindings()[book.id] : void 0;
-		latest.current = progress ? {
-			position: progress,
-			bookmarks
-		} : null;
-		(0, import_react.useEffect)(() => {
-			setOpen(false);
-			setConflict(null);
-			setSlow(false);
-			if (!book || !currentCloudId) {
-				controls.current = null;
-				setStatus(initialStatus);
-				return;
-			}
-			const localId = book.id;
-			const engine = new SyncSession(currentCloudId);
-			const initialSignature = latest.current ? signature(latest.current) : "";
-			let initialized = false, disposed = false;
-			let pendingSince = engine.state.pending ? Date.now() : null;
-			let debounce;
-			let request$2 = null;
-			const publish = (phase) => {
-				if (disposed) return;
-				setConflict(engine.state.conflict);
-				setStatus({
-					phase: engine.state.conflict ? "conflict" : phase,
-					pending: Boolean(engine.state.pending),
-					lastSyncedAt: engine.state.lastSyncedAt ?? 0
-				});
-			};
-			const apply = (snapshot) => {
-				if (!snapshot?.payload) return;
-				latest.current = snapshot.payload;
-				window.dispatchEvent(new CustomEvent("dnr-cloud-position", { detail: {
-					...snapshot.payload,
-					localId
-				} }));
-			};
-			const schedule = () => {
-				clearTimeout(debounce);
-				if (!engine.state.pending || engine.state.conflict || disposed) return;
-				pendingSince ??= Date.now();
-				debounce = setTimeout(() => {
-					run();
-				}, Math.min(1e3, Math.max(0, 5e3 - (Date.now() - pendingSince))));
-			};
-			const run = async (keepalive = false) => {
-				if (disposed || engine.busy || engine.state.conflict) return;
-				clearTimeout(debounce);
-				pendingSince = engine.state.pending ? Date.now() : null;
-				publish("syncing");
-				const abort = new AbortController();
-				request$2 = abort;
-				const timeout = setTimeout(() => abort.abort(), 15e3);
-				let failed = false;
-				try {
-					const snapshot = await engine.sync(abort.signal, keepalive);
-					if (disposed) return;
-					if (snapshot?.payload && (!latest.current || signature(snapshot.payload) !== signature(latest.current))) apply(snapshot);
-					if (!initialized && snapshot && !snapshot.payload && !engine.state.pending && latest.current) engine.queue(latest.current);
-					publish(engine.state.pending ? "pending" : "idle");
-				} catch {
-					failed = true;
-					if (!disposed) publish("error");
-				} finally {
-					clearTimeout(timeout);
-					if (request$2 === abort) request$2 = null;
-					initialized = true;
-					if (!engine.state.pending) pendingSince = null;
-					if (!disposed && !failed && engine.state.pending) schedule();
-				}
-			};
-			const queue = (payload) => {
-				if (!initialized && !engine.state.pending && signature(payload) === initialSignature) return;
-				const operation = engine.state.operation;
-				engine.queue(payload);
-				if (!engine.state.pending || operation === engine.state.operation) return;
-				publish(engine.busy ? "syncing" : "pending");
-				schedule();
-			};
-			const resolve = (choice) => {
-				const snapshot = engine.resolve(choice);
-				if (choice === "remote") apply(snapshot);
-				publish(engine.state.pending ? "pending" : "idle");
-				if (choice === "local") run();
-			};
-			controls.current = {
-				queue,
-				run,
-				resolve
-			};
-			publish(engine.state.pending ? "pending" : "idle");
-			run();
-			const poll = setInterval(() => {
-				if (document.visibilityState === "visible") run();
-			}, 5e3);
-			const wake = () => {
-				if (document.visibilityState === "visible") run();
-			};
-			const flush = () => {
-				if (engine.state.pending) run(true);
-			};
-			const visibility = () => {
-				if (document.visibilityState === "hidden") flush();
-				else wake();
-			};
-			window.addEventListener("online", wake);
-			window.addEventListener("focus", wake);
-			window.addEventListener("pagehide", flush);
-			document.addEventListener("visibilitychange", visibility);
-			return () => {
-				disposed = true;
-				controls.current = null;
-				clearInterval(poll);
-				clearTimeout(debounce);
-				request$2?.abort();
-				window.removeEventListener("online", wake);
-				window.removeEventListener("focus", wake);
-				window.removeEventListener("pagehide", flush);
-				document.removeEventListener("visibilitychange", visibility);
-			};
-		}, [book?.id, currentCloudId]);
-		(0, import_react.useEffect)(() => {
-			if (progress) controls.current?.queue({
-				position: progress,
-				bookmarks
-			});
-		}, [progress, bookmarks]);
-		const working = status.phase === "pending" || status.phase === "syncing";
-		(0, import_react.useEffect)(() => {
-			if (!working) {
-				setSlow(false);
-				return;
-			}
-			const timer = setTimeout(() => setSlow(true), 2e3);
-			return () => clearTimeout(timer);
-		}, [working]);
-		(0, import_react.useEffect)(() => {
-			if (!open) return;
-			const outside = (event) => {
-				if (!detailsRef.current?.contains(event.target) && !buttonRef.current?.contains(event.target)) setOpen(false);
-			};
-			const escape$1 = (event) => {
-				if (event.key === "Escape") {
-					event.stopPropagation();
-					setOpen(false);
-					buttonRef.current?.focus();
-				}
-			};
-			document.addEventListener("pointerdown", outside);
-			window.addEventListener("keydown", escape$1, { capture: true });
-			return () => {
-				document.removeEventListener("pointerdown", outside);
-				window.removeEventListener("keydown", escape$1, { capture: true });
-			};
-		}, [open]);
-		if (!currentCloudId) return null;
-		const showDetails = () => {
-			setOpen((value) => !value);
-		};
-		const busy = status.pending || slow && working || !status.lastSyncedAt;
-		const visualState = status.phase === "conflict" || status.phase === "error" ? status.phase : busy ? "pending" : "synced";
-		const label = status.phase === "conflict" ? "阅读进度有冲突" : status.phase === "error" ? "暂未连接云端" : status.phase === "syncing" && slow ? status.pending ? "正在同步进度…" : "正在检查云端进度…" : status.pending ? "进度已存本机，待同步" : status.lastSyncedAt ? "进度已同步" : "正在检查云端进度";
-		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "dnr-sync-control",
-				"data-sync-state": visualState,
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-					ref: buttonRef,
-					type: "button",
-					className: `dnr-sync-button ${slow && working ? "is-syncing" : ""}`,
-					"aria-label": "同步详情",
-					title: label,
-					"aria-expanded": open,
-					"aria-haspopup": "dialog",
-					onClick: showDetails,
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
-						className: "dnr-sync-cloud",
-						viewBox: "0 0 24 24",
-						width: "18",
-						height: "18",
-						fill: "none",
-						stroke: "currentColor",
-						strokeWidth: "1.6",
-						strokeLinecap: "round",
-						strokeLinejoin: "round",
-						"aria-hidden": "true",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M7 19a5 5 0 0 1-1-9.9A6 6 0 0 1 17.6 8a5.5 5.5 0 0 1 .9 11H7Z" }), visualState === "synced" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-							className: "dnr-sync-check",
-							d: "m8.5 13 2.3 2.3 4.7-4.7",
-							strokeWidth: "2"
-						}) : visualState === "pending" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("g", {
-							className: "dnr-sync-arrows",
-							strokeWidth: "1.3",
-							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M8.8 12a3.5 3.5 0 0 1 6-1.1L16 12m0-2.5V12h-2.5M15.2 14a3.5 3.5 0 0 1-6 1.1L8 14m0 2.5V14h2.5" })
-						}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("g", {
-							className: "dnr-sync-alert",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M12 10.5v3.5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
-								cx: "12",
-								cy: "16.2",
-								r: ".7",
-								fill: "currentColor",
-								stroke: "none"
-							})]
-						})]
-					}), (status.phase === "error" || status.phase === "conflict") && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { className: "dnr-sync-dot" })]
-				})
-			}),
-			conflict && !open && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-				type: "button",
-				className: "dnr-sync-conflict",
-				onClick: showDetails,
-				children: "阅读进度有冲突 · 选择位置"
-			}),
-			open && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				ref: detailsRef,
-				className: "dnr-sync-details",
-				role: "dialog",
-				"aria-label": "同步详情",
-				children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "dnr-sync-heading",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "阅读进度" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-							type: "button",
-							"aria-label": "关闭同步详情",
-							onClick: () => setOpen(false),
-							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "close" })
-						})]
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-						role: "status",
-						children: label
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: ["最近同步：", status.lastSyncedAt ? new Date(status.lastSyncedAt).toLocaleString("zh-CN", {
-						month: "numeric",
-						day: "numeric",
-						hour: "2-digit",
-						minute: "2-digit"
-					}) : "尚未完成"] }),
-					status.phase === "error" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-						className: "dnr-sync-hint",
-						children: "离线或连接失败。进度已存本机，联网后自动同步。"
-					}),
-					conflict ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-						className: "dnr-sync-hint",
-						children: [
-							"本机：第 ",
-							(progress?.chapterIndex ?? 0) + 1,
-							" 章",
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
-							"云端：第 ",
-							(conflict.payload?.position.chapterIndex ?? 0) + 1,
-							" 章",
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
-							"请选择继续的位置。"
-						]
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "dnr-sync-actions",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-							type: "button",
-							onClick: () => controls.current?.resolve("remote"),
-							children: "采用云端"
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-							type: "button",
-							onClick: () => controls.current?.resolve("local"),
-							children: "保留本机"
-						})]
-					})] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-						type: "button",
-						className: "dnr-sync-retry",
-						disabled: status.phase === "syncing",
-						onClick: () => void controls.current?.run(),
-						children: status.phase === "syncing" ? "正在同步…" : status.phase === "error" ? "重试同步" : "立即同步"
-					})
-				]
-			})
-		] });
-	}
-
-//#endregion
-//#region src/client/cloud/CloudReadingActivity.tsx
-	function CloudReadingActivity({ active: active$1 }) {
-		const { book, panel } = useReader();
-		(0, import_react.useEffect)(() => {
-			const flush = () => {
-				flushReadingActivity();
-			};
-			flush();
-			window.addEventListener("online", flush);
-			window.addEventListener("focus", flush);
-			return () => {
-				window.removeEventListener("online", flush);
-				window.removeEventListener("focus", flush);
-			};
-		}, []);
-		(0, import_react.useEffect)(() => {
-			if (!active$1 || !book || !panel.expanded) return;
-			let lastRecorded = 0;
-			const record = (force = false) => {
-				if (document.visibilityState !== "visible") return;
-				const id$1 = bindings()[book.id], now = Date.now();
-				if (id$1 && (force || now - lastRecorded >= 3e4)) {
-					lastRecorded = now;
-					markCloudBookRead(id$1, now);
-				}
-			};
-			record(true);
-			const wake = () => record();
-			const timer = window.setInterval(wake, 6e4);
-			window.addEventListener("focus", wake);
-			window.addEventListener("dnr-cloud-catalog-updated", wake);
-			document.addEventListener("visibilitychange", wake);
-			return () => {
-				clearInterval(timer);
-				window.removeEventListener("focus", wake);
-				window.removeEventListener("dnr-cloud-catalog-updated", wake);
-				document.removeEventListener("visibilitychange", wake);
-			};
-		}, [
-			active$1,
-			book?.id,
-			panel.expanded
-		]);
-		return null;
-	}
-
-//#endregion
-//#region src/client/host.ts
-/** Request extra space only when the current host exposes the optional API. */
-	async function requestDisplayMode(mode) {
-		if (window.openai?.requestDisplayMode === void 0) {
-			if (mode === "fullscreen" && document.documentElement.requestFullscreen) {
-				if (document.fullscreenElement) await document.exitFullscreen();
-				else await document.documentElement.requestFullscreen();
-				return true;
-			}
-			return false;
-		}
-		await window.openai.requestDisplayMode({ mode });
-		return true;
-	}
-	function notifyReaderHeight() {
-		window.openai?.notifyIntrinsicHeight?.(Math.max(560, document.documentElement.scrollHeight));
-	}
-
-//#endregion
-//#region src/client/useHostTheme.ts
-/** MCP hosts expose their theme; browser panels expose their preferred color scheme. */
-	function useHostTheme() {
-		const readTheme = () => window.openai?.theme ?? (window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-		const [theme, setTheme] = (0, import_react.useState)(readTheme);
-		(0, import_react.useEffect)(() => {
-			const media = window.matchMedia?.("(prefers-color-scheme: dark)");
-			const onMediaChange = () => setTheme(readTheme());
-			const onHostChange = (event) => {
-				const hostTheme = event.detail?.globals?.theme;
-				setTheme(hostTheme ?? readTheme());
-			};
-			media?.addEventListener("change", onMediaChange);
-			window.addEventListener("openai:set_globals", onHostChange);
-			onMediaChange();
-			return () => {
-				media?.removeEventListener("change", onMediaChange);
-				window.removeEventListener("openai:set_globals", onHostChange);
-			};
-		}, []);
-		return theme;
-	}
-
-//#endregion
 //#region src/client/components/FileLoader.tsx
 	function formatBytes(bytes) {
 		if (bytes < 1024) return `${bytes} B`;
@@ -11638,6 +11642,36 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					}) })]
 				})
 			]
+		});
+	}
+
+//#endregion
+//#region src/client/components/LibraryPanel.tsx
+	function LibraryPanel({ onOpened, onBack }) {
+		const [tab, setTab] = (0, import_react.useState)(cloudHosted ? "cloud" : "local");
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
+			className: "dnr-library-panel",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", {
+				className: "dnr-library-tabs",
+				"aria-label": "书库分类",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+					type: "button",
+					"aria-pressed": tab === "cloud",
+					onClick: () => setTab("cloud"),
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "cloud" }), "云端书库"]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+					type: "button",
+					"aria-pressed": tab === "local",
+					onClick: () => setTab("local"),
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "file" }), "本机书籍与导入"]
+				})]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "dnr-library-content",
+				children: tab === "cloud" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudLibrary, {
+					onBack,
+					onOpened
+				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileLoader, { onOpened })
+			})]
 		});
 	}
 
@@ -13043,6 +13077,71 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				})
 			]
 		});
+	}
+
+//#endregion
+//#region src/client/online/cloud-acquisition.ts
+	const MAX_BYTES = 50 * 1024 * 1024;
+	/** Each chapter is a bounded cloud request; no long-lived Worker job or local host is required. */
+	async function acquireCloudBook(result, signal, update, saving) {
+		const status = {
+			id: crypto.randomUUID(),
+			state: "resolving",
+			bookName: result.bookName,
+			completedChapters: 0,
+			totalChapters: 0,
+			retries: 0
+		};
+		update({ ...status });
+		const session = await openOnlineReading({ resultId: result.id }, signal);
+		const parts = [];
+		let bytes = 0;
+		try {
+			status.state = "downloading";
+			status.totalChapters = session.chapters.length;
+			update({ ...status });
+			for (let i$1 = 0; i$1 < session.chapters.length; i$1++) {
+				signal.throwIfAborted();
+				const chapter = await getOnlineChapter(session.id, i$1, signal);
+				const text = `${chapter.title}\n${chapter.paragraphs.join("\n\n")}\n\n`;
+				bytes += new TextEncoder().encode(text).byteLength;
+				if (bytes > MAX_BYTES) throw new Error("抓取后的正文超过 50MB，请选择分卷版本。");
+				parts.push(text);
+				status.completedChapters = i$1 + 1;
+				update({ ...status });
+			}
+			signal.throwIfAborted();
+			saving("正在整理书籍…");
+			const file = new File(parts, [result.bookName.replace(/[\\/:*?"<>|]/g, "_"), ".txt"].join(""), { type: "text/plain" });
+			const parsed = await loadBookFromFile(file);
+			const hash = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", await file.arrayBuffer())), (b) => b.toString(16).padStart(2, "0")).join("");
+			signal.throwIfAborted();
+			saving("正在保存到云端…");
+			const saved = await uploadBookRequest(hash, file, result.bookName, (p$4) => saving(p$4.awaitingServer ? "正在确认云端保存…" : `正在上传 ${Math.round(p$4.loaded / file.size * 100)}%`), signal);
+			const localId = `cloud-${saved.id}`;
+			let warning = "";
+			try {
+				bind(localId, saved.id);
+				await original(localId, file);
+			} catch {
+				warning = "书籍已保存云端，本机离线缓存未完成，请从书库重新打开。";
+			}
+			try {
+				write("catalog", [saved, ...read("catalog", []).filter((b) => b.id !== saved.id)]);
+			} catch {}
+			window.dispatchEvent(new Event("dnr-cloud-catalog-updated"));
+			update({
+				...status,
+				state: "completed"
+			});
+			saving(warning);
+			return {
+				...parsed.book,
+				id: localId
+			};
+		} finally {
+			closeOnlineReading(session.id).catch(() => {});
+		}
 	}
 
 //#endregion
@@ -14902,11 +15001,21 @@ var import_dist = /* @__PURE__ */ __toESM(require_dist());
 		const [searchedSources, setSearchedSources] = (0, import_react.useState)(0);
 		const [searching, setSearching] = (0, import_react.useState)(false);
 		const [error, setError] = (0, import_react.useState)(null);
+		const [savingMessage, setSavingMessage] = (0, import_react.useState)("");
+		const acquisitionController = (0, import_react.useRef)(null);
+		const mounted = (0, import_react.useRef)(true);
 		const [job, setJob] = (0, import_react.useState)(null);
 		const searchController = (0, import_react.useRef)(null);
-		(0, import_react.useEffect)(() => () => searchController.current?.abort(), []);
 		(0, import_react.useEffect)(() => {
-			if (job === null || ![
+			mounted.current = true;
+			return () => {
+				mounted.current = false;
+				searchController.current?.abort();
+				acquisitionController.current?.abort();
+			};
+		}, []);
+		(0, import_react.useEffect)(() => {
+			if (cloudHosted || job === null || ![
 				"queued",
 				"resolving",
 				"downloading"
@@ -14969,10 +15078,38 @@ var import_dist = /* @__PURE__ */ __toESM(require_dist());
 		};
 		const acquire = async (result) => {
 			setError(null);
+			if (!cloudHosted) {
+				try {
+					setJob(await createAcquisition(result.id));
+				} catch (caught) {
+					setError(caught instanceof Error ? caught.message : "无法创建抓取任务。");
+				}
+				return;
+			}
+			const controller = new AbortController();
+			acquisitionController.current = controller;
+			setSavingMessage("");
 			try {
-				setJob(await createAcquisition(result.id));
+				const book = await acquireCloudBook(result, controller.signal, (value) => {
+					if (mounted.current) setJob(value);
+				}, (value) => {
+					if (mounted.current) setSavingMessage(value);
+				});
+				if (!mounted.current) return;
+				await loadOnlineBook(book);
+				if (mounted.current) onOpened();
 			} catch (caught) {
-				setError(caught instanceof Error ? caught.message : "无法创建抓取任务。");
+				if (!mounted.current) return;
+				const message = controller.signal.aborted ? "抓取已取消。" : caught instanceof Error ? caught.message : "加入云端书库失败。";
+				setJob((current) => current ? {
+					...current,
+					state: controller.signal.aborted ? "cancelled" : "failed",
+					error: message
+				} : null);
+				setError(message);
+				setSavingMessage("");
+			} finally {
+				if (acquisitionController.current === controller) acquisitionController.current = null;
 			}
 		};
 		const readOnline = async (result) => {
@@ -14989,6 +15126,10 @@ var import_dist = /* @__PURE__ */ __toESM(require_dist());
 		};
 		const cancel = async () => {
 			if (job === null) return;
+			if (cloudHosted) {
+				acquisitionController.current?.abort();
+				return;
+			}
 			try {
 				await cancelAcquisition(job.id);
 				setJob({
@@ -15080,7 +15221,8 @@ var import_dist = /* @__PURE__ */ __toESM(require_dist());
 					"aria-live": "polite",
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: job.bookName }),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: statusText(job) }),
+						cloudHosted && activeJob && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "请保持当前页面打开；离开此页会取消抓取。" }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: savingMessage || statusText(job) }),
 						job.totalChapters > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 							className: "dnr-acquisition-progress",
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { style: { width: `${percent}%` } })
@@ -15132,7 +15274,7 @@ var import_dist = /* @__PURE__ */ __toESM(require_dist());
 									onClick: () => {
 										acquire(result);
 									},
-									children: "加入书库并阅读"
+									children: cloudHosted ? "加入云端书库并阅读" : "加入书库并阅读"
 								}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
 									href: result.sourceUrl,
@@ -15150,7 +15292,8 @@ var import_dist = /* @__PURE__ */ __toESM(require_dist());
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("aside", {
 					className: "dnr-online-disclaimer",
 					children: [
-						"搜索和抓取请求由本机 Host 直接访问第三方书源；可用性与内容不作保证，请遵守来源网站规则。 内置规则与设计源自 ",
+						cloudHosted ? "搜索和抓取请求由云端服务访问第三方书源；" : "搜索和抓取请求由本机 Host 直接访问第三方书源；",
+						"可用性与内容不作保证，请遵守来源网站规则。 内置规则与设计源自 ",
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
 							href: "https://github.com/freeok/so-novel",
 							target: "_blank",
@@ -15946,10 +16089,11 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 	}
 	function NovelReaderApp() {
 		const { book, panel, settings, progress, setReaderActive, error, loading, retryOnlineChapter, notices, goToChapter } = useReader();
-		const supportsOnline = window.__CODEX_NOVEL_READER_PREVIEW_API__ === true;
+		const supportsLocalOnline = window.__CODEX_NOVEL_READER_PREVIEW_API__ === true;
+		const supportsOnline = cloudHosted || supportsLocalOnline;
 		const hostTheme = useHostTheme();
 		const colorScheme = settings.theme === "light" || settings.theme === "dark" ? settings.theme : hostTheme;
-		const [view, setView] = (0, import_react.useState)(cloudHosted ? "cloud" : "reader");
+		const [view, setView] = (0, import_react.useState)(cloudHosted ? "library" : "reader");
 		const [toolbarTarget, setToolbarTarget] = (0, import_react.useState)(null);
 		const [fanqieVisited, setFanqieVisited] = (0, import_react.useState)(false);
 		(0, import_react.useEffect)(() => {
@@ -16014,16 +16158,16 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 		const showReader = book !== null && view === "reader";
 		const toolsVisible = view !== "reader" || settings.keepNavigationVisible || panel.toolsVisible;
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
-			className: `dnr-shell dnr-theme-${settings.theme} ${toolsVisible ? "" : "is-immersive"} ${settings.keepNavigationVisible ? "is-navigation-pinned" : ""}`,
+			className: `dnr-shell dnr-theme-${settings.theme} ${toolsVisible ? "" : "is-immersive"} ${settings.keepNavigationVisible ? "is-navigation-pinned" : ""} ${showReader ? "" : "is-panel-view"}`,
 			"data-color-scheme": colorScheme,
 			"aria-label": "Codex 小说阅读器",
 			children: [
-				(book !== null || view === "fanqie") && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "dnr-top-dock",
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "dnr-top-controls",
 						children: [
-							supportsOnline && (book !== null || view === "fanqie") && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", {
+							supportsLocalOnline && (book !== null || view === "fanqie") && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", {
 								className: "dnr-library-switch",
 								"aria-label": "书库来源",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
@@ -16038,7 +16182,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "library" }), "番茄小说"]
 								})]
 							}),
-							book !== null && view !== "fanqie" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							view !== "fanqie" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 								className: "dnr-toolbar-dock",
 								children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", {
 									className: "dnr-toolbar",
@@ -16046,22 +16190,34 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 									children: [
 										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 											type: "button",
-											onClick: () => setView("cloud"),
-											title: "云端书库",
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "globe" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "云书库" })]
+											"aria-label": "书库",
+											title: "书库",
+											className: view === "library" ? "is-active" : "",
+											onClick: () => setView("library"),
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "library" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "书库" })]
 										}),
 										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 											type: "button",
 											"aria-label": "目录",
 											title: "目录",
+											disabled: book === null,
 											className: view === "toc" ? "is-active" : "",
 											onClick: () => setView(view === "toc" ? "reader" : "toc"),
 											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "toc" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "目录" })]
 										}),
+										supportsOnline && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+											type: "button",
+											"aria-label": "在线搜书",
+											title: "在线搜书",
+											className: view === "online" ? "is-active" : "",
+											onClick: () => setView(view === "online" ? "reader" : "online"),
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "globe" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "搜书" })]
+										}),
 										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 											type: "button",
-											"aria-label": "搜索",
-											title: "搜索",
+											"aria-label": "书内搜索",
+											title: "书内搜索",
+											disabled: book === null,
 											className: view === "search" ? "is-active" : "",
 											onClick: () => setView(view === "search" ? "reader" : "search"),
 											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "search" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "搜索" })]
@@ -16073,21 +16229,6 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 											className: view === "settings" ? "is-active" : "",
 											onClick: () => setView(view === "settings" ? "reader" : "settings"),
 											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "settings" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "设置" })]
-										}),
-										supportsOnline && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-											type: "button",
-											"aria-label": "在线搜书",
-											title: "在线搜书",
-											onClick: () => setView("online"),
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "globe" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "搜书" })]
-										}),
-										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-											type: "button",
-											"aria-label": "更换文件",
-											title: "更换文件",
-											className: view === "file" ? "is-active" : "",
-											onClick: () => setView(view === "file" ? "reader" : "file"),
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "file" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "文件" })]
 										}),
 										window.openai?.requestDisplayMode && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 											type: "button",
@@ -16117,14 +16258,14 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudSync, {}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudReadingActivity, { active: showReader }),
-				view !== "cloud" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(UploadStatus, {
+				view !== "library" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(UploadStatus, {
 					compact: true,
-					onOpen: () => setView("cloud")
+					onOpen: () => setView("library")
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", {
 					className: "dnr-main",
 					children: [
-						view === "cloud" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudLibrary, {
+						(view === "library" || book === null && view === "reader") && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LibraryPanel, {
 							onBack: () => setView("reader"),
 							onOpened: () => setView("reader")
 						}),
@@ -16153,30 +16294,13 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 								toolbarTarget
 							})
 						}),
-						book === null && view !== "cloud" && view !== "online" && view !== "fanqie" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileLoader, {
-							onBrowseCloud: () => setView("cloud"),
-							onOpened: () => setView("reader"),
-							...supportsOnline ? {
-								onBrowseOnline: () => setView("online"),
-								onBrowseFanqie: () => setView("fanqie")
-							} : {}
-						}),
-						book !== null && view === "file" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileLoader, {
-							onBrowseCloud: () => setView("cloud"),
-							compact: true,
-							onOpened: () => setView("reader"),
-							...supportsOnline ? {
-								onBrowseOnline: () => setView("online"),
-								onBrowseFanqie: () => setView("fanqie")
-							} : {}
-						}),
 						book !== null && view === "toc" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableOfContents, { onSelect: () => setView("reader") }),
 						book !== null && view === "search" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SearchPanel, {
 							query: searchQuery,
 							onQueryChange: setSearchQuery,
 							onSelect: () => setView("reader")
 						}),
-						book !== null && view === "settings" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, {}),
+						view === "settings" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, {}),
 						showReader && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: `dnr-reading-grid ${settings.tocPosition === "left" ? "has-toc" : ""}`,
 							children: [settings.tocPosition === "left" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableOfContents, { embedded: true }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ReaderBody, {
@@ -16281,9 +16405,9 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
   .dnr-top-dock:hover .dnr-top-controls, .dnr-top-dock:has(:focus-visible) .dnr-top-controls { transform: translateY(0); opacity: 1; pointer-events: auto; box-shadow: 0 5px 12px var(--dnr-line); }
   .dnr-top-dock:hover::after, .dnr-top-dock:has(:focus-visible)::after { opacity: 0; }
 }
-.dnr-shell.is-navigation-pinned .dnr-top-dock { height: auto; flex-basis: auto; }
-.dnr-shell.is-navigation-pinned .dnr-top-dock::after { display: none; }
-.dnr-shell.is-navigation-pinned .dnr-top-controls { position: relative; transform: none; opacity: 1; pointer-events: auto; }
+.dnr-shell:is(.is-navigation-pinned, .is-panel-view) .dnr-top-dock { height: auto; flex-basis: auto; }
+.dnr-shell:is(.is-navigation-pinned, .is-panel-view) .dnr-top-dock::after { display: none; }
+.dnr-shell:is(.is-navigation-pinned, .is-panel-view) .dnr-top-controls { position: relative; transform: none; opacity: 1; pointer-events: auto; }
 .dnr-toolbar-dock { position: relative; z-index: 4; height: 46px; flex: 0 0 46px; overflow: hidden; background: var(--dnr-bg); transition: height 180ms, flex-basis 180ms; }
 .dnr-toolbar { height: 46px; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 3px; padding: 5px 10px; border-bottom: 1px solid var(--dnr-line); }
 .dnr-toolbar button { min-width: 0; height: 35px; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 0 4px; border: 0; border-radius: 8px; background: transparent; color: var(--dnr-muted); transition: background 140ms, color 140ms; }
@@ -16574,6 +16698,12 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 @container (max-width:400px) { .dnr-fanqie-navigation button { flex:1; padding:0 4px; } .dnr-fanqie-navigation button svg, .dnr-fanqie-sync span { display:none; } }
 @media (prefers-reduced-motion:reduce) { .dnr-fanqie-sync.is-syncing svg { animation:none; } }
 
+.dnr-library-panel { height: 100%; min-height: 0; display: flex; flex-direction: column; }
+.dnr-library-tabs { display: flex; flex-shrink: 0; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--dnr-line); }
+.dnr-library-tabs button { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border: 1px solid var(--dnr-line); border-radius: 8px; background: var(--dnr-bg); color: var(--dnr-muted); }
+.dnr-library-tabs button[aria-pressed="true"] { color: var(--dnr-text); background: var(--dnr-accent-soft); }
+.dnr-library-tabs svg { width: 16px; height: 16px; }
+.dnr-library-content { flex: 1; min-height: 0; }
 .dnr-cloud-library { height:100%; overflow:auto; padding:24px clamp(16px,5vw,48px) 60px; max-width:900px; margin:auto; }
 .dnr-cloud-library header { display:flex; align-items:center; justify-content:space-between; color:var(--dnr-muted); font-size:10px; letter-spacing:.12em; }
 .dnr-cloud-library h1 { font:500 clamp(26px,5vw,38px)/1.3 Georgia,serif; margin:32px 0 12px; }

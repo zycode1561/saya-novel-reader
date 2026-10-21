@@ -6,6 +6,9 @@ Private Sites companion for the local Codex novel reader. This deployment is a *
 
 - Original TXT, Markdown, EPUB uploads up to 50 MB, addressed and verified by SHA-256.
 - R2 stores original bytes; D1 stores the catalog and reading progress, with legacy bookmark data retained for sync compatibility.
+- Toolbar separates the library (cloud files and local import), chapter directory, online source search, in-book search and settings. The globe opens online search; the library icon owns uploaded cloud data.
+- Online search, TOCs, chapter content and source management run on this Site without a desktop bridge. Source settings use D1 with revision checks; temporary search results, reading sessions and rule-test handles use D1 metadata and R2 payloads so requests can run on different Workers.
+- Adding a search result to the cloud library fetches chapters on the current page, shows progress/cancellation, validates the 50 MB limit and uploads the assembled TXT through the existing SHA-256 file route. Keep that page open while fetching; leaving cancels unfinished work.
 - Shared reader bundle from `../codex-novel-reader`, preserving chapter and paragraph parsing.
 - IndexedDB caches opened originals and reader data; service worker caches only the reader shell. API data is never put in the HTTP cache. Offline copies remain on the device.
 - Durable client progress journal, optimistic revision checks, explicit conflict choices, idempotent operation IDs.
@@ -23,7 +26,7 @@ Private Sites companion for the local Codex novel reader. This deployment is a *
 
 Run the Sites dependency installer, `npm run db:generate` for new schema changes, and the Sites build helper. Apply generated migrations to local D1 before `npm run dev`. Do not replay existing migrations. The local preview simulates sign-in; production authentication is enforced by Sites.
 
-To refresh the reader bundle: build the sibling reader and run its `.code/build-cloud-reader.mjs`. Then rebuild this Site. Do not edit generated public/reader/reader.js directly.
+To refresh the reader bundle: build the sibling reader and run its `.code/build-cloud-reader.mjs`. For online engine changes, also run `node .code/build-cloud-online.mjs` in the sibling reader. Then rebuild this Site. Do not edit generated public/reader/reader.js directly.
 
 API integration check: `node .code/api-check.mjs` against the local preview. It uses a synthetic TXT only. Reader sync unit tests live in the sibling reader `tests/cloud-sync.test.ts`.
 
@@ -32,3 +35,5 @@ API integration check: `node .code/api-check.mjs` against the local preview. It 
 Open the deployed URL on the phone and sign in with the owning ChatGPT account. Open each book online once to cache it for offline reading. Upload is explicit; no automatic scanning or upload of local books. Older local entries need their original file reselected for first upload. Reader display preferences remain device-local.
 
 Keep the cloud server and local reader's parser versions aligned when changing parsing. This first release does not synchronize with third-party novel app accounts, delete cloud books, or offer shared libraries.
+
+Online route integration tests: `../codex-novel-reader/node_modules/.bin/vitest run --config .code/online-tests.config.ts`. They use an in-memory database and synthetic source responses; they do not touch the live library.

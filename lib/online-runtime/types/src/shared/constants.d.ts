@@ -1,0 +1,20 @@
+import type { ChapterPrefetchCount, PanelPreferences, ReaderSettings, ReaderShortcut } from './types.ts';
+export declare const MIN_PANEL_WIDTH = 280;
+export declare const MAX_PANEL_WIDTH = 600;
+export declare const DEFAULT_PANEL_WIDTH = 420;
+export declare const DEFAULT_LAUNCHER_Y_RATIO = 0.43;
+export declare const LAUNCHER_DRAG_THRESHOLD_PX = 5;
+export declare const LAUNCHER_EDGE_PADDING_PX = 8;
+export declare const LARGE_FILE_BYTES: number;
+export declare const MAX_FILE_BYTES: number;
+export declare const DEFAULT_TOGGLE_SHORTCUT: ReaderShortcut;
+export declare const DEFAULT_SETTINGS: ReaderSettings;
+export declare function normalizePrefetchChapters(value: unknown): ChapterPrefetchCount;
+export declare const DEFAULT_PANEL: PanelPreferences;
+export declare const STORAGE_KEYS: {
+    readonly settings: "codex-novel-reader:settings:v1";
+    readonly panel: "codex-novel-reader:panel:v1";
+    readonly progress: "codex-novel-reader:progress:v1";
+    readonly bookmarks: "codex-novel-reader:bookmarks:v1";
+    readonly recents: "codex-novel-reader:recents:v1";
+};

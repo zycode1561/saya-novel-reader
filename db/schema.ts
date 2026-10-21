@@ -8,3 +8,9 @@ export const progress = sqliteTable('progress', {
   id: text('id').primaryKey().references(() => books.id), revision: integer('revision').notNull().default(0),
   payload: text('payload'), operation: text('operation'), updatedAt: integer('updated_at').notNull().default(0),
 });
+export const onlineRules = sqliteTable('online_rules', {
+  id: text('id').primaryKey(), payload: text('payload').notNull(), revision: integer('revision').notNull().default(0),
+});
+export const onlineRecords = sqliteTable('online_records', {
+  id: text('id').primaryKey(), kind: text('kind').notNull(), expiresAt: integer('expires_at').notNull(),
+});
