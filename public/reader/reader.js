@@ -11707,6 +11707,81 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	}
 
 //#endregion
+//#region src/client/useChapterTransition.ts
+/** Hold the outgoing viewport until the incoming chapter has been paginated. */
+	function useChapterTransition(scroller, onSettled) {
+		const active$1 = (0, import_react.useRef)(null);
+		const settled = (0, import_react.useRef)(onSettled);
+		settled.current = onSettled;
+		const cancel = (0, import_react.useCallback)(() => {
+			const turn = active$1.current;
+			if (!turn) return;
+			clearTimeout(turn.timer);
+			if (turn.onEnd) scroller.current?.removeEventListener("animationend", turn.onEnd);
+			turn.snapshot?.remove();
+			turn.stage.classList.remove("is-chapter-changing", "is-chapter-animating");
+			turn.stage.style.removeProperty("--dnr-chapter-direction");
+			active$1.current = null;
+		}, [scroller]);
+		const begin = (0, import_react.useCallback)((bookId, chapterIndex, direction) => {
+			const container = scroller.current, stage = container?.parentElement;
+			if (!container || !stage || active$1.current) return false;
+			let snapshot = null;
+			if (!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+				snapshot = container.cloneNode(true);
+				snapshot.classList.add("dnr-chapter-snapshot");
+				snapshot.setAttribute("aria-hidden", "true");
+				snapshot.setAttribute("inert", "");
+				for (const element of snapshot.querySelectorAll("[id], [data-pindex]")) {
+					element.removeAttribute("id");
+					element.removeAttribute("data-pindex");
+				}
+				stage.append(snapshot);
+				snapshot.scrollLeft = container.scrollLeft;
+				snapshot.scrollTop = container.scrollTop;
+			}
+			stage.style.setProperty("--dnr-chapter-direction", String(direction));
+			stage.classList.add("is-chapter-changing");
+			active$1.current = {
+				bookId,
+				chapterIndex,
+				snapshot,
+				stage,
+				running: false
+			};
+			return true;
+		}, [scroller]);
+		const reveal = (0, import_react.useCallback)((bookId, chapterIndex) => {
+			const turn = active$1.current, container = scroller.current;
+			if (!turn || !container || turn.running || turn.bookId !== bookId || turn.chapterIndex !== chapterIndex) return;
+			const done = () => {
+				if (active$1.current === turn) {
+					cancel();
+					settled.current();
+				}
+			};
+			if (!turn.snapshot || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+				done();
+				return;
+			}
+			turn.running = true;
+			turn.onEnd = (event) => {
+				if (event.target === container && event.animationName === "dnr-chapter-in") done();
+			};
+			container.addEventListener("animationend", turn.onEnd);
+			turn.stage.classList.add("is-chapter-animating");
+			turn.timer = setTimeout(done, 300);
+		}, [cancel, scroller]);
+		(0, import_react.useEffect)(() => cancel, [cancel]);
+		return {
+			active: active$1,
+			begin,
+			reveal,
+			cancel
+		};
+	}
+
+//#endregion
 //#region src/client/components/ReaderBody.tsx
 	function highlighted(text, rawQuery) {
 		const query = rawQuery.trim();
@@ -11769,6 +11844,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		const measureFrameRef = (0, import_react.useRef)(null);
 		const settleTimerRef = (0, import_react.useRef)(null);
 		const restoreKeyRef = (0, import_react.useRef)("");
+		const renderedChapterRef = (0, import_react.useRef)("");
 		const landOnLastPageRef = (0, import_react.useRef)(false);
 		const targetPageRef = (0, import_react.useRef)(null);
 		const restoringRef = (0, import_react.useRef)(false);
@@ -11815,11 +11891,15 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			markParagraphVisible,
 			paged
 		]);
+		const { active: chapterTurnRef, begin: beginChapterTurn, reveal: revealChapter, cancel: cancelChapterTurn } = useChapterTransition(scrollerRef, () => {
+			restoringRef.current = false;
+			updatePosition();
+		});
 		const settlePage = (0, import_react.useCallback)(() => {
 			if (settleTimerRef.current !== null) clearTimeout(settleTimerRef.current);
 			settleTimerRef.current = null;
 			const container = scrollerRef.current;
-			if (!container || !paged || touchRef.current || measureFrameRef.current !== null || restoringRef.current && targetPageRef.current === null) return;
+			if (!container || !paged || touchRef.current || measureFrameRef.current !== null || chapterTurnRef.current !== null || restoringRef.current && targetPageRef.current === null) return;
 			const width = Math.max(1, container.clientWidth);
 			const page = Math.max(0, Math.min(pageTotal(container) - 1, targetPageRef.current ?? Math.round(container.scrollLeft / width)));
 			targetPageRef.current = null;
@@ -11834,7 +11914,11 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				restoringRef.current = false;
 				updatePosition();
 			});
-		}, [paged, updatePosition]);
+		}, [
+			paged,
+			updatePosition,
+			chapterTurnRef
+		]);
 		const scheduleSettle = (0, import_react.useCallback)(() => {
 			if (settleTimerRef.current !== null) clearTimeout(settleTimerRef.current);
 			settleTimerRef.current = setTimeout(settlePage, 180);
@@ -11853,9 +11937,42 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			setPageIndex(target);
 			scheduleSettle();
 		}, [scheduleSettle]);
+		const navigateChapter = (0, import_react.useCallback)((index, lastPage = false) => {
+			const container = scrollerRef.current;
+			if (!container || !book || !chapter || loading || chapterTurnRef.current) return;
+			const target = Math.max(0, Math.min(book.chapters.length - 1, index));
+			if (target === chapter.index) return;
+			if (paged) {
+				const width = Math.max(1, container.clientWidth);
+				const page = Math.max(0, Math.min(pageTotal(container) - 1, targetPageRef.current ?? Math.round(container.scrollLeft / width)));
+				if (Math.abs(container.scrollLeft - page * width) > .5 || container.scrollTop !== 0) container.scrollTo({
+					left: page * width,
+					top: 0,
+					behavior: "instant"
+				});
+				beginChapterTurn(book.id, target, target > chapter.index ? 1 : -1);
+				landOnLastPageRef.current = lastPage;
+			}
+			restoringRef.current = true;
+			if (frameRef.current !== null) {
+				cancelAnimationFrame(frameRef.current);
+				frameRef.current = null;
+			}
+			if (settleTimerRef.current !== null) clearTimeout(settleTimerRef.current);
+			targetPageRef.current = null;
+			goToChapter(target);
+		}, [
+			book,
+			chapter,
+			loading,
+			paged,
+			beginChapterTurn,
+			chapterTurnRef,
+			goToChapter
+		]);
 		const turnPage = (0, import_react.useCallback)((direction) => {
 			const container = scrollerRef.current;
-			if (container === null || book === null || chapter === void 0 || !paged || loading) return;
+			if (container === null || book === null || chapter === void 0 || !paged || loading || chapterTurnRef.current) return;
 			const width = Math.max(1, container.clientWidth);
 			const total = pageTotal(container);
 			const current = Math.max(0, Math.min(total - 1, targetPageRef.current ?? Math.round(container.scrollLeft / width)));
@@ -11864,23 +11981,29 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				scrollToPage(next);
 				return;
 			}
-			if (direction > 0 && chapter.index < book.chapters.length - 1) goToChapter(chapter.index + 1);
-			else if (direction < 0 && chapter.index > 0) {
-				landOnLastPageRef.current = true;
-				goToChapter(chapter.index - 1);
-			} else scrollToPage(current);
+			if (direction > 0 && chapter.index < book.chapters.length - 1) navigateChapter(chapter.index + 1);
+			else if (direction < 0 && chapter.index > 0) navigateChapter(chapter.index - 1, true);
+			else scrollToPage(current);
 		}, [
 			book,
 			chapter,
-			goToChapter,
+			navigateChapter,
 			paged,
 			loading,
-			scrollToPage
+			scrollToPage,
+			chapterTurnRef
 		]);
 		(0, import_react.useEffect)(() => {
-			if (error !== null) landOnLastPageRef.current = false;
-		}, [error]);
-		(0, import_react.useImperativeHandle)(forwardedRef, () => ({ turnPage }), [turnPage]);
+			if (error !== null) {
+				landOnLastPageRef.current = false;
+				cancelChapterTurn();
+				restoringRef.current = false;
+			}
+		}, [error, cancelChapterTurn]);
+		(0, import_react.useImperativeHandle)(forwardedRef, () => ({
+			turnPage,
+			goToChapter: navigateChapter
+		}), [turnPage, navigateChapter]);
 		(0, import_react.useEffect)(() => {
 			const container = scrollerRef.current;
 			if (!container) return;
@@ -11915,6 +12038,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			const container = scrollerRef.current;
 			if (container === null || book === null || progress === null || chapter === void 0) return;
 			if (book.onlineReading && loading) return;
+			if (!container.clientWidth) return;
 			const width = Math.max(1, container.clientWidth);
 			if (width !== pageWidth) {
 				restoringRef.current = true;
@@ -11925,6 +12049,30 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				restoreKeyRef.current = "";
 				setPageWidth(width);
 				return;
+			}
+			const contentKey = `${book.id}:${chapter.id}`;
+			const turn = chapterTurnRef.current;
+			if (turn && (!paged || turn.bookId !== book.id || turn.chapterIndex !== chapter.index) && !loading && renderedChapterRef.current !== contentKey) {
+				cancelChapterTurn();
+				landOnLastPageRef.current = false;
+			}
+			if (renderedChapterRef.current !== contentKey) {
+				renderedChapterRef.current = contentKey;
+				restoringRef.current = true;
+				if (frameRef.current !== null) {
+					cancelAnimationFrame(frameRef.current);
+					frameRef.current = null;
+				}
+				if (settleTimerRef.current !== null) clearTimeout(settleTimerRef.current);
+				const total = paged ? pageTotal(container) : 1;
+				const firstPage = paged && landOnLastPageRef.current ? total - 1 : 0;
+				if (total !== pageCount) setPageCount(total);
+				container.scrollTo({
+					left: firstPage * width,
+					top: 0,
+					behavior: "instant"
+				});
+				setPageIndex(firstPage);
 			}
 			if (measureFrameRef.current !== null) cancelAnimationFrame(measureFrameRef.current);
 			measureFrameRef.current = requestAnimationFrame(() => {
@@ -12000,11 +12148,13 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				restoreKeyRef.current = restoreKey;
 				if (pendingParagraph !== null) clearPendingParagraph();
 				if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
-				if (paged) {
+				if (paged) if (chapterTurnRef.current) revealChapter(book.id, chapter.index);
+				else {
 					restoringRef.current = false;
 					updatePosition();
 					scheduleSettle();
-				} else frameRef.current = requestAnimationFrame(() => {
+				}
+				else frameRef.current = requestAnimationFrame(() => {
 					restoringRef.current = false;
 					updatePosition();
 				});
@@ -12036,7 +12186,10 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			layoutRevision,
 			pageCount,
 			scheduleSettle,
-			updatePosition
+			updatePosition,
+			chapterTurnRef,
+			revealChapter,
+			cancelChapterTurn
 		]);
 		(0, import_react.useEffect)(() => () => {
 			if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
@@ -12175,7 +12328,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 							className: "dnr-empty-small",
 							children: "本章没有可显示的正文。"
 						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("footer", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "本章完" }) })
+						!paged && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("footer", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "本章完" }) })
 					]
 				}), paged && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "dnr-page-snap-rail",
@@ -15486,6 +15639,10 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 		const [searchQuery, setSearchQuery] = (0, import_react.useState)("");
 		const [hostNotice, setHostNotice] = (0, import_react.useState)(null);
 		const readerBodyRef = (0, import_react.useRef)(null);
+		const navigateChapter = (0, import_react.useCallback)((index) => {
+			if (readerBodyRef.current) readerBodyRef.current.goToChapter(index);
+			else goToChapter(index);
+		}, [goToChapter]);
 		const progressSnapshot = (0, import_react.useMemo)(() => book !== null && progress !== null ? calculateProgress(book, progress) : {
 			chapterPercent: 0,
 			bookPercent: 0
@@ -15508,19 +15665,19 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 				if (event.key === "ArrowLeft") {
 					event.preventDefault();
 					if (settings.pageMode === "paged") readerBodyRef.current?.turnPage(-1);
-					else goToChapter(progress.chapterIndex - 1);
+					else navigateChapter(progress.chapterIndex - 1);
 				}
 				if (event.key === "ArrowRight") {
 					event.preventDefault();
 					if (settings.pageMode === "paged") readerBodyRef.current?.turnPage(1);
-					else goToChapter(progress.chapterIndex + 1);
+					else navigateChapter(progress.chapterIndex + 1);
 				}
 			};
 			window.addEventListener("keydown", onKeyDown, { capture: true });
 			return () => window.removeEventListener("keydown", onKeyDown, { capture: true });
 		}, [
 			book,
-			goToChapter,
+			navigateChapter,
 			progress,
 			settings.pageMode,
 			view
@@ -15732,7 +15889,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 							type: "button",
-							onClick: () => goToChapter(currentChapter - 1),
+							onClick: () => navigateChapter(currentChapter - 1),
 							disabled: currentChapter <= 0,
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "chevron-left" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "上一章" })]
 						}),
@@ -15754,7 +15911,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 							type: "button",
-							onClick: () => goToChapter(currentChapter + 1),
+							onClick: () => navigateChapter(currentChapter + 1),
 							disabled: currentChapter >= book.chapters.length - 1,
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "下一章" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "chevron-right" })]
 						})
@@ -15875,6 +16032,12 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 }
 .dnr-reader-article[data-page-mode="paged"] header, .dnr-reader-article[data-page-mode="paged"] footer { break-inside: avoid-column; }
 .dnr-page-number { position: absolute; z-index: 2; right: 12px; bottom: 8px; padding: 2px 6px; border-radius: 4px; background: var(--dnr-reading-bg); color: color-mix(in srgb, var(--dnr-reading-text) 55%, transparent); font-size: 11px; font-variant-numeric: tabular-nums; pointer-events: none; }
+.dnr-chapter-snapshot { position: absolute; inset: 0; z-index: 3; overflow: hidden; scroll-snap-type: none; scroll-behavior: auto; pointer-events: none; }
+.dnr-reader-stage.is-chapter-changing > .dnr-reader-scroll { pointer-events: none; }
+.dnr-reader-stage.is-chapter-animating > .dnr-reader-scroll { will-change: transform; animation: dnr-chapter-in 220ms cubic-bezier(.22,.61,.36,1) both; }
+.dnr-reader-stage.is-chapter-animating > .dnr-chapter-snapshot { animation-name: dnr-chapter-out; }
+@keyframes dnr-chapter-in { from { transform: translateX(calc(var(--dnr-chapter-direction) * 100%)); } to { transform: translateX(0); } }
+@keyframes dnr-chapter-out { from { transform: translateX(0); } to { transform: translateX(calc(var(--dnr-chapter-direction) * -100%)); } }
 
 .dnr-toc { height: 100%; display: flex; flex-direction: column; padding: 16px; overflow: hidden; background: var(--dnr-bg); }
 .dnr-toc--embedded { border-right: 1px solid var(--dnr-line); padding: 12px 8px; background: var(--dnr-surface); }
