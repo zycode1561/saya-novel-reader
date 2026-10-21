@@ -11573,6 +11573,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		const landOnLastPageRef = (0, import_react.useRef)(false);
 		const targetPageRef = (0, import_react.useRef)(null);
 		const restoringRef = (0, import_react.useRef)(false);
+		const preserveAnchorRef = (0, import_react.useRef)(false);
 		const touchRef = (0, import_react.useRef)(null);
 		const pointerRef = (0, import_react.useRef)(null);
 		const suppressClickUntilRef = (0, import_react.useRef)(0);
@@ -11590,7 +11591,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		const updatePosition = (0, import_react.useCallback)(() => {
 			frameRef.current = null;
 			const container = scrollerRef.current;
-			if (container === null || restoringRef.current) return;
+			if (container === null || restoringRef.current || paged && preserveAnchorRef.current) return;
 			if (paged && Math.abs(container.scrollLeft / Math.max(1, container.clientWidth) - Math.round(container.scrollLeft / Math.max(1, container.clientWidth))) > .005) return;
 			const bounds = container.getBoundingClientRect();
 			const elements = Array.from(container.querySelectorAll("[data-pindex]"));
@@ -11642,6 +11643,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		const scrollToPage = (0, import_react.useCallback)((page) => {
 			const container = scrollerRef.current;
 			if (!container) return;
+			preserveAnchorRef.current = false;
 			const target = Math.max(0, Math.min(pageTotal(container) - 1, page));
 			targetPageRef.current = target;
 			container.scrollTo({
@@ -11756,6 +11758,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				touchRef.current = null;
 				if (settleTimerRef.current !== null) clearTimeout(settleTimerRef.current);
 				if (paged && landOnLastPageRef.current) {
+					preserveAnchorRef.current = false;
 					const last = total - 1;
 					landOnLastPageRef.current = false;
 					targetPageRef.current = last;
@@ -11772,6 +11775,12 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					const fallback = paragraphs.find((paragraph) => paragraph.index >= targetIndex);
 					const target = exact ?? (fallback === void 0 ? null : container.querySelector(`[data-pindex="${fallback.index}"]`));
 					if (paged) {
+						preserveAnchorRef.current = true;
+						anchorRef.current = {
+							chapterId: chapter.id,
+							paragraphIndex: targetIndex,
+							offset: anchor?.offset ?? 0
+						};
 						const bounds = container.getBoundingClientRect();
 						const rect = target === null ? null : textRect(target, anchor?.offset ?? 0) ?? target.getBoundingClientRect();
 						const targetLeft = rect === null ? 0 : container.scrollLeft + rect.left - bounds.left;
@@ -11886,6 +11895,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				return;
 			}
 			const dx = touch.clientX - start.x, dy = touch.clientY - start.y;
+			if (Math.abs(dx) > 8) preserveAnchorRef.current = false;
 			if (Math.abs(dx) > 8 || Math.abs(dy) > 8 || Date.now() - start.started >= 450) suppressClickUntilRef.current = Date.now() + 500;
 			if (!start.cancelled && Math.abs(dx) >= 40 && Math.abs(dx) > Math.abs(dy) * 1.3 && !selectedText(event.currentTarget) && !loading) {
 				targetPageRef.current = start.page;
@@ -11908,6 +11918,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				},
 				onWheel: () => {
 					targetPageRef.current = null;
+					preserveAnchorRef.current = false;
 				},
 				onPointerDown: (event) => {
 					if (event.pointerType === "mouse" || event.pointerType === "pen") pointerRef.current = {
