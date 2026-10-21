@@ -18,7 +18,7 @@ async function handle(request:Request):Promise<Response> {
         const found=await engine.search(query,signal);
         const results=await Promise.all(found.resolved.map(async result=>{
           result.keyword=query;const id=await saveRecord('result',pack(result),15*60_000);return {...result.public,id};
-        }));return json({results,failedSources:found.failedSources,searchedSources:found.searchedSources});
+        }));return json({query,results,failedSources:found.failedSources,searchedSources:found.searchedSources});
       }
       if(parts[0]==='readings') {
         if(parts.length===1&&method==='POST') {
