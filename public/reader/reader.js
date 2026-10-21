@@ -7305,6 +7305,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		firstLineIndent: true,
 		pageMode: "scroll",
 		footerDisplay: "chapter-title",
+		keepNavigationVisible: false,
 		prefetchChapters: 2,
 		toggleShortcut: DEFAULT_TOGGLE_SHORTCUT
 	};
@@ -9449,6 +9450,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		return {
 			...DEFAULT_SETTINGS,
 			...stored,
+			keepNavigationVisible: typeof stored.keepNavigationVisible === "boolean" ? stored.keepNavigationVisible : globalThis.matchMedia?.("(max-width: 600px)").matches ?? false,
 			prefetchChapters: normalizePrefetchChapters(stored.prefetchChapters)
 		};
 	}
@@ -10250,13 +10252,16 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			this.state.operation = crypto.randomUUID();
 			this.save();
 		}
-		async sync(signal) {
+		async sync(signal, keepalive = false) {
 			if (this.busy || this.state.conflict) return null;
 			this.busy = true;
 			try {
 				const pending = this.state.pending;
 				const operation = this.state.operation;
-				const options = signal ? { signal } : {};
+				const options = {
+					...signal ? { signal } : {},
+					...keepalive ? { keepalive: true } : {}
+				};
 				const response = pending ? await api(`/books/${this.id}/progress`, {
 					...options,
 					method: "PUT",
@@ -10276,6 +10281,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				this.state.revision = snapshot.revision;
 				if (snapshot.payload) this.state.baseline = signature(snapshot.payload);
 				if (pending && operation === this.state.operation) this.state.pending = null;
+				if (!this.state.pending) this.state.lastSyncedAt = Date.now();
 				this.save();
 				return this.state.pending ? null : snapshot;
 			} finally {
@@ -11018,107 +11024,364 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	}
 
 //#endregion
+//#region src/client/components/Icon.tsx
+var import_react_dom$1 = /* @__PURE__ */ __toESM(require_react_dom());
+	const paths = {
+		cloud: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M7 18a5 5 0 0 1-1-9.9A6 6 0 0 1 17.6 7a5.5 5.5 0 0 1 .9 11H7Z" }),
+		library: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M4 4v16M8 4v16M12 4v16M16 5l4 14" }) }),
+		sync: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M20 7v5h-5M4 17v-5h5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M6.1 7a7 7 0 0 1 11.6-1.4L20 8M4 16l2.3 2.4A7 7 0 0 0 17.9 17" })] }),
+		pip: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+			x: "3",
+			y: "4",
+			width: "18",
+			height: "16",
+			rx: "2"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+			x: "12",
+			y: "12",
+			width: "7",
+			height: "6",
+			rx: "1"
+		})] }),
+		fullscreen: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5" }),
+		book: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M4 5.5A2.5 2.5 0 0 1 6.5 3H11v15H6.5A2.5 2.5 0 0 0 4 20.5z" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M20 5.5A2.5 2.5 0 0 0 17.5 3H13v15h4.5a2.5 2.5 0 0 1 2.5 2.5z" })] }),
+		"chevron-left": /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "m15 18-6-6 6-6" }),
+		"chevron-right": /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "m9 18 6-6-6-6" }),
+		close: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "m18 6-12 12" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "m6 6 12 12" })] }),
+		file: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M14 2v6h6" }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M8 13h8M8 17h6" })
+		] }),
+		bookmark: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M6 3h12v18l-6-4-6 4z" }),
+		search: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+			cx: "11",
+			cy: "11",
+			r: "7"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "m20 20-4-4" })] }),
+		settings: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+			cx: "12",
+			cy: "12",
+			r: "3"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.1A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.1A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.1A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.13.37.34.72.6 1 .3.3.68.46 1.1.48h.1v4h-.1A1.7 1.7 0 0 0 19.4 15z" })] }),
+		toc: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M9 6h11M9 12h11M9 18h11" }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+				cx: "4",
+				cy: "6",
+				r: "1"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+				cx: "4",
+				cy: "12",
+				r: "1"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+				cx: "4",
+				cy: "18",
+				r: "1"
+			})
+		] }),
+		trash: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M3 6h18M8 6V4h8v2M19 6l-1 15H6L5 6M10 11v6M14 11v6" }) }),
+		panel: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
+			x: "3",
+			y: "3",
+			width: "18",
+			height: "18",
+			rx: "2"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M15 3v18" })] }),
+		clock: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+			cx: "12",
+			cy: "12",
+			r: "9"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M12 7v5l3 2" })] }),
+		menu: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M4 7h16M4 12h16M4 17h16" }) }),
+		globe: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
+			cx: "12",
+			cy: "12",
+			r: "9"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" })] })
+	};
+	function Icon({ name,...props }) {
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
+			viewBox: "0 0 24 24",
+			width: "18",
+			height: "18",
+			fill: "none",
+			stroke: "currentColor",
+			strokeWidth: "1.8",
+			strokeLinecap: "round",
+			strokeLinejoin: "round",
+			"aria-hidden": "true",
+			...props,
+			children: paths[name]
+		});
+	}
+
+//#endregion
 //#region src/client/cloud/CloudSync.tsx
-	function CloudSync() {
+	const initialStatus = {
+		phase: "idle",
+		pending: false,
+		lastSyncedAt: 0
+	};
+	function CloudSync({ toolbarTarget = null }) {
 		const { book, progress, bookmarks } = useReader();
-		const [status, setStatus] = (0, import_react.useState)("");
+		const [status, setStatus] = (0, import_react.useState)(initialStatus);
 		const [conflict, setConflict] = (0, import_react.useState)(null);
-		const session = (0, import_react.useRef)(null);
+		const [open, setOpen] = (0, import_react.useState)(false);
+		const [top, setTop] = (0, import_react.useState)(64);
+		const [slow, setSlow] = (0, import_react.useState)(false);
+		const buttonRef = (0, import_react.useRef)(null);
+		const detailsRef = (0, import_react.useRef)(null);
+		const controls = (0, import_react.useRef)(null);
 		const latest = (0, import_react.useRef)(null);
-		const active$1 = (0, import_react.useRef)(false);
-		const apply = (s) => {
-			if (s?.payload) {
-				latest.current = s.payload;
-				window.dispatchEvent(new CustomEvent("dnr-cloud-position", { detail: {
-					...s.payload,
-					localId: book?.id
-				} }));
-			}
-		};
 		const currentCloudId = book ? bindings()[book.id] : void 0;
+		latest.current = progress ? {
+			position: progress,
+			bookmarks
+		} : null;
 		(0, import_react.useEffect)(() => {
+			setOpen(false);
+			setConflict(null);
+			setSlow(false);
 			if (!book || !currentCloudId) {
-				session.current = null;
-				setStatus("");
+				controls.current = null;
+				setStatus(initialStatus);
 				return;
 			}
-			let disposed = false;
-			active$1.current = false;
+			const localId = book.id;
 			const engine = new SyncSession(currentCloudId);
-			session.current = engine;
-			const run = async () => {
+			const initialSignature = latest.current ? signature(latest.current) : "";
+			let initialized = false, disposed = false;
+			let pendingSince = engine.state.pending ? Date.now() : null;
+			let debounce;
+			let request$2 = null;
+			const publish = (phase) => {
+				if (disposed) return;
+				setConflict(engine.state.conflict);
+				setStatus({
+					phase: engine.state.conflict ? "conflict" : phase,
+					pending: Boolean(engine.state.pending),
+					lastSyncedAt: engine.state.lastSyncedAt ?? 0
+				});
+			};
+			const apply = (snapshot) => {
+				if (!snapshot?.payload) return;
+				latest.current = snapshot.payload;
+				window.dispatchEvent(new CustomEvent("dnr-cloud-position", { detail: {
+					...snapshot.payload,
+					localId
+				} }));
+			};
+			const schedule = () => {
+				clearTimeout(debounce);
+				if (!engine.state.pending || engine.state.conflict || disposed) return;
+				pendingSince ??= Date.now();
+				debounce = setTimeout(() => {
+					run();
+				}, Math.min(1e3, Math.max(0, 5e3 - (Date.now() - pendingSince))));
+			};
+			const run = async (keepalive = false) => {
+				if (disposed || engine.busy || engine.state.conflict) return;
+				clearTimeout(debounce);
+				pendingSince = engine.state.pending ? Date.now() : null;
+				publish("syncing");
+				const abort = new AbortController();
+				request$2 = abort;
+				const timeout = setTimeout(() => abort.abort(), 15e3);
+				let failed = false;
 				try {
-					const snapshot = await engine.sync();
+					const snapshot = await engine.sync(abort.signal, keepalive);
 					if (disposed) return;
 					if (snapshot?.payload && (!latest.current || signature(snapshot.payload) !== signature(latest.current))) apply(snapshot);
-					setConflict(engine.state.conflict);
-					setStatus(engine.state.conflict ? "发现另一设备的阅读进度" : engine.state.pending ? "等待同步" : "已同步");
+					if (!initialized && snapshot && !snapshot.payload && !engine.state.pending && latest.current) engine.queue(latest.current);
+					publish(engine.state.pending ? "pending" : "idle");
 				} catch {
-					if (!disposed) setStatus("离线或连接失败 · 进度已保存在本机");
+					failed = true;
+					if (!disposed) publish("error");
 				} finally {
-					if (!disposed) active$1.current = true;
+					clearTimeout(timeout);
+					if (request$2 === abort) request$2 = null;
+					initialized = true;
+					if (!engine.state.pending) pendingSince = null;
+					if (!disposed && !failed && engine.state.pending) schedule();
 				}
 			};
+			const queue = (payload) => {
+				if (!initialized && !engine.state.pending && signature(payload) === initialSignature) return;
+				const operation = engine.state.operation;
+				engine.queue(payload);
+				if (!engine.state.pending || operation === engine.state.operation) return;
+				publish(engine.busy ? "syncing" : "pending");
+				schedule();
+			};
+			const resolve = (choice) => {
+				const snapshot = engine.resolve(choice);
+				if (choice === "remote") apply(snapshot);
+				publish(engine.state.pending ? "pending" : "idle");
+				if (choice === "local") run();
+			};
+			controls.current = {
+				queue,
+				run,
+				resolve
+			};
+			publish(engine.state.pending ? "pending" : "idle");
 			run();
-			const timer = window.setInterval(() => {
+			const poll = setInterval(() => {
 				if (document.visibilityState === "visible") run();
 			}, 5e3);
 			const wake = () => {
-				run();
+				if (document.visibilityState === "visible") run();
+			};
+			const flush = () => {
+				if (engine.state.pending) run(true);
+			};
+			const visibility = () => {
+				if (document.visibilityState === "hidden") flush();
+				else wake();
 			};
 			window.addEventListener("online", wake);
 			window.addEventListener("focus", wake);
-			document.addEventListener("visibilitychange", wake);
+			window.addEventListener("pagehide", flush);
+			document.addEventListener("visibilitychange", visibility);
 			return () => {
 				disposed = true;
-				clearInterval(timer);
+				controls.current = null;
+				clearInterval(poll);
+				clearTimeout(debounce);
+				request$2?.abort();
 				window.removeEventListener("online", wake);
 				window.removeEventListener("focus", wake);
-				document.removeEventListener("visibilitychange", wake);
+				window.removeEventListener("pagehide", flush);
+				document.removeEventListener("visibilitychange", visibility);
 			};
 		}, [book?.id, currentCloudId]);
 		(0, import_react.useEffect)(() => {
-			if (!progress) return;
-			const payload = {
+			if (progress) controls.current?.queue({
 				position: progress,
 				bookmarks
-			};
-			latest.current = payload;
-			if (active$1.current && session.current) {
-				session.current.queue(payload);
-				if (session.current.state.pending) setStatus("等待同步");
-			}
+			});
 		}, [progress, bookmarks]);
+		const working = status.phase === "pending" || status.phase === "syncing";
+		(0, import_react.useEffect)(() => {
+			if (!working) {
+				setSlow(false);
+				return;
+			}
+			const timer = setTimeout(() => setSlow(true), 2e3);
+			return () => clearTimeout(timer);
+		}, [working]);
+		(0, import_react.useEffect)(() => {
+			if (!open) return;
+			const outside = (event) => {
+				if (!detailsRef.current?.contains(event.target) && !buttonRef.current?.contains(event.target)) setOpen(false);
+			};
+			const escape$1 = (event) => {
+				if (event.key === "Escape") {
+					event.stopPropagation();
+					setOpen(false);
+					buttonRef.current?.focus();
+				}
+			};
+			document.addEventListener("pointerdown", outside);
+			window.addEventListener("keydown", escape$1, { capture: true });
+			return () => {
+				document.removeEventListener("pointerdown", outside);
+				window.removeEventListener("keydown", escape$1, { capture: true });
+			};
+		}, [open]);
 		if (!currentCloudId) return null;
-		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "dnr-cloud-status",
-			role: "status",
-			children: [status, conflict && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
-					"本机：第 ",
-					(progress?.chapterIndex ?? 0) + 1,
-					" 章 · 云端：第 ",
-					(conflict.payload?.position.chapterIndex ?? 0) + 1,
-					" 章。请选择继续的位置。"
-				] }),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-					onClick: () => {
-						apply(session.current.resolve("remote"));
-						setConflict(null);
-						setStatus("已采用云端进度");
-					},
-					children: "采用云端"
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-					onClick: () => {
-						session.current.resolve("local");
-						setConflict(null);
-						setStatus("等待同步本机进度");
-					},
-					children: "保留本机"
-				})
-			] })]
-		});
+		const showDetails = () => {
+			const button = buttonRef.current;
+			const shell = button?.closest(".dnr-shell");
+			if (button && shell) setTop(button.getBoundingClientRect().bottom - shell.getBoundingClientRect().top + 8);
+			setOpen((value) => !value);
+		};
+		const label = status.phase === "conflict" ? "阅读进度有冲突" : status.phase === "error" ? "暂未连接云端" : status.pending ? "进度已存本机，待同步" : status.lastSyncedAt ? "进度已同步" : "正在检查云端进度";
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+			toolbarTarget && (0, import_react_dom$1.createPortal)(/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+				ref: buttonRef,
+				type: "button",
+				className: `dnr-sync-button ${slow && working ? "is-syncing" : ""}`,
+				"aria-label": "同步详情",
+				title: label,
+				"aria-expanded": open,
+				"aria-haspopup": "dialog",
+				onClick: showDetails,
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: slow && working ? "sync" : "cloud" }), (status.phase === "error" || status.phase === "conflict") && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { className: "dnr-sync-dot" })]
+			}), toolbarTarget),
+			conflict && !open && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+				type: "button",
+				className: "dnr-sync-conflict",
+				onClick: showDetails,
+				children: "阅读进度有冲突 · 选择位置"
+			}),
+			open && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				ref: detailsRef,
+				className: "dnr-sync-details",
+				role: "dialog",
+				"aria-label": "同步详情",
+				style: { top },
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "dnr-sync-heading",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "阅读进度" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							"aria-label": "关闭同步详情",
+							onClick: () => setOpen(false),
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "close" })
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						role: "status",
+						children: label
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: ["最近同步：", status.lastSyncedAt ? new Date(status.lastSyncedAt).toLocaleString("zh-CN", {
+						month: "numeric",
+						day: "numeric",
+						hour: "2-digit",
+						minute: "2-digit"
+					}) : "尚未完成"] }),
+					status.phase === "error" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "dnr-sync-hint",
+						children: "离线或连接失败。进度已存本机，联网后自动同步。"
+					}),
+					conflict ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+						className: "dnr-sync-hint",
+						children: [
+							"本机：第 ",
+							(progress?.chapterIndex ?? 0) + 1,
+							" 章",
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
+							"云端：第 ",
+							(conflict.payload?.position.chapterIndex ?? 0) + 1,
+							" 章",
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
+							"请选择继续的位置。"
+						]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "dnr-sync-actions",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							onClick: () => controls.current?.resolve("remote"),
+							children: "采用云端"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							onClick: () => controls.current?.resolve("local"),
+							children: "保留本机"
+						})]
+					})] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						type: "button",
+						className: "dnr-sync-retry",
+						disabled: status.phase === "syncing",
+						onClick: () => void controls.current?.run(),
+						children: status.phase === "syncing" ? "正在同步…" : status.phase === "error" ? "重试同步" : "立即同步"
+					})
+				]
+			})
+		] });
 	}
 
 //#endregion
@@ -11209,99 +11472,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			};
 		}, []);
 		return theme;
-	}
-
-//#endregion
-//#region src/client/components/Icon.tsx
-	const paths = {
-		library: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M4 4v16M8 4v16M12 4v16M16 5l4 14" }) }),
-		sync: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M20 7v5h-5M4 17v-5h5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M6.1 7a7 7 0 0 1 11.6-1.4L20 8M4 16l2.3 2.4A7 7 0 0 0 17.9 17" })] }),
-		pip: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
-			x: "3",
-			y: "4",
-			width: "18",
-			height: "16",
-			rx: "2"
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
-			x: "12",
-			y: "12",
-			width: "7",
-			height: "6",
-			rx: "1"
-		})] }),
-		fullscreen: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5" }),
-		book: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M4 5.5A2.5 2.5 0 0 1 6.5 3H11v15H6.5A2.5 2.5 0 0 0 4 20.5z" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M20 5.5A2.5 2.5 0 0 0 17.5 3H13v15h4.5a2.5 2.5 0 0 1 2.5 2.5z" })] }),
-		"chevron-left": /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "m15 18-6-6 6-6" }),
-		"chevron-right": /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "m9 18 6-6-6-6" }),
-		close: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "m18 6-12 12" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "m6 6 12 12" })] }),
-		file: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M14 2v6h6" }),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M8 13h8M8 17h6" })
-		] }),
-		bookmark: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M6 3h12v18l-6-4-6 4z" }),
-		search: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
-			cx: "11",
-			cy: "11",
-			r: "7"
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "m20 20-4-4" })] }),
-		settings: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
-			cx: "12",
-			cy: "12",
-			r: "3"
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.1A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.1A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.1A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.13.37.34.72.6 1 .3.3.68.46 1.1.48h.1v4h-.1A1.7 1.7 0 0 0 19.4 15z" })] }),
-		toc: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M9 6h11M9 12h11M9 18h11" }),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
-				cx: "4",
-				cy: "6",
-				r: "1"
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
-				cx: "4",
-				cy: "12",
-				r: "1"
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
-				cx: "4",
-				cy: "18",
-				r: "1"
-			})
-		] }),
-		trash: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M3 6h18M8 6V4h8v2M19 6l-1 15H6L5 6M10 11v6M14 11v6" }) }),
-		panel: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("rect", {
-			x: "3",
-			y: "3",
-			width: "18",
-			height: "18",
-			rx: "2"
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M15 3v18" })] }),
-		clock: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
-			cx: "12",
-			cy: "12",
-			r: "9"
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M12 7v5l3 2" })] }),
-		menu: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M4 7h16M4 12h16M4 17h16" }) }),
-		globe: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
-			cx: "12",
-			cy: "12",
-			r: "9"
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" })] })
-	};
-	function Icon({ name,...props }) {
-		return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
-			viewBox: "0 0 24 24",
-			width: "18",
-			height: "18",
-			fill: "none",
-			stroke: "currentColor",
-			strokeWidth: "1.8",
-			strokeLinecap: "round",
-			strokeLinejoin: "round",
-			"aria-hidden": "true",
-			...props,
-			children: paths[name]
-		});
 	}
 
 //#endregion
@@ -11860,7 +12030,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					return;
 				}
 			}
-			updatePanel({
+			if (!settings.keepNavigationVisible) updatePanel({
 				toolsVisible: !panel.toolsVisible,
 				immersive: panel.toolsVisible
 			});
@@ -12321,6 +12491,14 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 							onClick: () => updateSettings({ footerDisplay: item.value }),
 							children: item.label
 						}, item.value))
+					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+					className: "dnr-toggle-row",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "导航栏常驻" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "保持顶部导航和底部章节栏显示，关闭后可点击正文中间切换显隐" })] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+						type: "checkbox",
+						checked: settings.keepNavigationVisible,
+						onChange: (event) => updateSettings({ keepNavigationVisible: event.target.checked })
 					})]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -14491,7 +14669,6 @@ var import_dist = /* @__PURE__ */ __toESM(require_dist());
 
 //#endregion
 //#region src/client/fanqie/api.ts
-var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 	var FanqieApiError = class extends Error {
 		constructor(code, message) {
 			super(message);
@@ -14840,6 +15017,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 
 //#endregion
 //#region src/client/components/FanqieWorkspace.tsx
+	var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 	function readingBook(open, text, index) {
 		return {
 			...buildReadingBook({
@@ -15271,6 +15449,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 		const colorScheme = settings.theme === "light" || settings.theme === "dark" ? settings.theme : hostTheme;
 		const [view, setView] = (0, import_react.useState)(cloudHosted ? "cloud" : "reader");
 		const [toolbarTarget, setToolbarTarget] = (0, import_react.useState)(null);
+		const [syncTarget, setSyncTarget] = (0, import_react.useState)(null);
 		const [fanqieVisited, setFanqieVisited] = (0, import_react.useState)(false);
 		(0, import_react.useEffect)(() => {
 			setReaderActive(view === "reader");
@@ -15329,8 +15508,9 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 		const currentChapterTitle = book?.chapters[currentChapter]?.title ?? "";
 		const alreadyBookmarked = book !== null && progress !== null && bookmarks.some((item) => item.paragraphIndex === progress.paragraphIndex);
 		const showReader = book !== null && view === "reader";
+		const toolsVisible = view !== "reader" || settings.keepNavigationVisible || panel.toolsVisible;
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
-			className: `dnr-shell dnr-theme-${settings.theme} ${panel.toolsVisible ? "" : "is-immersive"}`,
+			className: `dnr-shell dnr-theme-${settings.theme} ${toolsVisible ? "" : "is-immersive"} ${settings.keepNavigationVisible ? "is-navigation-pinned" : ""}`,
 			"data-color-scheme": colorScheme,
 			"aria-label": "Codex 小说阅读器",
 			children: [
@@ -15434,6 +15614,10 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 											title: "全屏",
 											onClick: () => void changeDisplay("fullscreen"),
 											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "fullscreen" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "全屏" })]
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+											className: "dnr-sync-slot",
+											ref: setSyncTarget
 										})
 									]
 								})
@@ -15447,7 +15631,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 					onClick: () => setHostNotice(null),
 					children: hostNotice ?? notices[0]
 				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudSync, {}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudSync, { toolbarTarget: syncTarget }),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudReadingActivity, { active: showReader }),
 				view !== "cloud" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(UploadStatus, {
 					compact: true,
@@ -15612,6 +15796,10 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
   .dnr-top-dock:hover .dnr-top-controls, .dnr-top-dock:has(:focus-visible) .dnr-top-controls { transform: translateY(0); opacity: 1; pointer-events: auto; box-shadow: 0 5px 12px var(--dnr-line); }
   .dnr-top-dock:hover::after, .dnr-top-dock:has(:focus-visible)::after { opacity: 0; }
 }
+.dnr-shell.is-navigation-pinned .dnr-top-dock { height: auto; flex-basis: auto; }
+.dnr-shell.is-navigation-pinned .dnr-top-dock::after { display: none; }
+.dnr-shell.is-navigation-pinned .dnr-top-controls { position: relative; transform: none; opacity: 1; pointer-events: auto; }
+.dnr-top-dock:has(.dnr-sync-button[aria-expanded="true"]) .dnr-top-controls { transform: none; opacity: 1; pointer-events: auto; }
 .dnr-toolbar-dock { position: relative; z-index: 4; height: 46px; flex: 0 0 46px; overflow: hidden; background: var(--dnr-bg); transition: height 180ms, flex-basis 180ms; }
 .dnr-toolbar { height: 46px; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 3px; padding: 5px 10px; border-bottom: 1px solid var(--dnr-line); }
 .dnr-toolbar button { min-width: 0; height: 35px; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 0 4px; border: 0; border-radius: 8px; background: transparent; color: var(--dnr-muted); transition: background 140ms, color 140ms; }
@@ -15899,7 +16087,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-cloud-library h2 { font-size:17px; margin-top:30px; }
 .dnr-cloud-library h2 small { color:var(--dnr-muted); font-weight:400; font-size:12px; }
 .dnr-cloud-library p { color:var(--dnr-muted); line-height:1.8; }
-.dnr-cloud-library button, .dnr-cloud-status button { border:1px solid var(--dnr-line); background:var(--dnr-surface); padding:9px 13px; border-radius:8px; }
+.dnr-cloud-library button { border:1px solid var(--dnr-line); background:var(--dnr-surface); padding:9px 13px; border-radius:8px; }
 .dnr-cloud-library a { color:inherit; margin-left:8px; text-underline-offset:4px; }
 .dnr-cloud-actions { display:flex; gap:10px; margin:24px 0; }
 .dnr-cloud-actions button:first-child { background:var(--dnr-text); color:var(--dnr-bg); }
@@ -15912,8 +16100,23 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-cloud-url { overflow-wrap:anywhere; }
 .dnr-cloud-empty { padding:30px 20px; border:1px dashed var(--dnr-line); color:var(--dnr-muted); border-radius:12px; }
 .dnr-cloud-message { padding:12px; background:var(--dnr-surface); border-radius:8px; }
-.dnr-cloud-status { flex-shrink:0; padding:4px 12px; font-size:10px; color:var(--dnr-muted); border-bottom:1px solid var(--dnr-line); }
-.dnr-cloud-status button { margin:4px; }
+.dnr-sync-slot { min-width: 0; }
+.dnr-sync-slot:empty { display: none; }
+.dnr-toolbar .dnr-sync-button { position: relative; width: 100%; }
+.dnr-sync-dot { position: absolute; top: 6px; right: calc(50% - 10px); width: 5px; height: 5px; border-radius: 50%; background: var(--dnr-error); box-shadow: 0 0 0 2px var(--dnr-bg); }
+.dnr-sync-button.is-syncing svg { animation: dnr-sync-spin 1.2s linear infinite; }
+.dnr-sync-details { position: absolute; z-index: 20; right: 12px; width: min(296px, calc(100% - 24px)); max-height: calc(100% - 90px); overflow: auto; padding: 16px; border: 1px solid var(--dnr-line); border-radius: 12px; background: var(--dnr-bg); box-shadow: 0 8px 30px #0002; color: var(--dnr-text); font-size: 12px; }
+.dnr-sync-heading { display: flex; align-items: center; justify-content: space-between; }
+.dnr-sync-heading strong { font-size: 13px; font-weight: 600; }
+.dnr-sync-heading button { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--dnr-muted); }
+.dnr-sync-details p { margin: 8px 0; }
+.dnr-sync-details small, .dnr-sync-hint { color: var(--dnr-muted); line-height: 1.8; }
+.dnr-sync-retry, .dnr-sync-actions button { min-height: 36px; padding: 7px 12px; border: 1px solid var(--dnr-line); border-radius: 8px; background: var(--dnr-surface); }
+.dnr-sync-retry { width: 100%; margin-top: 14px; }
+.dnr-sync-actions { display: flex; gap: 8px; margin-top: 14px; }
+.dnr-sync-actions button { flex: 1; }
+.dnr-sync-conflict { position: absolute; z-index: 9; right: 12px; bottom: 56px; max-width: calc(100% - 24px); padding: 9px 12px; border: 1px solid var(--dnr-line); border-radius: 10px; color: var(--dnr-text); background: var(--dnr-bg); box-shadow: 0 3px 12px #0001; }
+@media (prefers-reduced-motion: reduce) { .dnr-sync-button.is-syncing svg { animation: none; } }
 .dnr-upload-status { margin:0 0 24px; padding:18px; border:1px solid var(--dnr-line); border-radius:12px; background:var(--dnr-surface); color:var(--dnr-text); }
 .dnr-upload-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
 .dnr-upload-heading > strong { font-size:14px; font-weight:600; }
