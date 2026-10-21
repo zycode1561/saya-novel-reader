@@ -12105,17 +12105,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 								} : {}
 							},
 							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { children: [
-									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-										"第 ",
-										chapter.index + 1,
-										" / ",
-										book.chapters.length,
-										" 章"
-									] }),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: chapter.title }),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", {})
-								] }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("header", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: chapter.title }) }),
 								(grouped.get(chapter.id) ?? []).map((p$4) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 									id: p$4.id,
 									"data-pindex": p$4.index,
@@ -12705,17 +12695,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 						"--dnr-page-width": `${pageWidth}px`
 					},
 					children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-								"第 ",
-								chapter.index + 1,
-								" / ",
-								book.chapters.length,
-								" 章"
-							] }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: chapter.title }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", {})
-						] }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("header", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: chapter.title }) }),
 						paragraphs.map((paragraph) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 							id: paragraph.id,
 							"data-pindex": paragraph.index,
@@ -16406,7 +16386,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-reader-scroll { height: 100%; overflow: auto; overscroll-behavior: contain; scroll-behavior: smooth; }
 .dnr-reader-article {
   --dnr-font-size: 18px; width: min(100%, 760px); min-height: 100%; margin: 0 auto;
-  padding: clamp(24px, 5cqw, 48px) clamp(24px, 6cqw, 56px) 72px;
+  padding: clamp(16px, 3cqw, 24px) clamp(24px, 6cqw, 56px) 72px;
   font-size: var(--dnr-font-size); line-height: 1.9;
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
   line-break: strict; text-spacing-trim: space-all; hanging-punctuation: first last;
@@ -16418,10 +16398,8 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-reader-article[data-font="serif"] { font-family: "Noto Serif SC", "Source Han Serif SC", Georgia, serif; }
 .dnr-reader-article[data-spacing="compact"] { line-height: 1.55; }
 .dnr-reader-article[data-spacing="relaxed"] { line-height: 2.25; }
-.dnr-reader-article header { text-align: left; margin: 0 0 2em; }
-.dnr-reader-article header span { font: 500 11px/1.5 -apple-system, BlinkMacSystemFont, sans-serif; color: color-mix(in srgb, var(--dnr-reading-text) 55%, transparent); letter-spacing: .06em; }
-.dnr-reader-article h1 { margin: .5em 0 .7em; font-size: 1.45em; line-height: 1.45; font-weight: 600; letter-spacing: .01em; }
-.dnr-reader-article header i { display: block; width: 28px; height: 2px; border-radius: 2px; background: color-mix(in srgb, var(--dnr-reading-text) 25%, transparent); }
+.dnr-reader-article header { text-align: left; margin: 0 0 18px; }
+.dnr-reader-article h1 { margin: 0; font-size: 1.15em; line-height: 1.45; font-weight: 600; letter-spacing: .01em; }
 .dnr-reader-article p { margin: 0 0 .9em; scroll-margin-top: 24px; }
 .dnr-reader-article[data-indent] p { text-indent: 2em; }
 .dnr-reader-article mark { padding: 0 .06em; color: inherit; background: var(--dnr-mark); border-radius: 2px; }
@@ -16436,7 +16414,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-page-snap { position: absolute; top: 0; height: 1px; scroll-snap-align: start; scroll-snap-stop: always; }
 .dnr-reader-article[data-page-mode="paged"] {
   --dnr-page-pad: clamp(24px, 6cqw, 56px); height: 100%; min-height: 0; width: 100%; max-width: none;
-  margin: 0; padding: clamp(24px, 5cqw, 48px) var(--dnr-page-pad) 48px; overflow: visible;
+  margin: 0; padding: clamp(16px, 3cqw, 24px) var(--dnr-page-pad) 48px; overflow: visible;
   column-width: calc(var(--dnr-page-width) - var(--dnr-page-pad) - var(--dnr-page-pad));
   column-gap: calc(var(--dnr-page-pad) + var(--dnr-page-pad)); column-fill: auto;
 }
