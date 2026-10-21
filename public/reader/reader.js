@@ -9063,12 +9063,12 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			},
 			chapters: [chapter]
 		});
-		const active = book.chapters[0];
+		const active$1 = book.chapters[0];
 		return {
 			...book,
 			id: onlineReadingBookId(session.reference),
 			chapters: session.chapters.map((item, index) => ({
-				...active,
+				...active$1,
 				id: `chapter-${index}`,
 				index,
 				title: index === chapter.index ? chapter.title : item.title,
@@ -10250,13 +10250,15 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			this.state.operation = crypto.randomUUID();
 			this.save();
 		}
-		async sync() {
+		async sync(signal) {
 			if (this.busy || this.state.conflict) return null;
 			this.busy = true;
 			try {
 				const pending = this.state.pending;
 				const operation = this.state.operation;
+				const options = signal ? { signal } : {};
 				const response = pending ? await api(`/books/${this.id}/progress`, {
+					...options,
 					method: "PUT",
 					headers: { "content-type": "application/json" },
 					body: JSON.stringify({
@@ -10264,7 +10266,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 						operation,
 						payload: pending
 					})
-				}) : await api(`/books/${this.id}/progress`);
+				}) : await api(`/books/${this.id}/progress`, options);
 				const snapshot = await response.json();
 				if (!pending && this.state.pending && snapshot.revision !== this.state.revision || response.status === 409) {
 					this.state.conflict = snapshot;
@@ -10295,14 +10297,487 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	};
 
 //#endregion
+//#region src/client/cloud/upload-request.ts
+/** Monitor bytes sent separately from the server's durable-save acknowledgement. */
+	function uploadBookRequest(hash, file, name, onProgress, signal) {
+		return new Promise((resolve, reject) => {
+			const xhr = new XMLHttpRequest();
+			let finished = false;
+			let timer;
+			const finish = (error, book) => {
+				if (finished) return;
+				finished = true;
+				clearTimeout(timer);
+				signal.removeEventListener("abort", abort);
+				if (error) reject(error);
+				else resolve(book);
+			};
+			const abort = () => {
+				finish(new DOMException("上传已停止", "AbortError"));
+				xhr.abort();
+			};
+			const resetTimeout = () => {
+				if (finished) return;
+				clearTimeout(timer);
+				timer = setTimeout(() => {
+					finish(/* @__PURE__ */ new Error("连接长时间没有响应，请检查网络后重试；若文件已传完，请先刷新书库确认是否已保存。"));
+					xhr.abort();
+				}, 9e4);
+			};
+			xhr.upload.onprogress = (event) => {
+				if (finished) return;
+				resetTimeout();
+				onProgress({
+					loaded: Math.min(file.size, event.loaded),
+					total: file.size,
+					computable: event.lengthComputable,
+					awaitingServer: false
+				});
+			};
+			xhr.upload.onload = () => {
+				if (finished) return;
+				resetTimeout();
+				onProgress({
+					loaded: file.size,
+					total: file.size,
+					computable: true,
+					awaitingServer: true
+				});
+			};
+			xhr.onerror = () => finish(/* @__PURE__ */ new Error("网络连接中断，请检查网络后重试。若文件已传完，请先刷新书库确认。"));
+			xhr.onabort = () => finish(new DOMException("上传已停止", "AbortError"));
+			xhr.onload = () => {
+				if (finished) return;
+				let body;
+				try {
+					body = JSON.parse(xhr.responseText);
+				} catch {
+					finish(/* @__PURE__ */ new Error("未收到有效的云端确认，请检查登录状态并刷新书库后重试。"));
+					return;
+				}
+				if (xhr.status < 200 || xhr.status >= 300) {
+					const message = body?.error;
+					finish(new Error(typeof message === "string" ? message : `上传失败（${xhr.status}），请重试。`));
+					return;
+				}
+				const book = body;
+				if (!book || book.id !== hash || typeof book.name !== "string" || typeof book.filename !== "string" || book.size !== file.size) {
+					finish(/* @__PURE__ */ new Error("云端保存确认不完整，请刷新书库检查后重试。"));
+					return;
+				}
+				finish(void 0, book);
+			};
+			if (signal.aborted) {
+				abort();
+				return;
+			}
+			signal.addEventListener("abort", abort, { once: true });
+			try {
+				xhr.open("PUT", `/api/cloud/books/${hash}`);
+				xhr.setRequestHeader("x-reader-request", "1");
+				xhr.setRequestHeader("content-type", "application/octet-stream");
+				xhr.setRequestHeader("x-book-filename", encodeURIComponent(file.name));
+				xhr.setRequestHeader("x-book-name", encodeURIComponent(name));
+				resetTimeout();
+				xhr.send(file);
+			} catch (error) {
+				finish(error instanceof Error ? error : /* @__PURE__ */ new Error("无法开始上传，请重试。"));
+			}
+		});
+	}
+
+//#endregion
+//#region src/client/cloud/uploads.ts
+	const JOURNAL = "dnr-cloud:unfinished-uploads";
+	const active = (item) => ![
+		"completed",
+		"failed",
+		"cancelled"
+	].includes(item.phase);
+	async function bounded(run, milliseconds) {
+		const controller = new AbortController();
+		let timer;
+		try {
+			return await Promise.race([run(controller.signal), new Promise((_, reject) => {
+				timer = setTimeout(() => {
+					controller.abort();
+					reject(/* @__PURE__ */ new Error("整理超时"));
+				}, milliseconds);
+			})]);
+		} finally {
+			clearTimeout(timer);
+		}
+	}
+	const dependencies = {
+		prepare: async (file) => (await loadBookFromFile(file)).book,
+		hash: async (file) => Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", await file.arrayBuffer())), (byte) => byte.toString(16).padStart(2, "0")).join(""),
+		transfer: uploadBookRequest,
+		finalize: async (file, saved, localId) => {
+			const warnings = [];
+			try {
+				bind(localId, saved.id);
+			} catch {
+				warnings.push("本机阅读进度关联未保存");
+			}
+			try {
+				await bounded(() => original(`cloud-${saved.id}`, file), 8e3);
+			} catch {
+				warnings.push("本机离线副本未保存，可稍后打开书籍重新缓存");
+			}
+			const position = loadProgress()[localId];
+			if (position) try {
+				await bounded(async (signal) => {
+					const sync = new SyncSession(saved.id);
+					if (!(await sync.sync(signal))?.payload && !sync.state.pending && !sync.state.conflict) {
+						sync.queue({
+							position,
+							bookmarks: loadBookmarks().filter((bookmark) => bookmark.bookId === position.bookId)
+						});
+						await sync.sync(signal);
+					}
+					if (sync.state.conflict) warnings.push("阅读进度存在冲突，请打开书籍后选择继续位置");
+				}, 12e3);
+			} catch {
+				warnings.push("阅读进度暂未同步，可稍后打开书籍继续同步");
+			}
+			return warnings;
+		}
+	};
+	/** Page-independent queue: reader/library navigation does not own the upload. */
+	var UploadQueue = class {
+		snapshot;
+		listeners = /* @__PURE__ */ new Set();
+		files = /* @__PURE__ */ new Map();
+		controller = null;
+		activeId = null;
+		journal = "";
+		pending = Promise.resolve();
+		constructor(deps = dependencies, restore = true) {
+			this.deps = deps;
+			let interrupted = [];
+			if (restore) try {
+				const value = JSON.parse(sessionStorage.getItem(JOURNAL) ?? "[]");
+				if (Array.isArray(value)) interrupted = value.filter((name) => typeof name === "string");
+			} catch {}
+			this.snapshot = {
+				items: [],
+				running: false,
+				interrupted
+			};
+		}
+		getSnapshot = () => this.snapshot;
+		subscribe = (listener) => {
+			this.listeners.add(listener);
+			return () => this.listeners.delete(listener);
+		};
+		whenIdle = () => this.pending;
+		beforeUnload = (event) => {
+			if (this.snapshot.running) {
+				event.preventDefault();
+				event.returnValue = "1";
+			}
+		};
+		emit(patch) {
+			this.snapshot = {
+				...this.snapshot,
+				...patch
+			};
+			const journal = JSON.stringify(this.snapshot.items.filter(active).map((item) => item.filename));
+			if (journal !== this.journal) {
+				this.journal = journal;
+				try {
+					if (journal === "[]") sessionStorage.removeItem(JOURNAL);
+					else sessionStorage.setItem(JOURNAL, journal);
+				} catch {}
+			}
+			this.listeners.forEach((listener) => listener());
+		}
+		update(id$1, patch) {
+			this.emit({ items: this.snapshot.items.map((item) => item.id === id$1 ? {
+				...item,
+				...patch
+			} : item) });
+		}
+		enqueue(inputs) {
+			if (!inputs.length) return;
+			if (!this.snapshot.running) this.files.clear();
+			const items = inputs.map((input) => {
+				const id$1 = crypto.randomUUID();
+				this.files.set(id$1, input);
+				return {
+					id: id$1,
+					filename: input.file.name,
+					size: input.file.size,
+					phase: "queued",
+					loaded: 0,
+					computable: true,
+					bytesPerSecond: 0,
+					message: ""
+				};
+			});
+			this.emit({
+				interrupted: [],
+				items: [...this.snapshot.running ? this.snapshot.items : [], ...items]
+			});
+			this.start();
+		}
+		retry(id$1) {
+			const item = this.snapshot.items.find((item$1) => item$1.id === id$1);
+			if (!item || item.retryable === false || !this.files.has(id$1) || !["failed", "cancelled"].includes(item.phase)) return;
+			this.update(id$1, {
+				phase: "queued",
+				loaded: 0,
+				bytesPerSecond: 0,
+				computable: true,
+				message: ""
+			});
+			this.start();
+		}
+		stop() {
+			this.emit({ items: this.snapshot.items.map((item) => item.phase === "queued" ? {
+				...item,
+				phase: "cancelled",
+				message: "已停止，尚未上传。"
+			} : item) });
+			if (this.snapshot.items.find((item) => item.id === this.activeId)?.phase !== "finishing") this.controller?.abort();
+		}
+		dismiss() {
+			if (this.snapshot.running) return;
+			this.files.clear();
+			this.emit({
+				items: [],
+				interrupted: []
+			});
+		}
+		start() {
+			if (this.snapshot.running) return;
+			this.emit({ running: true });
+			window.addEventListener("beforeunload", this.beforeUnload);
+			this.pending = this.run();
+		}
+		async run() {
+			try {
+				let item;
+				while (item = this.snapshot.items.find((item$1) => item$1.phase === "queued")) {
+					const { file, localId } = this.files.get(item.id);
+					const id$1 = item.id;
+					const controller = new AbortController();
+					this.controller = controller;
+					this.activeId = id$1;
+					let validated = false;
+					try {
+						if (!file.size) throw new Error("文件为空，请重新选择。");
+						if (file.size > 50 * 1024 * 1024) throw new Error("单本文件最大 50MB。");
+						if (!/\.(txt|md|markdown|epub)$/i.test(file.name)) throw new Error("请选择 TXT、Markdown 或 EPUB 文件。");
+						validated = true;
+						this.update(id$1, { phase: "preparing" });
+						await new Promise((resolve) => setTimeout(resolve, 0));
+						controller.signal.throwIfAborted();
+						const book = await this.deps.prepare(file);
+						controller.signal.throwIfAborted();
+						this.update(id$1, { phase: "checking" });
+						const hash = await this.deps.hash(file);
+						controller.signal.throwIfAborted();
+						this.update(id$1, { phase: "uploading" });
+						const started = performance.now();
+						const saved = await this.deps.transfer(hash, file, book.name, (progress) => {
+							if (controller.signal.aborted) return;
+							const seconds = (performance.now() - started) / 1e3;
+							this.update(id$1, {
+								phase: progress.awaitingServer ? "confirming" : "uploading",
+								loaded: progress.loaded,
+								computable: progress.computable,
+								bytesPerSecond: seconds >= 1 ? progress.loaded / seconds : 0
+							});
+						}, controller.signal);
+						this.update(id$1, {
+							phase: "finishing",
+							loaded: file.size,
+							computable: true
+						});
+						let warnings;
+						try {
+							warnings = await this.deps.finalize(file, saved, localId ?? book.id);
+						} catch {
+							warnings = ["本机缓存或阅读进度同步未完成，可稍后打开书籍重试"];
+						}
+						this.update(id$1, {
+							phase: "completed",
+							message: warnings.length ? `书籍已保存云端；${warnings.join("；")}。` : "已保存到云端，可以在其他设备阅读。"
+						});
+						this.files.delete(id$1);
+						try {
+							write("catalog", [saved, ...read("catalog", []).filter((entry) => entry.id !== saved.id)]);
+						} catch {}
+						window.dispatchEvent(new Event("dnr-cloud-catalog-updated"));
+					} catch (error) {
+						const retryable = controller.signal.aborted || validated && !(error instanceof FileLoadError && error.code !== "READ_FAILED");
+						if (!retryable) this.files.delete(id$1);
+						this.update(id$1, {
+							retryable,
+							phase: controller.signal.aborted ? "cancelled" : "failed",
+							message: controller.signal.aborted ? "上传已停止；已传出的文件可能仍在云端保存，请刷新书库确认。" : error instanceof Error ? error.message : "上传失败，请重试。"
+						});
+					} finally {
+						this.controller = null;
+						this.activeId = null;
+					}
+				}
+			} finally {
+				this.emit({ running: false });
+				window.removeEventListener("beforeunload", this.beforeUnload);
+			}
+		}
+	};
+	const uploads = new UploadQueue();
+	function useUploads() {
+		return (0, import_react.useSyncExternalStore)(uploads.subscribe, uploads.getSnapshot, uploads.getSnapshot);
+	}
+
+//#endregion
+//#region src/client/cloud/UploadStatus.tsx
+	const labels = {
+		queued: "等待上传",
+		preparing: "正在解析书籍",
+		checking: "正在校验文件",
+		uploading: "正在上传",
+		confirming: "文件已传完，等待云端保存",
+		finishing: "云端已保存，正在整理本机缓存与阅读进度",
+		completed: "上传完成",
+		failed: "上传失败",
+		cancelled: "已停止"
+	};
+	function formatBytes$1(bytes) {
+		if (bytes < 1024) return `${Math.max(0, Math.round(bytes))} B`;
+		if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+		return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+	}
+	function transferText(item) {
+		const percent = item.computable && item.size ? `${Math.floor(item.loaded / item.size * 100)}% · ` : "";
+		const speed = item.bytesPerSecond > 0 && item.phase === "uploading" ? ` · ${formatBytes$1(item.bytesPerSecond)}/s` : "";
+		return `${percent}${formatBytes$1(item.loaded)} / ${formatBytes$1(item.size)}${speed}`;
+	}
+	function UploadStatus({ compact = false, onOpen }) {
+		const { items, running, interrupted } = useUploads();
+		if (!items.length && !interrupted.length) return null;
+		const current = items.find((item) => [
+			"preparing",
+			"checking",
+			"uploading",
+			"confirming",
+			"finishing"
+		].includes(item.phase));
+		const completed = items.filter((item) => item.phase === "completed").length;
+		const failed = items.filter((item) => item.phase === "failed").length;
+		const cancelled = items.filter((item) => item.phase === "cancelled").length;
+		const heading = running ? `正在上传 ${items.findIndex((item) => item.id === current?.id) + 1 || 1} / ${items.length} 本` : interrupted.length ? "上次上传未完成" : failed || cancelled ? `上传已结束 · 成功 ${completed} 本${failed ? ` · 失败 ${failed} 本` : ""}${cancelled ? ` · 已停止 ${cancelled} 本` : ""}` : `已上传 ${completed} 本书籍`;
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
+			className: `dnr-upload-status ${compact ? "is-compact" : ""}`,
+			"aria-label": "书籍上传进度",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "dnr-upload-heading",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", {
+						role: "status",
+						children: heading
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+						compact && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							onClick: onOpen,
+							children: "查看上传"
+						}),
+						running && (current?.phase !== "finishing" || items.some((item) => item.phase === "queued")) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							onClick: () => uploads.stop(),
+							children: "停止上传"
+						}),
+						!running && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							onClick: () => uploads.dismiss(),
+							children: "收起"
+						})
+					] })]
+				}),
+				interrupted.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+					className: "dnr-upload-hint",
+					children: [
+						"上次有 ",
+						interrupted.length,
+						" 本书籍尚未确认上传完成。请先刷新书库检查，再重新选择未完成的文件；不会自动续传。"
+					]
+				}),
+				running && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "dnr-upload-hint",
+					children: "可在站点内返回阅读、切换目录，上传会继续。请保持本网页打开：刷新、关闭或跳转到其他网站会中断未完成任务；手机锁屏或切到后台可能暂停上传。"
+				}),
+				!running && items.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "dnr-upload-hint",
+					children: failed || cancelled ? "已成功的书籍已保存云端。未完成的文件可单独重试，现在可以离开此页面。" : "书籍已保存云端，现在可以安全离开此页面。"
+				}),
+				!compact && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ol", {
+					className: "dnr-upload-list",
+					children: items.map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", {
+						"data-phase": item.phase,
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "dnr-upload-file",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", {
+									title: item.filename,
+									children: item.filename
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: labels[item.phase] })]
+							}),
+							[
+								"preparing",
+								"checking",
+								"uploading",
+								"confirming",
+								"finishing"
+							].includes(item.phase) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("progress", {
+								"aria-label": `${item.filename}上传进度`,
+								max: item.size || 1,
+								value: item.phase === "uploading" && item.computable ? item.loaded : void 0
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "dnr-upload-detail",
+								children: ["uploading", "confirming"].includes(item.phase) ? transferText(item) : item.phase === "preparing" ? "正在读取并解析文件，较大的书籍需要一些时间。" : item.phase === "checking" ? "正在核对文件内容，完成后开始传输。" : "上传已成功，本机整理不影响云端书籍。"
+							})] }),
+							item.message && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "dnr-upload-detail",
+								children: item.message
+							}),
+							["failed", "cancelled"].includes(item.phase) && item.retryable !== false && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
+								"aria-label": `重试 ${item.filename}`,
+								onClick: () => uploads.retry(item.id),
+								children: "重试"
+							})
+						]
+					}, item.id))
+				}),
+				compact && current && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "dnr-upload-current",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: current.filename }),
+						" · ",
+						labels[current.phase],
+						current.phase === "uploading" ? ` · ${transferText(current)}` : ""
+					]
+				})
+			]
+		});
+	}
+
+//#endregion
 //#region src/client/cloud/CloudLibrary.tsx
 	function CloudLibrary({ onOpened, onBack }) {
 		const { recents, loadOnlineBook } = useReader();
 		const [books, setBooks] = (0, import_react.useState)(() => read("catalog", []));
 		const [message, setMessage] = (0, import_react.useState)("");
-		const [busy, setBusy] = (0, import_react.useState)(false);
+		const [openingId, setOpeningId] = (0, import_react.useState)(null);
+		const [refreshing, setRefreshing] = (0, import_react.useState)(false);
+		const { running: uploading } = useUploads();
 		const input = (0, import_react.useRef)(null);
 		const refresh = async () => {
+			setRefreshing(true);
 			try {
 				const rows = await (await api("/books")).json();
 				write("catalog", rows);
@@ -10310,49 +10785,28 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				setMessage("");
 			} catch (e) {
 				setMessage(`${e.message}；已下载的书籍仍可打开。`);
+			} finally {
+				setRefreshing(false);
 			}
 		};
 		(0, import_react.useEffect)(() => {
+			const update = () => {
+				setBooks(read("catalog", []));
+				refresh();
+			};
 			refresh();
+			window.addEventListener("dnr-cloud-catalog-updated", update);
+			return () => window.removeEventListener("dnr-cloud-catalog-updated", update);
 		}, []);
-		const upload = async (file, localId) => {
-			if (file.size > 50 * 1024 * 1024) throw new Error("单本文件最大 50MB");
-			if (!/\.(txt|md|markdown|epub)$/i.test(file.name)) throw new Error("请选择 TXT、Markdown 或 EPUB 文件");
-			const result = await loadBookFromFile(file);
-			const bytes = await file.arrayBuffer();
-			const hash = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)), (b) => b.toString(16).padStart(2, "0")).join("");
-			const saved = await (await api(`/books/${hash}`, {
-				method: "PUT",
-				headers: {
-					"content-type": "application/octet-stream",
-					"x-book-filename": encodeURIComponent(file.name),
-					"x-book-name": encodeURIComponent(result.book.name)
-				},
-				body: bytes
-			})).json();
-			bind(localId ?? result.book.id, hash);
-			await original(`cloud-${hash}`, file);
-			const sync = new SyncSession(hash);
-			const remote = await sync.sync();
-			const position = loadProgress()[localId ?? result.book.id];
-			if (!remote?.payload && position && !sync.state.pending) {
-				sync.queue({
-					position,
-					bookmarks: loadBookmarks().filter((b) => b.bookId === position.bookId)
-				});
-				await sync.sync();
-			}
-			await refresh();
-			setMessage(`《${saved.name}》已同步到云端`);
-		};
-		const work = async (fn) => {
-			setBusy(true);
+		const openBook = async (entry) => {
+			setOpeningId(entry.id);
+			setMessage("");
 			try {
-				await fn();
-			} catch (e) {
-				setMessage(e.message);
+				await open(entry);
+			} catch (error) {
+				setMessage(error instanceof Error ? error.message : "打开书籍失败，请重试。");
 			} finally {
-				setBusy(false);
+				setOpeningId(null);
 			}
 		};
 		const open = async (entry) => {
@@ -10383,15 +10837,16 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "dnr-cloud-actions",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-						disabled: busy,
+						disabled: uploading,
 						onClick: () => input.current?.click(),
-						children: busy ? "正在处理…" : "＋ 上传书籍"
+						children: uploading ? "上传进行中…" : "＋ 上传书籍"
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-						disabled: busy,
+						disabled: refreshing,
 						onClick: () => void refresh(),
-						children: "刷新书库"
+						children: refreshing ? "正在刷新…" : "刷新书库"
 					})]
 				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(UploadStatus, {}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
 					ref: input,
 					type: "file",
@@ -10401,9 +10856,8 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					onChange: (event) => {
 						const files = Array.from(event.target.files ?? []);
 						event.target.value = "";
-						work(async () => {
-							for (const file of files) await upload(file);
-						});
+						setMessage("");
+						uploads.enqueue(files.map((file) => ({ file })));
 					}
 				}),
 				!cloudHosted && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
@@ -10443,9 +10897,9 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 							entry.filename.split(".").pop()?.toUpperCase()
 						] }),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-							disabled: busy,
-							onClick: () => void work(() => open(entry)),
-							children: "打开阅读"
+							disabled: openingId !== null,
+							onClick: () => void openBook(entry),
+							children: openingId === entry.id ? "正在打开…" : "打开阅读"
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
 							href: `/api/cloud/books/${entry.id}/file`,
@@ -10460,13 +10914,23 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					recents.filter((b) => b.format !== "online").map((b) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "dnr-cloud-local",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: b.name }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-							disabled: busy,
-							onClick: () => void work(async () => {
-								if (!await getBook(b.id)) throw new Error("未找到本地书籍，请重新选择原文件。");
-								const file = await original(b.id);
-								if (!file) throw new Error("这本旧书未保留原文件，请点击“上传书籍”重新选择它。");
-								await upload(file, b.id);
-							}),
+							disabled: uploading,
+							onClick: () => {
+								(async () => {
+									try {
+										if (!await getBook(b.id)) throw new Error("未找到本地书籍，请重新选择原文件。");
+										const file = await original(b.id);
+										if (!file) throw new Error("这本旧书未保留原文件，请点击“上传书籍”重新选择它。");
+										setMessage("");
+										uploads.enqueue([{
+											file,
+											localId: b.id
+										}]);
+									} catch (error) {
+										setMessage(error instanceof Error ? error.message : "无法读取本地文件。");
+									}
+								})();
+							},
 							children: bindings()[b.id] ? "已同步 · 检查" : "同步到云端"
 						})]
 					}, b.id))
@@ -10483,7 +10947,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		const [conflict, setConflict] = (0, import_react.useState)(null);
 		const session = (0, import_react.useRef)(null);
 		const latest = (0, import_react.useRef)(null);
-		const active = (0, import_react.useRef)(false);
+		const active$1 = (0, import_react.useRef)(false);
 		const apply = (s) => {
 			if (s?.payload) {
 				latest.current = s.payload;
@@ -10501,7 +10965,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				return;
 			}
 			let disposed = false;
-			active.current = false;
+			active$1.current = false;
 			const engine = new SyncSession(currentCloudId);
 			session.current = engine;
 			const run = async () => {
@@ -10514,7 +10978,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				} catch {
 					if (!disposed) setStatus("离线或连接失败 · 进度已保存在本机");
 				} finally {
-					if (!disposed) active.current = true;
+					if (!disposed) active$1.current = true;
 				}
 			};
 			run();
@@ -10542,7 +11006,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				bookmarks
 			};
 			latest.current = payload;
-			if (active.current && session.current) {
+			if (active$1.current && session.current) {
 				session.current.queue(payload);
 				if (session.current.state.pending) setStatus("等待同步");
 			}
@@ -14261,7 +14725,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 		};
 	}
 	/** Separate reading state and Host API; no local books, recents or progress are written. */
-	function FanqieWorkspace({ active, toolbarTarget = null }) {
+	function FanqieWorkspace({ active: active$1, toolbarTarget = null }) {
 		const local = useReader();
 		const [status, updateStatus] = (0, import_react.useState)(null);
 		const [book, setBook] = (0, import_react.useState)(null);
@@ -14337,13 +14801,13 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 			fonts$1.current.clear();
 		}, [flushPosition]);
 		(0, import_react.useEffect)(() => {
-			if (!active) {
+			if (!active$1) {
 				flushPosition();
 				generation.current++;
 				request$2.current?.abort();
 				setLoading(false);
 			}
-		}, [active, flushPosition]);
+		}, [active$1, flushPosition]);
 		const installFont = async (text, signal) => {
 			if (!text.fontData) return void 0;
 			const cached = fonts$1.current.get(text.fontData);
@@ -14459,7 +14923,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 			status?.accountId
 		]);
 		(0, import_react.useEffect)(() => {
-			if (!active) return;
+			if (!active$1) return;
 			const onKey = (event) => {
 				if (!local.panel.expanded || document.querySelector("[aria-modal=\"true\"]") || event.defaultPrevented || event.target instanceof Element && event.target.closest("input,textarea,select,[contenteditable=\"true\"]")) return;
 				if (event.key === "Escape" && view !== "reader" && book) {
@@ -14477,7 +14941,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 			window.addEventListener("keydown", onKey, { capture: true });
 			return () => window.removeEventListener("keydown", onKey, { capture: true });
 		}, [
-			active,
+			active$1,
 			book,
 			view,
 			progress,
@@ -14526,7 +14990,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 			applySyncedChapter: async () => null
 		};
 		const fallbackChapter = opened.current?.chapters[failedIndex ?? progress?.chapterIndex ?? 0]?.id;
-		const toolbar = book && active ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		const toolbar = book && active$1 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: "dnr-fanqie-toolbar",
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", {
 				className: "dnr-fanqie-navigation",
@@ -14623,7 +15087,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 					}),
 					book && view === "toc" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableOfContents, { onSelect: () => setView("reader") }),
 					book && view === "settings" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, {}),
-					book && view === "reader" && active && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					book && view === "reader" && active$1 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: `dnr-reading-grid ${local.settings.tocPosition === "left" ? "has-toc" : ""}`,
 						children: [local.settings.tocPosition === "left" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableOfContents, { embedded: true }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ReaderBody, {
 							ref: readerBody,
@@ -14848,6 +15312,10 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 					children: hostNotice ?? notices[0]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudSync, {}),
+				view !== "cloud" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(UploadStatus, {
+					compact: true,
+					onOpen: () => setView("cloud")
+				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", {
 					className: "dnr-main",
 					children: [
@@ -15309,6 +15777,25 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-cloud-message { padding:12px; background:var(--dnr-surface); border-radius:8px; }
 .dnr-cloud-status { flex-shrink:0; padding:4px 12px; font-size:10px; color:var(--dnr-muted); border-bottom:1px solid var(--dnr-line); }
 .dnr-cloud-status button { margin:4px; }
+.dnr-upload-status { margin:0 0 24px; padding:18px; border:1px solid var(--dnr-line); border-radius:12px; background:var(--dnr-surface); color:var(--dnr-text); }
+.dnr-upload-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+.dnr-upload-heading > strong { font-size:14px; font-weight:600; }
+.dnr-upload-heading > div { display:flex; gap:6px; }
+.dnr-upload-status button { flex-shrink:0; padding:6px 10px; border:1px solid var(--dnr-line); border-radius:6px; background:var(--dnr-bg); color:var(--dnr-text); }
+.dnr-upload-status .dnr-upload-hint { margin:10px 0 0; font-size:12px; line-height:1.7; color:var(--dnr-muted); }
+.dnr-upload-list { list-style:none; margin:16px 0 0; padding:0; max-height:300px; overflow:auto; }
+.dnr-upload-list li { padding:12px 0; border-top:1px solid var(--dnr-line); }
+.dnr-upload-list li:last-child { padding-bottom:0; }
+.dnr-upload-file { display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:4px 12px; }
+.dnr-upload-file strong { font-weight:500; font-size:13px; overflow-wrap:anywhere; min-width:0; }
+.dnr-upload-file span { font-size:11px; color:var(--dnr-muted); }
+.dnr-upload-status progress { display:block; appearance:auto; width:100%; height:6px; margin:12px 0 8px; accent-color:var(--dnr-accent); }
+.dnr-upload-status .dnr-upload-detail { margin:6px 0; font-size:11px; color:var(--dnr-muted); line-height:1.6; overflow-wrap:anywhere; }
+.dnr-upload-list li[data-phase="failed"] .dnr-upload-file span { color:var(--dnr-error); }
+.dnr-upload-status.is-compact { flex-shrink:0; margin:0; padding:10px 14px; border:0; border-bottom:1px solid var(--dnr-line); border-radius:0; }
+.dnr-upload-status.is-compact .dnr-upload-hint { margin-top:5px; font-size:11px; }
+.dnr-upload-current { margin-top:6px; font-size:11px; color:var(--dnr-muted); overflow-wrap:anywhere; }
+@container (max-width:400px) { .dnr-upload-status { padding:12px; } .dnr-upload-file { flex-direction:column; } .dnr-upload-list { max-height:240px; } }
 `;
 
 //#endregion
