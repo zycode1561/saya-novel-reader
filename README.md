@@ -5,7 +5,7 @@ Private Sites companion for the local Codex novel reader. This deployment is a *
 ## Features
 
 - Original TXT, Markdown, EPUB uploads up to 50 MB, addressed and verified by SHA-256.
-- R2 stores original bytes; D1 stores the catalog and progress/bookmarks.
+- R2 stores original bytes; D1 stores the catalog and reading progress, with legacy bookmark data retained for sync compatibility.
 - Shared reader bundle from `../codex-novel-reader`, preserving chapter and paragraph parsing.
 - IndexedDB caches opened originals and reader data; service worker caches only the reader shell. API data is never put in the HTTP cache. Offline copies remain on the device.
 - Durable client progress journal, optimistic revision checks, explicit conflict choices, idempotent operation IDs.

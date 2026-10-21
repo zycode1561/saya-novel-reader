@@ -8659,9 +8659,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	function createBookId(file, head) {
 		return `book-${hashText(`${file.name}:${file.size}:${file.lastModified}:${head.slice(0, 2048)}`)}`;
 	}
-	function createId(prefix) {
-		return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-	}
 
 //#endregion
 //#region src/shared/parser.ts
@@ -10127,25 +10124,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				}
 			}));
 		}, [book]);
-		const addBookmark = (0, import_react.useCallback)(() => {
-			if (book === null || progress === null) return;
-			const paragraph = book.paragraphs[progress.paragraphIndex];
-			if (paragraph === void 0) return;
-			setBookmarks((current) => {
-				if (current.some((item) => item.bookId === book.id && item.chapterIndex === progress.chapterIndex && item.paragraphIndex === paragraph.index)) return current;
-				return [{
-					id: createId("bookmark"),
-					bookId: book.id,
-					chapterIndex: progress.chapterIndex,
-					paragraphIndex: paragraph.index,
-					excerpt: paragraph.text.slice(0, 80),
-					createdAt: Date.now()
-				}, ...current];
-			});
-		}, [book, progress]);
-		const removeBookmark = (0, import_react.useCallback)((id$1) => {
-			setBookmarks((current) => current.filter((item) => item.id !== id$1));
-		}, []);
 		const value = (0, import_react.useMemo)(() => ({
 			book,
 			settings,
@@ -10174,8 +10152,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			goToParagraph,
 			markParagraphVisible,
 			clearPendingParagraph: () => setPendingParagraph(null),
-			addBookmark,
-			removeBookmark,
 			clearError: () => setError(null)
 		}), [
 			book,
@@ -10202,9 +10178,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			setPanelWidth,
 			goToChapter,
 			goToParagraph,
-			markParagraphVisible,
-			addBookmark,
-			removeBookmark
+			markParagraphVisible
 		]);
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ReaderContext.Provider, {
 			value,
@@ -11052,7 +11026,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M14 2v6h6" }),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M8 13h8M8 17h6" })
 		] }),
-		bookmark: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M6 3h12v18l-6-4-6 4z" }),
 		search: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("circle", {
 			cx: "11",
 			cy: "11",
@@ -11501,44 +11474,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			};
 		}, []);
 		return theme;
-	}
-
-//#endregion
-//#region src/client/components/BookmarksPanel.tsx
-	function BookmarksPanel({ onSelect }) {
-		const { bookmarks, book, goToParagraph, removeBookmark } = useReader();
-		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
-			className: "dnr-bookmarks",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "dnr-panel-heading",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "书签" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [bookmarks.length, " 个"] })]
-			}), bookmarks.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "dnr-empty-panel",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
-					name: "bookmark",
-					width: "28",
-					height: "28"
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "读到喜欢的地方，点一下书签按钮。" })]
-			}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", { children: bookmarks.map((bookmark) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("li", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-				type: "button",
-				className: "dnr-bookmark-main",
-				onClick: () => {
-					goToParagraph(bookmark.paragraphIndex, bookmark.chapterIndex);
-					onSelect();
-				},
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: book?.chapters[bookmark.chapterIndex]?.title ?? "正文" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: bookmark.excerpt })]
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-				className: "dnr-icon-button dnr-subtle",
-				type: "button",
-				"aria-label": "删除书签",
-				onClick: () => removeBookmark(bookmark.id),
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
-					name: "trash",
-					width: "15",
-					height: "15"
-				})
-			})] }, bookmark.id)) })]
-		});
 	}
 
 //#endregion
@@ -15868,8 +15803,6 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 			startOnlineReading: async () => {},
 			openRecent: async () => false,
 			removeRecent: async () => {},
-			addBookmark: () => {},
-			removeBookmark: () => {},
 			applySyncedChapter: async () => null
 		};
 		const fallbackChapter = opened.current?.chapters[failedIndex ?? progress?.chapterIndex ?? 0]?.id;
@@ -16012,7 +15945,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 		return `${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分`;
 	}
 	function NovelReaderApp() {
-		const { book, panel, settings, progress, setReaderActive, error, loading, retryOnlineChapter, notices, goToChapter, addBookmark, bookmarks } = useReader();
+		const { book, panel, settings, progress, setReaderActive, error, loading, retryOnlineChapter, notices, goToChapter } = useReader();
 		const supportsOnline = window.__CODEX_NOVEL_READER_PREVIEW_API__ === true;
 		const hostTheme = useHostTheme();
 		const colorScheme = settings.theme === "light" || settings.theme === "dark" ? settings.theme : hostTheme;
@@ -16078,7 +16011,6 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 		};
 		const currentChapter = progress?.chapterIndex ?? 0;
 		const currentChapterTitle = book?.chapters[currentChapter]?.title ?? "";
-		const alreadyBookmarked = book !== null && progress !== null && bookmarks.some((item) => item.paragraphIndex === progress.paragraphIndex);
 		const showReader = book !== null && view === "reader";
 		const toolsVisible = view !== "reader" || settings.keepNavigationVisible || panel.toolsVisible;
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
@@ -16133,22 +16065,6 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 											className: view === "search" ? "is-active" : "",
 											onClick: () => setView(view === "search" ? "reader" : "search"),
 											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "search" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "搜索" })]
-										}),
-										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-											type: "button",
-											"aria-label": alreadyBookmarked ? "已标记书签" : "添加书签",
-											title: alreadyBookmarked ? "已标记书签" : "添加书签",
-											className: alreadyBookmarked ? "is-saved" : "",
-											onClick: addBookmark,
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "bookmark" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: alreadyBookmarked ? "已标记" : "书签" })]
-										}),
-										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-											type: "button",
-											"aria-label": "书签夹",
-											title: "书签夹",
-											className: view === "bookmarks" ? "is-active" : "",
-											onClick: () => setView(view === "bookmarks" ? "reader" : "bookmarks"),
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "menu" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "书签夹" })]
 										}),
 										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 											type: "button",
@@ -16261,7 +16177,6 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 							onSelect: () => setView("reader")
 						}),
 						book !== null && view === "settings" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, {}),
-						book !== null && view === "bookmarks" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BookmarksPanel, { onSelect: () => setView("reader") }),
 						showReader && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: `dnr-reading-grid ${settings.tocPosition === "left" ? "has-toc" : ""}`,
 							children: [settings.tocPosition === "left" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableOfContents, { embedded: true }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ReaderBody, {
@@ -16351,7 +16266,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-shell input::placeholder, .dnr-shell textarea::placeholder { color: var(--dnr-muted); }
 .dnr-shell :is(input[type="range"], input[type="checkbox"]) { accent-color: var(--dnr-accent); }
 .dnr-shell ::selection { background: var(--dnr-mark); color: inherit; }
-.dnr-shell :is(.dnr-toc-list, .dnr-reader-scroll, .dnr-settings, .dnr-search-panel, .dnr-bookmarks, .dnr-online-panel, .dnr-file-loader, .dnr-rules-panel) {
+.dnr-shell :is(.dnr-toc-list, .dnr-reader-scroll, .dnr-settings, .dnr-search-panel, .dnr-online-panel, .dnr-file-loader, .dnr-rules-panel) {
   scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--dnr-muted) 30%, transparent) transparent;
 }
 .dnr-launcher, .dnr-resize-handle, .dnr-collapse-button, .dnr-top-spacer { display: none !important; }
@@ -16374,7 +16289,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-toolbar button { min-width: 0; height: 35px; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 0 4px; border: 0; border-radius: 8px; background: transparent; color: var(--dnr-muted); transition: background 140ms, color 140ms; }
 .dnr-toolbar button svg { width: 16px; height: 16px; flex-shrink: 0; }
 .dnr-toolbar button span { font-size: 11px; white-space: nowrap; }
-.dnr-toolbar button:hover, .dnr-toolbar button.is-active, .dnr-toolbar button.is-saved { color: var(--dnr-text); background: var(--dnr-accent-soft); }
+.dnr-toolbar button:hover, .dnr-toolbar button.is-active { color: var(--dnr-text); background: var(--dnr-accent-soft); }
 .dnr-icon-button { width: 28px; height: 28px; display: inline-grid; place-items: center; padding: 0; border: 0; border-radius: 6px; background: transparent; transition: background 140ms; }
 .dnr-icon-button:hover { background: var(--dnr-accent-soft); }
 .dnr-icon-button.dnr-subtle { color: var(--dnr-muted); }
@@ -16449,7 +16364,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 @media (max-width: 600px), (pointer: coarse) {
   .dnr-shell .dnr-search-field input { font-size: 16px; }
 }
-.dnr-search-panel, .dnr-settings, .dnr-bookmarks { width: 100%; max-width: 680px; height: 100%; margin-inline: auto; padding: 24px clamp(16px, 4cqw, 28px) 32px; overflow: auto; }
+.dnr-search-panel, .dnr-settings { width: 100%; max-width: 680px; height: 100%; margin-inline: auto; padding: 24px clamp(16px, 4cqw, 28px) 32px; overflow: auto; }
 .dnr-search-help { margin: 8px 0 12px; color: var(--dnr-muted); font-size: 11px; }
 .dnr-search-results { display: flex; flex-direction: column; gap: 6px; }
 .dnr-search-results > button { padding: 10px 12px; border: 1px solid var(--dnr-line); border-radius: 8px; background: var(--dnr-bg); text-align: left; }
@@ -16519,24 +16434,22 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-recents-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; color: var(--dnr-muted); font-size: 11px; }
 .dnr-recents-heading > span:first-child { display: flex; align-items: center; gap: 7px; color: var(--dnr-text); font-size: 12px; font-weight: 500; }
 .dnr-recents-heading svg { width: 14px; height: 14px; color: var(--dnr-muted); }
-.dnr-recents li:hover, .dnr-bookmarks li:hover { border-color: color-mix(in srgb, var(--dnr-muted) 40%, transparent); background: var(--dnr-accent-soft); }
+.dnr-recents li:hover { border-color: color-mix(in srgb, var(--dnr-muted) 40%, transparent); background: var(--dnr-accent-soft); }
 .dnr-recent-main { display: flex; align-items: center; gap: 12px; }
 .dnr-recent-cover { width: 38px; height: 50px; display: grid; flex: 0 0 38px; place-items: center; border: 1px solid var(--dnr-line); border-radius: 4px 8px 8px 4px; background: var(--dnr-bg); color: var(--dnr-muted); box-shadow: inset 3px 0 var(--dnr-accent-soft); }
 .dnr-recent-cover svg { width: 18px; height: 18px; }
 .dnr-recent-details { min-width: 0; flex: 1; }
 .dnr-recents { width: min(100%, 520px); margin-top: 28px; text-align: left; }
-.dnr-recents ul, .dnr-bookmarks ul { padding: 0; margin: 0; list-style: none; }
-.dnr-recents li, .dnr-bookmarks li { display: flex; align-items: center; gap: 4px; margin-bottom: 10px; padding: 3px 10px 3px 3px; border: 1px solid var(--dnr-line); border-radius: 12px; background: var(--dnr-surface); transition: background 140ms, border-color 140ms; }
-.dnr-recent-main, .dnr-bookmark-main { min-width: 0; flex: 1; padding: 12px; border: 0; border-radius: 8px; background: transparent; text-align: left; }
-.dnr-recent-main:hover, .dnr-bookmark-main:hover { background: transparent; }
+.dnr-recents ul { padding: 0; margin: 0; list-style: none; }
+.dnr-recents li { display: flex; align-items: center; gap: 4px; margin-bottom: 10px; padding: 3px 10px 3px 3px; border: 1px solid var(--dnr-line); border-radius: 12px; background: var(--dnr-surface); transition: background 140ms, border-color 140ms; }
+.dnr-recent-main { min-width: 0; flex: 1; padding: 12px; border: 0; border-radius: 8px; background: transparent; text-align: left; }
+.dnr-recent-main:hover { background: transparent; }
 .dnr-recent-name { display: block; font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dnr-recent-meta { display: block; margin-top: 4px; color: var(--dnr-muted); font-size: 11px; }
 .dnr-recent-progress-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
 .dnr-recent-progress-track { height: 3px; min-width: 32px; flex: 1; border-radius: 99px; background: var(--dnr-line); overflow: hidden; }
 .dnr-recent-progress-track i { display: block; width: 0; height: 100%; border-radius: inherit; background: var(--dnr-muted); transition: width 180ms; }
 .dnr-recent-progress-label { flex: 0 0 auto; color: var(--dnr-muted); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.dnr-bookmark-main span { color: var(--dnr-text); font-size: 11px; font-weight: 500; }
-.dnr-bookmark-main p { margin: 4px 0 0; color: var(--dnr-muted); font-size: 12px; line-height: 1.5; }
 .dnr-empty-panel { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 64px 16px 24px; color: var(--dnr-muted); text-align: center; }
 .dnr-empty-panel > svg { box-sizing: content-box; padding: 16px; border: 1px solid var(--dnr-line); border-radius: 16px; background: var(--dnr-surface); }
 .dnr-empty-panel p { max-width: 240px; font-size: 12px; line-height: 1.6; }
