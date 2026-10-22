@@ -16744,7 +16744,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-shell[data-color-scheme="dark"] .dnr-toc--page { --dnr-toc-accent: #b9d1b6; --dnr-toc-active: #29382d; }
 .dnr-toc--page > :not(.dnr-toc-list) { flex-shrink: 0; }
 .dnr-toc--page > .dnr-panel-header { min-height: 44px; padding: 0; margin: 0; }
-.dnr-toc-intro { padding-top: 36px; }
+.dnr-toc-intro { padding-top: 20px; }
 .dnr-toc-intro h1 { margin: 0; font: 500 32px/1.3 "Songti SC", "Noto Serif SC", "SimSun", serif; letter-spacing: 1px; }
 .dnr-toc-filter { height: 46px; gap: 9px; margin-top: 24px; padding: 0 4px 0 12px; border-radius: 10px; }
 .dnr-toc-filter > svg { width: 18px; height: 18px; flex-shrink: 0; }
@@ -16768,7 +16768,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-toc-current svg { width: 13px; height: 13px; }
 .dnr-toc-help { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0; padding-top: 20px; color: var(--dnr-muted); font-size: 11px; line-height: 1.8; }
 .dnr-toc-help svg { width: 13px; height: 13px; }
-@container (max-width: 459px) { .dnr-toc-intro { padding-top: 32px; } .dnr-toc-intro h1 { font-size: 29px; } .dnr-toc--page .dnr-toc-list button { grid-template-columns: minmax(25px, max-content) minmax(0, 1fr) auto; gap: 9px; padding-right: 10px; } .dnr-toc--page .dnr-toc-list .dnr-toc-title { font-size: 14px; } }
+@container (max-width: 459px) { .dnr-toc-intro { padding-top: 16px; } .dnr-toc-intro h1 { font-size: 29px; } .dnr-toc--page .dnr-toc-list button { grid-template-columns: minmax(25px, max-content) minmax(0, 1fr) auto; gap: 9px; padding-right: 10px; } .dnr-toc--page .dnr-toc-list .dnr-toc-title { font-size: 14px; } }
 @media (max-height: 600px) { .dnr-toc--page { padding-block: 12px; } .dnr-toc-intro { padding-top: 12px; } .dnr-toc-intro h1 { font-size: 24px; } .dnr-toc-filter { margin-top: 14px; } .dnr-toc-context { margin-block: 3px 5px; } .dnr-toc-help { padding-top: 8px; } }
 /* Keep native mobile focus from zooming small search text; preserve pinch zoom. */
 @media (max-width: 600px), (pointer: coarse) {
@@ -16780,11 +16780,11 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-shell[data-color-scheme="dark"] .dnr-search-panel { --dnr-search-accent: #b9d1b6; --dnr-search-mark: #354b3a; --dnr-search-mark-text: #d4ead6; }
 .dnr-search-panel > * { flex-shrink: 0; }
 .dnr-search-panel > .dnr-panel-header { min-height: 44px; padding: 0; margin: 0; }
-.dnr-book-search-intro { padding-top: 36px; }
+.dnr-book-search-intro { padding-top: 20px; }
 .dnr-book-search-intro h1 { margin: 0; font: 500 32px/1.3 "Songti SC", "Noto Serif SC", "SimSun", serif; letter-spacing: 1px; }
-.dnr-book-search-field { height: 54px; gap: 11px; margin-top: 24px; padding: 3px 6px 3px 16px; border-radius: 13px; }
+.dnr-book-search-field { height: 46px; gap: 9px; margin-top: 24px; padding: 0 4px 0 12px; border-radius: 10px; }
 .dnr-book-search-field:focus-within { border-color: var(--dnr-search-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--dnr-search-accent) 8%, transparent); }
-.dnr-book-search-field > svg { width: 20px; height: 20px; flex-shrink: 0; }
+.dnr-book-search-field > svg { width: 18px; height: 18px; flex-shrink: 0; }
 .dnr-book-search-field input { height: 100%; font-size: 16px; }
 /* The enclosing field supplies the visible keyboard focus ring. */
 .dnr-shell .dnr-book-search-field input:focus-visible { outline: 0; }
@@ -16806,7 +16806,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-book-search-empty p { margin: 0; font-size: 12px; }
 .dnr-search-help { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; margin: auto 0 0; padding-top: 30px; color: var(--dnr-muted); font-size: 11px; line-height: 1.8; }
 .dnr-search-help svg { width: 13px; height: 13px; }
-@container (max-width: 459px) { .dnr-book-search-intro { padding-top: 32px; } .dnr-book-search-intro h1 { font-size: 29px; } .dnr-book-search-context { margin-bottom: 20px; } .dnr-search-results > button { padding: 16px; } .dnr-search-results > button p { font-size: 14px; } .dnr-book-search-meta { margin-bottom: 8px; } .dnr-book-search-shortcuts { display: none; } }
+@container (max-width: 459px) { .dnr-book-search-intro { padding-top: 16px; } .dnr-book-search-intro h1 { font-size: 29px; } .dnr-book-search-context { margin-bottom: 20px; } .dnr-search-results > button { padding: 16px; } .dnr-search-results > button p { font-size: 14px; } .dnr-book-search-meta { margin-bottom: 8px; } .dnr-book-search-shortcuts { display: none; } }
 
 .dnr-section-label { margin: 0 0 10px; color: var(--dnr-muted); font-size: 11px; font-weight: 500; }
 .dnr-setting-group { margin-bottom: 12px; padding: 16px; border: 1px solid var(--dnr-line); border-radius: 12px; background: var(--dnr-surface); }
@@ -16901,7 +16901,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-online-manage { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; padding: 8px 12px; border: 1px solid var(--dnr-line); border-radius: 9px; background: var(--dnr-bg); font-size: 13px; }
 .dnr-online-manage svg { width: 16px; height: 16px; color: var(--dnr-muted); }
 .dnr-online-manage:hover:not(:disabled) { background: var(--dnr-surface); }
-.dnr-online-intro { padding-top: clamp(32px, 7cqw, 53px); }
+.dnr-online-intro { padding-top: 20px; }
 .dnr-online-intro .dnr-online-eyebrow { margin: 0 0 12px; font-size: 11px; letter-spacing: 3px; }
 .dnr-online-intro h1 { margin: 0 0 12px; font: 500 32px/1.3 "Songti SC", "Noto Serif SC", "SimSun", serif; letter-spacing: 1px; }
 .dnr-online-intro p { margin: 0; color: var(--dnr-muted); font-size: 14px; line-height: 1.7; }
@@ -16911,12 +16911,12 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-online-heading > div > span { color: var(--dnr-muted); font-size: 11px; }
 .dnr-online-back { height: 28px; display: flex; align-items: center; gap: 2px; padding: 0 6px; border: 0; border-radius: 6px; background: transparent; color: var(--dnr-muted); font-size: 11px; }
 .dnr-online-back:hover { background: var(--dnr-accent-soft); }
-.dnr-online-search { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; margin-top: 28px; padding: 6px; border: 1px solid var(--dnr-line); border-radius: 13px; background: var(--dnr-bg); box-shadow: 0 5px 20px color-mix(in srgb, var(--dnr-text) 2%, transparent); }
+.dnr-online-search { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px; height: 46px; margin-top: 24px; padding: 0 2px 0 0; border: 1px solid var(--dnr-line); border-radius: 10px; background: var(--dnr-bg); box-shadow: 0 5px 20px color-mix(in srgb, var(--dnr-text) 2%, transparent); }
 .dnr-online-search:focus-within { border-color: var(--dnr-muted); }
-.dnr-online-search .dnr-search-field { height: 46px; min-width: 0; gap: 10px; padding: 0 10px; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
-.dnr-online-search .dnr-search-field svg { width: 20px; height: 20px; flex-shrink: 0; }
+.dnr-online-search .dnr-search-field { height: 44px; min-width: 0; gap: 9px; padding: 0 12px; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.dnr-online-search .dnr-search-field svg { width: 18px; height: 18px; flex-shrink: 0; }
 .dnr-online-search .dnr-search-field input { width: 100%; height: 100%; font-size: 16px; }
-.dnr-online-search > .dnr-primary-button { height: 46px; padding: 0 21px; border-radius: 8px; font-size: 14px; }
+.dnr-online-search > .dnr-primary-button { height: 44px; padding: 0 18px; border-radius: 8px; font-size: 14px; }
 .dnr-online-source-hint { display: flex; align-items: center; gap: 7px; margin: 12px 2px 0; color: var(--dnr-muted); font-size: 12px; }
 .dnr-online-source-hint svg { width: 13px; height: 13px; }
 .dnr-online-actions button:hover:not(:disabled) { background: var(--dnr-accent-soft); }
@@ -16952,6 +16952,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-online-disclaimer p { margin: 9px 0 0; }
 .dnr-online-disclaimer .dnr-online-credits { display: flex; flex-wrap: wrap; gap: 2px 16px; margin-top: 5px; font-size: 11px; }
 @container (max-width: 399px) { .dnr-online-panel { padding-top: 20px; padding-bottom: 20px; } .dnr-online-intro h1 { font-size: 29px; } .dnr-online-search { gap: 4px; } .dnr-online-search > .dnr-primary-button { padding-inline: 15px; } }
+@container (max-width: 459px) { .dnr-online-intro { padding-top: 16px; } }
 @media (pointer: coarse) { .dnr-online-manage, .dnr-online-disclaimer summary { min-height: 44px; } }
 
 .dnr-footer { height: var(--dnr-footer-height); flex: 0 0 var(--dnr-footer-height); display: flex; align-items: center; gap: 10px; padding: 0 12px; border-top: 1px solid var(--dnr-line); background: var(--dnr-bg); }
