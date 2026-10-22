@@ -11324,6 +11324,18 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		const [refreshing, setRefreshing] = (0, import_react.useState)(false);
 		const { running: uploading } = useUploads();
 		const input = (0, import_react.useRef)(null);
+		const library = (0, import_react.useRef)(null);
+		(0, import_react.useEffect)(() => {
+			const dismissOutside = (event) => {
+				if (!(event.target instanceof Node)) return;
+				const target = event.target;
+				library.current?.querySelectorAll(".dnr-cloud-book-more[open]").forEach((details) => {
+					if (!details.contains(target)) details.open = false;
+				});
+			};
+			document.addEventListener("pointerdown", dismissOutside, true);
+			return () => document.removeEventListener("pointerdown", dismissOutside, true);
+		}, []);
 		const refresh = async () => {
 			setRefreshing(true);
 			try {
@@ -11393,6 +11405,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		const lastRead = (entry) => Math.max(entry.last_read_at || 0, times[entry.id] || 0, ...recents.filter((recent) => recent.id === `cloud-${entry.id}` || linked[recent.id] === entry.id).map((recent) => recent.openedAt));
 		const recentBook = [...books].filter((entry) => lastRead(entry) > 0).sort((a, b) => lastRead(b) - lastRead(a))[0];
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
+			ref: library,
 			className: "dnr-cloud-library",
 			"aria-label": "云端书架",
 			children: [
@@ -11510,9 +11523,20 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: bookFormat(entry) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: formatBytes$1(entry.size) })] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", {
 								className: "dnr-cloud-book-more",
 								onToggle: (event) => {
-									if (event.currentTarget.open) event.currentTarget.closest(".dnr-cloud-books")?.querySelectorAll("details[open]").forEach((other) => {
-										if (other !== event.currentTarget) other.open = false;
+									const details = event.currentTarget;
+									if (!details.open) return;
+									details.closest(".dnr-cloud-books")?.querySelectorAll("details[open]").forEach((other) => {
+										if (other !== details) other.open = false;
 									});
+									const menu = details.querySelector(".dnr-cloud-book-menu");
+									const shelf = library.current?.getBoundingClientRect();
+									if (menu && shelf) {
+										const trigger = details.getBoundingClientRect();
+										const width = menu.getBoundingClientRect().width;
+										const left = Math.max(shelf.left + 20, Math.min(trigger.right - width, shelf.right - 20 - width));
+										menu.style.left = `${left - trigger.left}px`;
+										menu.style.right = "auto";
+									}
 								},
 								onKeyDown: (event) => {
 									if (event.key === "Escape") {
@@ -17190,10 +17214,12 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-cloud-book-meta { display:flex; gap:3px; justify-content:space-between; align-items:center; color:var(--dnr-muted); font-size:10px; }
 .dnr-cloud-book-meta > span { display:flex; flex-wrap:wrap; gap:2px 6px; }
 .dnr-cloud-book-meta > span > span { white-space:nowrap; }
+.dnr-cloud-book-more { position:relative; }
+.dnr-cloud-book:has(.dnr-cloud-book-more[open]) { z-index:6; }
 .dnr-cloud-book-more summary { display:grid; place-items:center; width:28px; min-height:32px; border-radius:5px; list-style:none; cursor:pointer; color:var(--dnr-text); font-size:17px; }
 .dnr-cloud-book-more summary::-webkit-details-marker { display:none; }
 .dnr-cloud-book-more summary:hover, .dnr-cloud-book-more[open] summary { background:var(--dnr-surface); }
-.dnr-cloud-book-menu { position:absolute; z-index:5; top:100%; left:0; right:0; padding:12px; margin-top:4px; color:var(--dnr-text); background:var(--dnr-bg); border:1px solid var(--dnr-line); border-radius:9px; box-shadow:0 6px 18px #0001; overflow-wrap:anywhere; }
+.dnr-cloud-book-menu { position:absolute; z-index:5; bottom:calc(100% + 8px); right:0; width:min(240px,calc(100cqw - 40px)); max-height:min(320px,50cqh); overflow-y:auto; padding:14px; color:var(--dnr-text); background:var(--dnr-bg); border:1px solid var(--dnr-line); border-radius:10px; box-shadow:0 4px 20px #00000012; overflow-wrap:anywhere; }
 .dnr-cloud-book-menu > span { color:var(--dnr-muted); font-size:10px; }
 .dnr-cloud-book-menu p { margin:6px 0 12px; font-size:11px; }
 .dnr-cloud-book-menu a { display:block; font-size:11px; line-height:1.8; padding:5px 0; }
