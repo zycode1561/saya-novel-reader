@@ -12872,6 +12872,23 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 
 //#endregion
 //#region src/client/components/SearchPanel.tsx
+	function highlightExcerpt(text, query) {
+		const needle = query.trim().toLocaleLowerCase();
+		if (needle === "") return text;
+		const haystack = text.toLocaleLowerCase();
+		const parts = [];
+		let from = 0;
+		while (from < text.length) {
+			const index = haystack.indexOf(needle, from);
+			if (index < 0) {
+				parts.push(text.slice(from));
+				break;
+			}
+			parts.push(text.slice(from, index), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("mark", { children: text.slice(index, index + needle.length) }, index));
+			from = index + needle.length;
+		}
+		return parts;
+	}
 	function SearchPanel({ query, onQueryChange, onSelect, onBack }) {
 		const { book, goToParagraph } = useReader();
 		const inputRef = (0, import_react.useRef)(null);
@@ -12891,20 +12908,21 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 			className: "dnr-search-panel",
 			children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PanelHeader, {
-					title: "书内搜索",
-					onBack,
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: results.length > 0 ? `${selected + 1} / ${results.length}` : "0 条" })
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PanelHeader, { onBack }),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "dnr-book-search-intro",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: "书内搜索" })
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
-					className: "dnr-search-field",
+					className: "dnr-search-field dnr-book-search-field",
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "search" }),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
 							ref: inputRef,
 							value: query,
 							onChange: (event) => onQueryChange(event.target.value),
-							placeholder: "输入关键词",
+							placeholder: "输入关键词，查找书中内容",
+							"aria-label": "书内搜索关键词",
 							onKeyDown: (event) => {
 								if (event.key === "Enter" && results.length > 0) {
 									event.preventDefault();
@@ -12915,18 +12933,24 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 						query !== "" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 							type: "button",
 							"aria-label": "清空搜索",
-							onClick: () => onQueryChange(""),
+							onClick: () => {
+								onQueryChange("");
+								inputRef.current?.focus({ preventScroll: true });
+							},
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
 								name: "close",
-								width: "14",
-								height: "14"
+								width: "16",
+								height: "16"
 							})
 						})
 					]
 				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-					className: "dnr-search-help",
-					children: [book?.onlineReading ? "本章搜索" : "全文搜索", " · Enter 下一个 · Shift+Enter 上一个 · Esc 关闭"]
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "dnr-book-search-context",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "book" }), book?.onlineReading ? "本章搜索" : "全文搜索"] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						"aria-live": "polite",
+						children: query.trim() === "" ? "输入即搜索" : `${results.length} 条结果`
+					})]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "dnr-search-results",
@@ -12934,15 +12958,29 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 						type: "button",
 						className: selected === index ? "is-active" : "",
 						onClick: () => jump(index),
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: book?.chapters[result.chapterIndex]?.title }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: result.excerpt })]
-					}, result.id)), query.trim() !== "" && results.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "dnr-empty-small",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "dnr-book-search-meta",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: book?.chapters[result.chapterIndex]?.title }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: String(index + 1).padStart(2, "0") })]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: highlightExcerpt(result.excerpt, query) })]
+					}, result.id)), results.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "dnr-book-search-empty",
 						children: [
-							"没有找到“",
-							query.trim(),
-							"”"
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: query.trim() === "" ? "book" : "search" }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: query.trim() === "" ? "在书中找一句话" : `没有找到“${query.trim()}”` }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: query.trim() === "" ? "输入关键词，即可查找当前书籍" : "换一个关键词，再试试看" })
 						]
 					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+					className: "dnr-search-help",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "chevron-right" }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "点击摘录，回到正文" }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "dnr-book-search-shortcuts",
+							children: "· Enter 下一个 · Shift+Enter 上一个 · Esc 关闭"
+						})
+					]
 				})
 			]
 		});
@@ -16659,12 +16697,37 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 }
 .dnr-search-panel, .dnr-settings { width: 100%; max-width: 680px; height: 100%; margin-inline: auto; padding: 24px clamp(16px, 4cqw, 28px) 32px; overflow: auto; }
 .dnr-search-panel > .dnr-panel-header, .dnr-settings > .dnr-panel-header { top: -24px; }
-.dnr-search-help { margin: 8px 0 12px; color: var(--dnr-muted); font-size: 11px; }
-.dnr-search-results { display: flex; flex-direction: column; gap: 6px; }
-.dnr-search-results > button { padding: 10px 12px; border: 1px solid var(--dnr-line); border-radius: 8px; background: var(--dnr-bg); text-align: left; }
-.dnr-search-results > button:hover, .dnr-search-results > button.is-active { background: var(--dnr-accent-soft); }
-.dnr-search-results span { color: var(--dnr-text); font-size: 11px; font-weight: 500; }
-.dnr-search-results p { margin: 4px 0 0; font-size: 12px; line-height: 1.6; color: var(--dnr-muted); }
+.dnr-search-panel { --dnr-search-accent: #365749; --dnr-search-mark: #e3eee6; --dnr-search-mark-text: #284c35; display: flex; flex-direction: column; padding-inline: clamp(20px, 4cqw, 32px); }
+.dnr-shell[data-color-scheme="dark"] .dnr-search-panel { --dnr-search-accent: #b9d1b6; --dnr-search-mark: #354b3a; --dnr-search-mark-text: #d4ead6; }
+.dnr-search-panel > * { flex-shrink: 0; }
+.dnr-search-panel > .dnr-panel-header { min-height: 44px; padding: 0; margin: 0; }
+.dnr-book-search-intro { padding-top: 36px; }
+.dnr-book-search-intro h1 { margin: 0; font: 500 32px/1.3 "Songti SC", "Noto Serif SC", "SimSun", serif; letter-spacing: 1px; }
+.dnr-book-search-field { height: 54px; gap: 11px; margin-top: 24px; padding: 3px 6px 3px 16px; border-radius: 13px; }
+.dnr-book-search-field:focus-within { border-color: var(--dnr-search-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--dnr-search-accent) 8%, transparent); }
+.dnr-book-search-field > svg { width: 20px; height: 20px; flex-shrink: 0; }
+.dnr-book-search-field input { height: 100%; font-size: 16px; }
+/* The enclosing field supplies the visible keyboard focus ring. */
+.dnr-shell .dnr-book-search-field input:focus-visible { outline: 0; }
+.dnr-book-search-field button { width: 40px; height: 44px; flex-shrink: 0; border-radius: 6px; }
+.dnr-book-search-context { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin: 13px 2px 26px; color: var(--dnr-muted); font-size: 12px; }
+.dnr-book-search-context > span:first-child { display: flex; align-items: center; gap: 6px; }
+.dnr-book-search-context svg { width: 13px; height: 13px; }
+.dnr-book-search-context > span:last-child { font-variant-numeric: tabular-nums; }
+.dnr-search-results { display: flex; flex: 1 0 auto; flex-direction: column; gap: 12px; }
+.dnr-search-results > button { flex-shrink: 0; padding: 18px; border: 1px solid var(--dnr-line); border-radius: 11px; background: var(--dnr-bg); color: var(--dnr-text); text-align: left; }
+.dnr-search-results > button:hover, .dnr-search-results > button.is-active { background: var(--dnr-surface); }
+.dnr-book-search-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; color: var(--dnr-muted); font-size: 12px; font-weight: 400; }
+.dnr-book-search-meta > span:last-child { font-size: 11px; font-variant-numeric: tabular-nums; }
+.dnr-search-results > button p { margin: 0; font-size: 15px; line-height: 1.85; letter-spacing: .015em; color: var(--dnr-text); overflow-wrap: anywhere; }
+.dnr-search-results mark { padding: 1px 2px; border-radius: 3px; background: var(--dnr-search-mark); color: var(--dnr-search-mark-text); font-weight: 500; }
+.dnr-book-search-empty { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 240px; padding: 32px 0; text-align: center; color: var(--dnr-muted); }
+.dnr-book-search-empty > svg { width: 38px; height: 38px; margin-bottom: 6px; opacity: .65; stroke-width: 1.2; }
+.dnr-book-search-empty h2 { margin: 0; color: var(--dnr-text); font-size: 15px; font-weight: 400; overflow-wrap: anywhere; max-width: 100%; }
+.dnr-book-search-empty p { margin: 0; font-size: 12px; }
+.dnr-search-help { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; margin: auto 0 0; padding-top: 30px; color: var(--dnr-muted); font-size: 11px; line-height: 1.8; }
+.dnr-search-help svg { width: 13px; height: 13px; }
+@container (max-width: 459px) { .dnr-book-search-intro { padding-top: 32px; } .dnr-book-search-intro h1 { font-size: 29px; } .dnr-book-search-context { margin-bottom: 20px; } .dnr-search-results > button { padding: 16px; } .dnr-search-results > button p { font-size: 14px; } .dnr-book-search-meta { margin-bottom: 8px; } .dnr-book-search-shortcuts { display: none; } }
 
 .dnr-section-label { margin: 0 0 10px; color: var(--dnr-muted); font-size: 11px; font-weight: 500; }
 .dnr-setting-group { margin-bottom: 12px; padding: 16px; border: 1px solid var(--dnr-line); border-radius: 12px; background: var(--dnr-surface); }
