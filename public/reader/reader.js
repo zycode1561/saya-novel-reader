@@ -15250,26 +15250,34 @@ var import_dist = /* @__PURE__ */ __toESM(require_dist());
 			className: "dnr-online-panel",
 			children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", {
-					className: "dnr-online-heading",
+					className: "dnr-online-search-heading",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						className: "dnr-online-back",
+						type: "button",
+						onClick: onBack,
+						"aria-label": "返回",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
+							name: "chevron-left",
+							width: "16",
+							height: "16"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "返回" })]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						className: "dnr-online-manage",
+						type: "button",
+						disabled: activeJob || searching || opening,
+						onClick: () => setManagingRules(true),
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "settings" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "书源管理" })]
+					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "dnr-online-intro",
 					children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-							className: "dnr-online-back",
-							type: "button",
-							onClick: onBack,
-							"aria-label": "返回",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
-								name: "chevron-left",
-								width: "16",
-								height: "16"
-							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "返回" })]
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "dnr-online-eyebrow",
+							children: "发现下一本好书"
 						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "在线搜书" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "聚合已启用书源" })] }),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-							type: "button",
-							disabled: activeJob || searching || opening,
-							onClick: () => setManagingRules(true),
-							children: "书源管理"
-						})
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: "在线搜书" }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "在已启用的书源中，寻找想读的故事。" })
 					]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
@@ -15292,6 +15300,10 @@ var import_dist = /* @__PURE__ */ __toESM(require_dist());
 						disabled: searching || activeJob || opening,
 						children: searching ? "正在搜索…" : "搜书"
 					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+					className: "dnr-online-source-hint",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "library" }), "搜索范围 · 已启用的书源"]
 				}),
 				searchedSources > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
 					className: "dnr-online-summary",
@@ -15341,72 +15353,96 @@ var import_dist = /* @__PURE__ */ __toESM(require_dist());
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "dnr-online-results",
-					children: [results.map((result) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "dnr-online-result-heading",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: result.bookName }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: metadata(result) || "暂无书籍元数据" })] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: result.sourceName })]
-						}),
-						(result.latestChapter || result.lastUpdateTime) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
-							className: "dnr-online-latest",
+					"aria-busy": searching,
+					children: [
+						!searching && searchedSources === 0 && results.length === 0 && error === null && job === null && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "dnr-online-empty",
 							children: [
-								result.latestChapter,
-								result.latestChapter && result.lastUpdateTime ? " · " : "",
-								result.lastUpdateTime
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "book" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "从一本想读的书开始" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "输入书名或作者，搜索结果会出现在这里" })
 							]
 						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "dnr-online-actions",
+						searching && results.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "dnr-online-empty",
+							role: "status",
 							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-									className: "dnr-primary-button",
-									type: "button",
-									disabled: activeJob || opening,
-									onClick: () => {
-										readOnline(result);
-									},
-									children: "在线阅读"
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-									type: "button",
-									disabled: activeJob || opening,
-									onClick: () => {
-										acquire(result);
-									},
-									children: cloudHosted ? "加入云端书库并阅读" : "加入书库并阅读"
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
-									href: result.sourceUrl,
-									target: "_blank",
-									rel: "noreferrer",
-									children: "源站链接"
-								})
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "search" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "正在寻找相关书籍…" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "正在搜索已启用的书源，请稍候" })
 							]
+						}),
+						results.map((result) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "dnr-online-result-heading",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: result.bookName }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: metadata(result) || "暂无书籍元数据" })] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: result.sourceName })]
+							}),
+							(result.latestChapter || result.lastUpdateTime) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+								className: "dnr-online-latest",
+								children: [
+									result.latestChapter,
+									result.latestChapter && result.lastUpdateTime ? " · " : "",
+									result.lastUpdateTime
+								]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "dnr-online-actions",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+										className: "dnr-primary-button",
+										type: "button",
+										disabled: activeJob || opening,
+										onClick: () => {
+											readOnline(result);
+										},
+										children: "在线阅读"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+										type: "button",
+										disabled: activeJob || opening,
+										onClick: () => {
+											acquire(result);
+										},
+										children: cloudHosted ? "加入云端书库并阅读" : "加入书库并阅读"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
+										href: result.sourceUrl,
+										target: "_blank",
+										rel: "noreferrer",
+										children: "源站链接"
+									})
+								]
+							})
+						] }, result.id)),
+						!searching && searchedSources > 0 && results.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "dnr-empty-small",
+							children: "没有找到匹配书籍，可以换个关键词。"
 						})
-					] }, result.id)), !searching && searchedSources > 0 && results.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "dnr-empty-small",
-						children: "没有找到匹配书籍，可以换个关键词。"
-					})]
+					]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("aside", {
 					className: "dnr-online-disclaimer",
-					children: [
-						cloudHosted ? "搜索和抓取请求由云端服务访问第三方书源；" : "搜索和抓取请求由本机 Host 直接访问第三方书源；",
-						"可用性与内容不作保证，请遵守来源网站规则。 内置规则与设计源自 ",
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("summary", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "内容来自第三方书源" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+						className: "dnr-online-disclosure",
+						children: ["使用说明", /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "chevron-right" })]
+					})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [cloudHosted ? "搜索和抓取请求由云端服务访问第三方书源；" : "搜索和抓取请求由本机 Host 直接访问第三方书源；", "可用性与内容不作保证，请遵守来源网站规则。"] })] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+						className: "dnr-online-credits",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["规则与设计源自 ", /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
 							href: "https://github.com/freeok/so-novel",
 							target: "_blank",
 							rel: "noreferrer",
 							children: "SoNovel"
-						}),
-						"， 本插件完整源码按 ",
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
-							href: "https://github.com/zycode1561/deepseek-novel-reader",
-							target: "_blank",
-							rel: "noreferrer",
-							children: "AGPL-3.0"
-						}),
-						" 提供。"
-					]
+						})] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+							"完整源码按 ",
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
+								href: "https://github.com/zycode1561/deepseek-novel-reader",
+								target: "_blank",
+								rel: "noreferrer",
+								children: "AGPL-3.0"
+							}),
+							" 提供"
+						] })]
+					})]
 				})
 			]
 		});
@@ -16679,18 +16715,39 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 
 .dnr-online-container { height: 100%; }
 .dnr-online-container[hidden] { display: none; }
-.dnr-online-panel { width: 100%; max-width: 680px; height: 100%; margin-inline: auto; padding: 24px clamp(16px, 4cqw, 28px) 32px; overflow: auto; }
+.dnr-online-panel { --dnr-accent: #365749; --dnr-on-accent: #fff; --dnr-accent-soft: rgba(54, 87, 73, .06); display: flex; flex-direction: column; width: 100%; max-width: 680px; height: 100%; margin-inline: auto; padding: 24px clamp(20px, 4cqw, 32px) 24px; overflow: auto; }
+.dnr-shell[data-color-scheme="dark"] .dnr-online-panel { --dnr-accent: #b9d1b6; --dnr-on-accent: #1b2c21; --dnr-accent-soft: rgba(185, 209, 182, .08); }
+.dnr-online-panel > :not(.dnr-online-results) { flex-shrink: 0; }
+.dnr-online-search-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.dnr-online-search-heading .dnr-online-back { height: 44px; gap: 6px; padding: 0; font-size: 13px; color: var(--dnr-muted); }
+.dnr-online-manage { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; padding: 8px 12px; border: 1px solid var(--dnr-line); border-radius: 9px; background: var(--dnr-bg); font-size: 13px; }
+.dnr-online-manage svg { width: 16px; height: 16px; color: var(--dnr-muted); }
+.dnr-online-manage:hover:not(:disabled) { background: var(--dnr-surface); }
+.dnr-online-intro { padding-top: clamp(32px, 7cqw, 53px); }
+.dnr-online-intro .dnr-online-eyebrow { margin: 0 0 12px; font-size: 11px; letter-spacing: 3px; }
+.dnr-online-intro h1 { margin: 0 0 12px; font: 500 32px/1.3 "Songti SC", "Noto Serif SC", "SimSun", serif; letter-spacing: 1px; }
+.dnr-online-intro p { margin: 0; color: var(--dnr-muted); font-size: 14px; line-height: 1.7; }
 .dnr-online-heading { display: flex; align-items: center; gap: 8px; padding: 0 0 16px; }
 .dnr-online-heading > div { min-width: 0; display: flex; flex: 1; align-items: baseline; justify-content: space-between; gap: 8px; }
 .dnr-online-heading strong { font-size: 17px; font-weight: 600; }
 .dnr-online-heading > div > span { color: var(--dnr-muted); font-size: 11px; }
 .dnr-online-back { height: 28px; display: flex; align-items: center; gap: 2px; padding: 0 6px; border: 0; border-radius: 6px; background: transparent; color: var(--dnr-muted); font-size: 11px; }
 .dnr-online-back:hover { background: var(--dnr-accent-soft); }
-.dnr-online-search { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: stretch; gap: 8px; }
-.dnr-online-search > .dnr-primary-button { height: 40px; border-radius: 10px; }
+.dnr-online-search { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; margin-top: 28px; padding: 6px; border: 1px solid var(--dnr-line); border-radius: 13px; background: var(--dnr-bg); box-shadow: 0 5px 20px color-mix(in srgb, var(--dnr-text) 2%, transparent); }
+.dnr-online-search:focus-within { border-color: var(--dnr-muted); }
+.dnr-online-search .dnr-search-field { height: 46px; min-width: 0; gap: 10px; padding: 0 10px; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.dnr-online-search .dnr-search-field svg { width: 20px; height: 20px; flex-shrink: 0; }
+.dnr-online-search .dnr-search-field input { width: 100%; height: 100%; font-size: 16px; }
+.dnr-online-search > .dnr-primary-button { height: 46px; padding: 0 21px; border-radius: 8px; font-size: 14px; }
+.dnr-online-source-hint { display: flex; align-items: center; gap: 7px; margin: 12px 2px 0; color: var(--dnr-muted); font-size: 12px; }
+.dnr-online-source-hint svg { width: 13px; height: 13px; }
 .dnr-online-actions button:hover:not(:disabled) { background: var(--dnr-accent-soft); }
 .dnr-online-summary { margin: 10px 0; color: var(--dnr-muted); font-size: 11px; }
-.dnr-online-results { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.dnr-online-results { display: flex; flex: 1 0 auto; flex-direction: column; gap: 8px; margin-top: 20px; }
+.dnr-online-empty { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; min-height: 210px; padding: 32px 0; text-align: center; }
+.dnr-online-empty > svg { width: 46px; height: 46px; margin-bottom: 17px; color: var(--dnr-muted); opacity: .6; stroke-width: 1; }
+.dnr-online-empty h2 { margin: 0 0 8px; font-size: 15px; font-weight: 400; }
+.dnr-online-empty p { max-width: 330px; margin: 0; color: var(--dnr-muted); font-size: 12px; line-height: 1.7; }
 .dnr-online-results article { padding: 16px; border: 1px solid var(--dnr-line); border-radius: 12px; background: var(--dnr-surface); }
 .dnr-online-result-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .dnr-online-result-heading > div { min-width: 0; }
@@ -16708,7 +16765,16 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-acquisition--failed { border-color: color-mix(in srgb, var(--dnr-error) 25%, transparent); }
 .dnr-acquisition-progress { height: 3px; border-radius: 9px; background: var(--dnr-line); overflow: hidden; }
 .dnr-acquisition-progress i { display: block; height: 100%; background: var(--dnr-muted); transition: width 180ms; }
-.dnr-online-disclaimer { margin: 16px 0 4px; padding: 10px 12px; border-radius: 8px; background: var(--dnr-surface); color: var(--dnr-muted); font-size: 11px; line-height: 1.6; }
+.dnr-online-disclaimer { margin: 24px 0 0; padding-top: 16px; border-top: 1px solid var(--dnr-line); color: var(--dnr-muted); font-size: 12px; line-height: 1.8; }
+.dnr-online-disclaimer summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 36px; list-style: none; cursor: pointer; }
+.dnr-online-disclaimer summary::-webkit-details-marker { display: none; }
+.dnr-online-disclosure { display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+.dnr-online-disclosure svg { width: 13px; height: 13px; transform: rotate(90deg); }
+.dnr-online-disclaimer details[open] .dnr-online-disclosure svg { transform: rotate(-90deg); }
+.dnr-online-disclaimer p { margin: 9px 0 0; }
+.dnr-online-disclaimer .dnr-online-credits { display: flex; flex-wrap: wrap; gap: 2px 16px; margin-top: 5px; font-size: 11px; }
+@container (max-width: 399px) { .dnr-online-panel { padding-top: 20px; padding-bottom: 20px; } .dnr-online-intro h1 { font-size: 29px; } .dnr-online-search { gap: 4px; } .dnr-online-search > .dnr-primary-button { padding-inline: 15px; } }
+@media (pointer: coarse) { .dnr-online-manage, .dnr-online-disclaimer summary { min-height: 44px; } }
 
 .dnr-footer { height: var(--dnr-footer-height); flex: 0 0 var(--dnr-footer-height); display: flex; align-items: center; gap: 10px; padding: 0 12px; border-top: 1px solid var(--dnr-line); background: var(--dnr-bg); }
 .dnr-footer > button { height: 28px; display: flex; align-items: center; gap: 3px; padding: 0 6px; border: 0; border-radius: 6px; background: transparent; color: var(--dnr-muted); font-size: 11px; white-space: nowrap; }
