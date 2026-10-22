@@ -11503,11 +11503,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(BookCover, { entry }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: displayName(entry.name) })]
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "dnr-cloud-book-meta",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-								bookFormat(entry),
-								" · ",
-								formatBytes$1(entry.size)
-							] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", {
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: bookFormat(entry) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: formatBytes$1(entry.size) })] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", {
 								className: "dnr-cloud-book-more",
 								onToggle: (event) => {
 									if (event.currentTarget.open) event.currentTarget.closest(".dnr-cloud-books")?.querySelectorAll("details[open]").forEach((other) => {
@@ -16846,7 +16842,8 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-cloud-continue .dnr-cloud-cover small { font-size:9px; }
 .dnr-cloud-books h3 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:13px; font-weight:500; line-height:1.65; height:3.3em; margin:12px 0 2px; overflow-wrap:anywhere; }
 .dnr-cloud-book-meta { display:flex; gap:3px; justify-content:space-between; align-items:center; color:var(--dnr-muted); font-size:10px; }
-.dnr-cloud-book-meta > span { overflow-wrap:anywhere; }
+.dnr-cloud-book-meta > span { display:flex; flex-wrap:wrap; gap:2px 6px; }
+.dnr-cloud-book-meta > span > span { white-space:nowrap; }
 .dnr-cloud-book-more summary { display:grid; place-items:center; width:28px; min-height:32px; border-radius:5px; list-style:none; cursor:pointer; color:var(--dnr-text); font-size:17px; }
 .dnr-cloud-book-more summary::-webkit-details-marker { display:none; }
 .dnr-cloud-book-more summary:hover, .dnr-cloud-book-more[open] summary { background:var(--dnr-surface); }
