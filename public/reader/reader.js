@@ -16746,8 +16746,8 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-toc--page > .dnr-panel-header { min-height: 44px; padding: 0; margin: 0; }
 .dnr-toc-intro { padding-top: 36px; }
 .dnr-toc-intro h1 { margin: 0; font: 500 32px/1.3 "Songti SC", "Noto Serif SC", "SimSun", serif; letter-spacing: 1px; }
-.dnr-toc-filter { height: 54px; gap: 11px; margin-top: 24px; padding: 3px 6px 3px 16px; border-radius: 13px; }
-.dnr-toc-filter > svg { width: 20px; height: 20px; flex-shrink: 0; }
+.dnr-toc-filter { height: 46px; gap: 9px; margin-top: 24px; padding: 0 4px 0 12px; border-radius: 10px; }
+.dnr-toc-filter > svg { width: 18px; height: 18px; flex-shrink: 0; }
 .dnr-toc-filter input { height: 100%; font-size: 16px; }
 .dnr-toc-filter:focus-within { border-color: var(--dnr-toc-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--dnr-toc-accent) 8%, transparent); }
 /* The enclosing filter supplies the visible keyboard focus ring. */
@@ -16769,7 +16769,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-toc-help { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0; padding-top: 20px; color: var(--dnr-muted); font-size: 11px; line-height: 1.8; }
 .dnr-toc-help svg { width: 13px; height: 13px; }
 @container (max-width: 459px) { .dnr-toc-intro { padding-top: 32px; } .dnr-toc-intro h1 { font-size: 29px; } .dnr-toc--page .dnr-toc-list button { grid-template-columns: minmax(25px, max-content) minmax(0, 1fr) auto; gap: 9px; padding-right: 10px; } .dnr-toc--page .dnr-toc-list .dnr-toc-title { font-size: 14px; } }
-@media (max-height: 600px) { .dnr-toc--page { padding-block: 12px; } .dnr-toc-intro { padding-top: 12px; } .dnr-toc-intro h1 { font-size: 24px; } .dnr-toc-filter { margin-top: 14px; height: 48px; } .dnr-toc-context { margin-block: 3px 5px; } .dnr-toc-help { padding-top: 8px; } }
+@media (max-height: 600px) { .dnr-toc--page { padding-block: 12px; } .dnr-toc-intro { padding-top: 12px; } .dnr-toc-intro h1 { font-size: 24px; } .dnr-toc-filter { margin-top: 14px; } .dnr-toc-context { margin-block: 3px 5px; } .dnr-toc-help { padding-top: 8px; } }
 /* Keep native mobile focus from zooming small search text; preserve pinch zoom. */
 @media (max-width: 600px), (pointer: coarse) {
   .dnr-shell .dnr-search-field input { font-size: 16px; }
