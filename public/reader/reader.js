@@ -13069,178 +13069,215 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	}];
 	function SettingsPanel({ onBack } = {}) {
 		const { settings, updateSettings } = useReader();
+		const fontSizeId = (0, import_react.useId)();
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 			className: "dnr-settings",
 			children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PanelHeader, {
-					title: "阅读设置",
-					onBack,
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [settings.fontSize, "px"] })
-				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PanelHeader, { onBack }),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "dnr-setting-group",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "dnr-section-label",
-						children: "字号"
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "dnr-range-row",
-						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "小" }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-								"aria-label": "字体大小",
-								type: "range",
-								min: "12",
-								max: "32",
-								step: "1",
-								value: settings.fontSize,
-								onChange: (event) => updateSettings({ fontSize: Number(event.target.value) })
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "大" })
-						]
-					})]
+					className: "dnr-settings-intro",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: "阅读设置" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "即时生效" })]
 				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "dnr-setting-group",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "dnr-section-label",
-						children: "字体"
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "dnr-font-grid",
-						children: fonts.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-							type: "button",
-							className: settings.fontFamily === font.value ? "is-active" : "",
-							"data-font": font.value,
-							onClick: () => updateSettings({ fontFamily: font.value }),
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: font.label }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: font.preview })]
-						}, font.value))
-					})]
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "dnr-setting-group",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "dnr-section-label",
-						children: "行间距"
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "dnr-segmented",
-						children: spacings.map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-							type: "button",
-							className: settings.lineSpacing === item.value ? "is-active" : "",
-							onClick: () => updateSettings({ lineSpacing: item.value }),
-							children: item.label
-						}, item.value))
-					})]
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "dnr-setting-group",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "dnr-section-label",
-						children: "翻页方式"
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "dnr-page-mode-grid",
-						children: pageModes.map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-							type: "button",
-							className: settings.pageMode === item.value ? "is-active" : "",
-							onClick: () => updateSettings({ pageMode: item.value }),
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: item.label }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: item.hint })]
-						}, item.value))
-					})]
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "dnr-setting-group",
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
+					className: "dnr-settings-section",
+					"aria-label": "正文排版",
 					children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-							className: "dnr-section-label",
-							children: "主题"
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "正文排版" }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+							className: "dnr-settings-row",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "字体" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", {
+								"aria-label": "字体",
+								value: settings.fontFamily,
+								onChange: (event) => updateSettings({ fontFamily: event.currentTarget.value }),
+								children: fonts.map((font) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+									value: font.value,
+									children: font.label === "系统" ? "系统字体" : font.label
+								}, font.value))
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "dnr-settings-size-heading",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", {
+								htmlFor: fontSizeId,
+								children: "字号"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("output", {
+								htmlFor: fontSizeId,
+								children: [settings.fontSize, " px"]
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "dnr-range-row",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "小" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									id: fontSizeId,
+									"aria-label": "字体大小",
+									type: "range",
+									min: "12",
+									max: "32",
+									step: "1",
+									value: settings.fontSize,
+									onChange: (event) => updateSettings({ fontSize: Number(event.target.value) })
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "大" })
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "dnr-settings-label",
+							children: "行间距"
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-							className: "dnr-theme-grid",
+							className: "dnr-settings-segments",
+							role: "group",
+							"aria-label": "行间距",
+							children: spacings.map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
+								"aria-pressed": settings.lineSpacing === item.value,
+								onClick: () => updateSettings({ lineSpacing: item.value }),
+								children: item.label
+							}, item.value))
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+							className: "dnr-settings-row dnr-settings-indent",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "段落首行缩进" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+								className: "dnr-settings-switch",
+								type: "checkbox",
+								role: "switch",
+								"aria-label": "段落首行缩进",
+								checked: settings.firstLineIndent,
+								onChange: (event) => updateSettings({ firstLineIndent: event.target.checked })
+							})]
+						})
+					]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
+					className: "dnr-settings-section",
+					"aria-label": "阅读外观",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "阅读外观" }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "dnr-settings-themes",
+							role: "group",
+							"aria-label": "阅读主题",
 							children: themes.map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 								type: "button",
 								"aria-pressed": settings.theme === item.value,
-								className: settings.theme === item.value ? "is-active" : "",
 								onClick: () => updateSettings({ theme: item.value }),
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { "data-theme": item.value }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: item.label })]
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "dnr-settings-swatch",
+									"data-theme": item.value,
+									"aria-hidden": "true"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: item.label })]
 							}, item.value))
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-							className: "dnr-setting-hint",
-							children: "跟随外观自动适配宿主或系统的浅色、深色模式。护眼色仅用于正文。"
+							className: "dnr-settings-hint",
+							children: "跟随外观适配宿主或系统；护眼色仅用于正文。"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "dnr-settings-preview-label",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "正文预览" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "示例文字" })]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "dnr-settings-preview",
+							"data-font": settings.fontFamily,
+							"data-spacing": settings.lineSpacing,
+							"data-indent": settings.firstLineIndent || void 0,
+							style: { fontSize: `${settings.fontSize}px` },
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "窗外的风掠过书页，故事便从这一刻开始。" })
 						})
 					]
 				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "dnr-setting-group",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "dnr-section-label",
-						children: "目录布局"
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "dnr-segmented",
-						children: ["left", "top"].map((value) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-							type: "button",
-							className: settings.tocPosition === value ? "is-active" : "",
-							onClick: () => updateSettings({ tocPosition: value }),
-							children: value === "left" ? "左侧常驻" : "顶部面板"
-						}, value))
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", {
+					className: "dnr-settings-more",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("summary", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "chevron-right" }), "阅读与导航"] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
+						settings.pageMode === "scroll" ? "上下滚动" : "左右翻页",
+						" · ",
+						settings.keepNavigationVisible ? "导航常驻" : "点击显隐"
+					] })] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "dnr-settings-more-body",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+								className: "dnr-settings-row",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "翻页方式" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", {
+									"aria-label": "翻页方式",
+									value: settings.pageMode,
+									onChange: (event) => updateSettings({ pageMode: event.currentTarget.value }),
+									children: pageModes.map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+										value: item.value,
+										children: item.label
+									}, item.value))
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+								className: "dnr-settings-row",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "目录布局" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+									"aria-label": "目录布局",
+									value: settings.tocPosition,
+									onChange: (event) => updateSettings({ tocPosition: event.currentTarget.value }),
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+										value: "left",
+										children: "左侧常驻"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+										value: "top",
+										children: "顶部面板"
+									})]
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+								className: "dnr-settings-row",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "底部显示" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", {
+									"aria-label": "底部显示",
+									value: settings.footerDisplay,
+									onChange: (event) => updateSettings({ footerDisplay: event.currentTarget.value }),
+									children: footerDisplays.map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+										value: item.value,
+										children: item.label
+									}, item.value))
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+								className: "dnr-settings-row",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "导航栏常驻" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+									className: "dnr-settings-switch",
+									type: "checkbox",
+									role: "switch",
+									"aria-label": "导航栏常驻",
+									checked: settings.keepNavigationVisible,
+									onChange: (event) => updateSettings({ keepNavigationVisible: event.target.checked })
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "dnr-settings-hint",
+								children: "关闭后，可点击正文中间切换导航显隐。"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+								className: "dnr-settings-row",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "章节智能预读" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("select", {
+									"aria-label": "章节智能预读",
+									value: settings.prefetchChapters,
+									onChange: (event) => updateSettings({ prefetchChapters: Number(event.currentTarget.value) }),
+									children: [
+										0,
+										1,
+										2,
+										3
+									].map((count) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+										value: count,
+										children: count === 0 ? "关闭" : `${count} 章`
+									}, count))
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "dnr-settings-hint",
+								children: "预读仅用于在线阅读，正文保留在内存。"
+							})
+						]
 					})]
 				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "dnr-setting-group",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "dnr-section-label",
-						children: "底部显示"
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "dnr-segmented",
-						children: footerDisplays.map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-							type: "button",
-							className: settings.footerDisplay === item.value ? "is-active" : "",
-							onClick: () => updateSettings({ footerDisplay: item.value }),
-							children: item.label
-						}, item.value))
-					})]
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
-					className: "dnr-toggle-row",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "导航栏常驻" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "保持顶部导航和底部章节栏显示，关闭后可点击正文中间切换显隐" })] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-						type: "checkbox",
-						checked: settings.keepNavigationVisible,
-						onChange: (event) => updateSettings({ keepNavigationVisible: event.target.checked })
-					})]
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "dnr-setting-group",
-					children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-							className: "dnr-section-label",
-							children: "章节智能预读"
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-							className: "dnr-segmented",
-							children: [
-								0,
-								1,
-								2,
-								3
-							].map((count) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-								type: "button",
-								"aria-pressed": settings.prefetchChapters === count,
-								className: settings.prefetchChapters === count ? "is-active" : "",
-								onClick: () => updateSettings({ prefetchChapters: count }),
-								children: count === 0 ? "关闭" : `${count} 章`
-							}, count))
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-							className: "dnr-setting-hint",
-							children: "在线阅读时预读后续章节，正文仅保留在内存。"
-						})
-					]
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
-					className: "dnr-toggle-row",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "段落首行缩进" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "更适合中文长篇阅读" })] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
-						type: "checkbox",
-						checked: settings.firstLineIndent,
-						onChange: (event) => updateSettings({ firstLineIndent: event.target.checked })
-					})]
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "dnr-settings-status",
+					children: "修改即时生效，无需额外保存"
 				})
 			]
 		});
@@ -16840,6 +16877,65 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-toggle-row strong { font-size: 12px; font-weight: 500; }
 .dnr-toggle-row small, .dnr-setting-hint { color: var(--dnr-muted); font-size: 11px; line-height: 1.5; }
 .dnr-setting-hint { margin: 8px 0 0; }
+.dnr-settings { --dnr-settings-accent: #365749; --dnr-settings-selected: #edf4ee; padding-inline: clamp(20px, 4cqw, 32px); }
+.dnr-shell[data-color-scheme="dark"] .dnr-settings { --dnr-settings-accent: #b9d1b6; --dnr-settings-selected: #2b3c30; }
+.dnr-settings > .dnr-panel-header { min-height: 44px; padding: 0; margin: 0; }
+.dnr-settings-intro { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-top: 20px; margin-bottom: 28px; }
+.dnr-settings-intro h1 { margin: 0; font: 500 32px/1.3 "Songti SC", "Noto Serif SC", "SimSun", serif; letter-spacing: 1px; }
+.dnr-settings-intro > span { color: var(--dnr-muted); font-size: 11px; white-space: nowrap; }
+.dnr-settings-section { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--dnr-line); }
+.dnr-settings-section:first-of-type { margin-top: 0; padding-top: 0; border-top: 0; }
+.dnr-settings-section h2 { margin: 0 0 12px; color: var(--dnr-muted); font-size: 12px; font-weight: 500; letter-spacing: .08em; }
+.dnr-settings-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 54px; padding: 6px 0; font-size: 14px; }
+.dnr-settings-row select { min-width: 0; width: 160px; max-width: 60%; height: 46px; padding: 0 10px; border: 1px solid var(--dnr-line); border-radius: 10px; background: var(--dnr-surface); color: var(--dnr-text); font-size: 14px; }
+.dnr-settings-size-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; font-size: 14px; }
+.dnr-settings-size-heading output { color: var(--dnr-settings-accent); font-size: 13px; font-variant-numeric: tabular-nums; }
+.dnr-settings .dnr-range-row { min-height: 44px; gap: 12px; font-size: 12px; }
+.dnr-settings .dnr-range-row input { accent-color: var(--dnr-settings-accent); }
+.dnr-settings-label { margin: 7px 0 10px; font-size: 14px; }
+.dnr-settings-segments { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 3px; border-radius: 10px; background: var(--dnr-surface); }
+.dnr-settings-segments button { min-height: 40px; padding: 5px 8px; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--dnr-muted); font-size: 13px; }
+.dnr-settings-segments button[aria-pressed="true"] { border-color: color-mix(in srgb, var(--dnr-settings-accent) 24%, transparent); background: var(--dnr-settings-selected); color: var(--dnr-settings-accent); font-weight: 500; }
+.dnr-settings-switch { position: relative; display: inline-block; flex-shrink: 0; width: 36px; height: 22px; margin: 0; appearance: none; border: 0; border-radius: 12px; background: color-mix(in srgb, var(--dnr-muted) 30%, var(--dnr-bg)); cursor: pointer; }
+.dnr-settings-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--dnr-bg); }
+.dnr-settings-switch:checked { background: var(--dnr-settings-accent); }
+.dnr-settings-switch:checked::after { transform: translateX(14px); }
+.dnr-settings-indent { min-height: 46px; margin-top: 8px; cursor: pointer; }
+.dnr-settings-themes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.dnr-settings-themes button { min-width: 0; padding: 0; border: 0; background: transparent; color: var(--dnr-muted); font-size: 11px; text-align: center; }
+.dnr-settings-swatch { position: relative; display: block; height: 32px; margin-bottom: 7px; border: 1px solid var(--dnr-line); border-radius: 7px; }
+.dnr-settings-swatch[data-theme="auto"] { background: linear-gradient(135deg, #fff 50%, #343936 50%); }
+.dnr-settings-swatch[data-theme="light"] { background: #fff; }
+.dnr-settings-swatch[data-theme="dark"] { background: #242824; }
+.dnr-settings-swatch[data-theme="eye-care"] { background: #edf3e6; }
+.dnr-settings-swatch[data-theme="parchment"] { background: #f3ead7; }
+.dnr-settings-themes button[aria-pressed="true"] { color: var(--dnr-settings-accent); }
+.dnr-settings-themes button[aria-pressed="true"] .dnr-settings-swatch { outline: 2px solid var(--dnr-settings-accent); outline-offset: 2px; }
+.dnr-settings-themes button[aria-pressed="true"] .dnr-settings-swatch::after { content: '✓'; position: absolute; right: 4px; bottom: 2px; padding: 0 2px; border-radius: 3px; background: #fff; color: #365749; font-size: 11px; }
+.dnr-settings-hint { margin: 11px 0 0; color: var(--dnr-muted); font-size: 11px; line-height: 1.7; }
+.dnr-settings-preview-label { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 22px 0 10px; color: var(--dnr-muted); font-size: 11px; }
+.dnr-settings-preview { padding: 16px; border: 1px solid var(--dnr-line); border-radius: 10px; background: var(--dnr-reading-bg); color: var(--dnr-reading-text); line-height: 1.9; overflow-wrap: anywhere; }
+.dnr-settings-preview p { margin: 0; }
+.dnr-settings-preview[data-font="songti"] { font-family: "Songti SC", "Noto Serif SC", "SimSun", serif; }
+.dnr-settings-preview[data-font="heiti"] { font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; }
+.dnr-settings-preview[data-font="kaiti"] { font-family: "Kaiti SC", "STKaiti", KaiTi, serif; }
+.dnr-settings-preview[data-font="serif"] { font-family: "Noto Serif SC", "Source Han Serif SC", Georgia, serif; }
+.dnr-settings-preview[data-spacing="compact"] { line-height: 1.55; }
+.dnr-settings-preview[data-spacing="relaxed"] { line-height: 2.25; }
+.dnr-settings-preview[data-indent] p { text-indent: 2em; }
+.dnr-settings-more { margin-top: 26px; border-top: 1px solid var(--dnr-line); }
+.dnr-settings-more summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 58px; list-style: none; font-size: 14px; cursor: pointer; }
+.dnr-settings-more summary::-webkit-details-marker { display: none; }
+.dnr-settings-more summary > span { display: flex; align-items: center; gap: 7px; }
+.dnr-settings-more summary svg { width: 16px; height: 16px; color: var(--dnr-muted); }
+.dnr-settings-more[open] summary svg { transform: rotate(90deg); }
+.dnr-settings-more summary small { color: var(--dnr-muted); font-size: 11px; text-align: right; }
+.dnr-settings-more-body { padding-bottom: 6px; }
+.dnr-settings-more-body .dnr-settings-row + .dnr-settings-row { border-top: 1px solid var(--dnr-line); }
+.dnr-settings-status { margin: 18px 0 0; color: var(--dnr-muted); font-size: 11px; line-height: 1.8; text-align: center; }
+@container (max-width: 459px) { .dnr-settings-intro { padding-top: 16px; margin-bottom: 24px; } .dnr-settings-intro h1 { font-size: 29px; } .dnr-settings-row { gap: 12px; } .dnr-settings-row select { width: 142px; } }
+@media (max-width: 600px), (pointer: coarse) { .dnr-settings-row select { font-size: 16px; } }
+@media (pointer: coarse) { .dnr-settings-segments button { min-height: 44px; } .dnr-settings-themes button { min-height: 54px; } }
 
 /* The start screen and book lists use the same restrained surfaces as the host. */
 .dnr-file-loader { height: 100%; display: flex; flex-direction: column; align-items: center; padding: clamp(24px, 6cqw, 48px) clamp(16px, 4cqw, 32px) 32px; overflow: auto; }
