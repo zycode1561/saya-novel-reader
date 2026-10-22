@@ -16658,6 +16658,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
   .dnr-shell .dnr-search-field input { font-size: 16px; }
 }
 .dnr-search-panel, .dnr-settings { width: 100%; max-width: 680px; height: 100%; margin-inline: auto; padding: 24px clamp(16px, 4cqw, 28px) 32px; overflow: auto; }
+.dnr-search-panel > .dnr-panel-header, .dnr-settings > .dnr-panel-header { top: -24px; }
 .dnr-search-help { margin: 8px 0 12px; color: var(--dnr-muted); font-size: 11px; }
 .dnr-search-results { display: flex; flex-direction: column; gap: 6px; }
 .dnr-search-results > button { padding: 10px 12px; border: 1px solid var(--dnr-line); border-radius: 8px; background: var(--dnr-bg); text-align: left; }
