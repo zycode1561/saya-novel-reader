@@ -7320,6 +7320,7 @@ var import_client = /* @__PURE__ */ __toESM(require_client());
 var import_react = /* @__PURE__ */ __toESM(require_react());
 	var import_jsx_runtime = /* @__PURE__ */ __toESM(require_jsx_runtime());
 	const paths = {
+		return: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "m9 5-5 5 5 5M4 10h10a5 5 0 0 1 0 10h-2" }),
 		upload: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M12 16V4m-4 4 4-4 4 4M4 16v4h16v-4" }) }),
 		download: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M12 4v12m-4-4 4 4 4-4M4 16v4h16v-4" }),
 		cloud: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M7 18a5 5 0 0 1-1-9.9A6 6 0 0 1 17.6 7a5.5 5.5 0 0 1 .9 11H7Z" }),
@@ -16841,10 +16842,10 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 				title: `返回第 ${returnLocation.chapterIndex + 1} 章的原阅读位置`,
 				onClick: () => void restore(),
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
-					name: "chevron-left",
-					width: "13",
-					height: "13"
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: returning ? "正在返回…" : "返回原阅读位置" })]
+					name: "return",
+					width: "14",
+					height: "14"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: returning ? "返回中…" : "回到刚才" })]
 			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 				type: "button",
 				disabled: returning,
@@ -16853,8 +16854,9 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 				onClick: dismissReturnPosition,
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
 					name: "close",
-					width: "13",
-					height: "13"
+					width: "12",
+					height: "12",
+					strokeWidth: "1.5"
 				})
 			})]
 		});
@@ -17775,10 +17777,13 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-reading-status { position: relative; z-index: 9; display: flex; align-items: center; gap: 6px; height: var(--dnr-status-height); padding: 0 12px 0 4px; background: var(--dnr-reading-bg); color: var(--dnr-reading-text); }
 .dnr-reading-sync { flex: 0 0 32px; min-width: 0; }
 .dnr-book-progress { margin-left: auto; flex-shrink: 0; color: color-mix(in srgb, var(--dnr-reading-text) 55%, transparent); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.dnr-return-position { display: flex; align-items: center; min-width: 0; margin-left: auto; color: var(--dnr-muted); }
-.dnr-return-position > button { display: flex; align-items: center; justify-content: center; gap: 2px; height: var(--dnr-status-height); min-width: 0; padding: 0 3px; border: 0; border-radius: 4px; background: transparent; font-size: 11px; white-space: nowrap; }
-.dnr-return-position > button:hover { color: var(--dnr-text); background: var(--dnr-accent-soft); }
-.dnr-return-position > .dnr-return-dismiss { flex-shrink: 0; width: 24px; margin-left: 2px; }
+.dnr-return-position { position: relative; isolation: isolate; display: flex; align-items: center; min-width: 0; margin-left: auto; padding: 0 3px 0 5px; color: color-mix(in srgb, var(--dnr-reading-text) 72%, var(--dnr-reading-bg)); }
+.dnr-return-position::before { content: ''; position: absolute; z-index: -1; inset: calc((100% - 24px) / 2) 0; border: 1px solid color-mix(in srgb, var(--dnr-reading-text) 10%, transparent); border-radius: 999px; background: color-mix(in srgb, var(--dnr-reading-text) 4%, var(--dnr-reading-bg)); pointer-events: none; }
+.dnr-return-position > button { position: relative; display: flex; align-items: center; justify-content: center; gap: 5px; height: var(--dnr-status-height); min-width: 0; padding: 0 6px; border: 0; border-radius: 999px; background: transparent; font-size: 11px; font-weight: 500; white-space: nowrap; }
+.dnr-return-position > button:hover { color: var(--dnr-reading-text); }
+.dnr-return-position > .dnr-return-dismiss { flex-shrink: 0; width: 23px; padding: 0; margin-left: 1px; color: color-mix(in srgb, var(--dnr-reading-text) 38%, var(--dnr-reading-bg)); }
+.dnr-return-position > .dnr-return-dismiss::before { content: ''; position: absolute; left: 0; top: calc(50% - 5px); width: 1px; height: 10px; background: color-mix(in srgb, var(--dnr-reading-text) 10%, transparent); }
+.dnr-return-position > .dnr-return-dismiss:hover { color: var(--dnr-reading-text); }
 @media (pointer: coarse) { .dnr-shell { --dnr-status-height: 44px; } }
 .dnr-sync-control { width: 32px; height: var(--dnr-status-height); }
 .dnr-sync-button { position: relative; display: grid; place-items: center; width: 32px; height: 100%; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--dnr-muted); }
