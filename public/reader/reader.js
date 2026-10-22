@@ -16888,7 +16888,8 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-settings-section:first-of-type { margin-top: 0; padding-top: 0; border-top: 0; }
 .dnr-settings-section h2 { margin: 0 0 12px; color: var(--dnr-muted); font-size: 12px; font-weight: 500; letter-spacing: .08em; }
 .dnr-settings-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 54px; padding: 6px 0; font-size: 14px; }
-.dnr-settings-row select { min-width: 0; width: 160px; max-width: 60%; height: 46px; padding: 0 10px; border: 1px solid var(--dnr-line); border-radius: 10px; background: var(--dnr-surface); color: var(--dnr-text); font-size: 14px; }
+.dnr-settings-row select { min-width: 0; width: 120px; max-width: 60%; height: 36px; padding: 0 8px; border: 1px solid var(--dnr-line); border-radius: 8px; background: var(--dnr-bg); color: var(--dnr-text); font-size: 14px; cursor: pointer; }
+.dnr-settings-row select:hover { border-color: color-mix(in srgb, var(--dnr-settings-accent) 40%, var(--dnr-line)); }
 .dnr-settings-size-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; font-size: 14px; }
 .dnr-settings-size-heading output { color: var(--dnr-settings-accent); font-size: 13px; font-variant-numeric: tabular-nums; }
 .dnr-settings .dnr-range-row { min-height: 44px; gap: 12px; font-size: 12px; }
@@ -16934,10 +16935,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-settings-more-body { padding-bottom: 6px; }
 .dnr-settings-more-body .dnr-settings-row + .dnr-settings-row { border-top: 1px solid var(--dnr-line); }
 .dnr-settings-status { margin: 18px 0 0; color: var(--dnr-muted); font-size: 11px; line-height: 1.8; text-align: center; }
-@container (max-width: 459px) { .dnr-settings-intro { padding-top: 16px; margin-bottom: 24px; } .dnr-settings-intro h1 { font-size: 29px; } .dnr-settings-row { gap: 12px; } .dnr-settings-row select { width: 142px; } }
-@media (max-width: 600px), (pointer: coarse) { .dnr-settings-row select { font-size: 16px; } }
-.dnr-settings-row .dnr-settings-font-select { width: 120px; height: 36px; padding: 0 8px; border-radius: 8px; background: var(--dnr-bg); font-size: 14px; cursor: pointer; }
-.dnr-settings-row .dnr-settings-font-select:hover { border-color: color-mix(in srgb, var(--dnr-settings-accent) 40%, var(--dnr-line)); }
+@container (max-width: 459px) { .dnr-settings-intro { padding-top: 16px; margin-bottom: 24px; } .dnr-settings-intro h1 { font-size: 29px; } .dnr-settings-row { gap: 12px; } }
 @media (pointer: coarse) { .dnr-settings-segments button { min-height: 44px; } .dnr-settings-themes button { min-height: 54px; } }
 
 /* The start screen and book lists use the same restrained surfaces as the host. */
