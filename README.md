@@ -1,46 +1,56 @@
-# 沙耶的云端书库
+# 云端小说阅读器
 
-Private Sites companion for the local Codex novel reader. This deployment is a **single-owner library**. Keep the Site owner-private: the local bridge uses Sites service access and shares this one library with the signed-in owner. Do not widen audience without first adding per-user storage authorization.
+## 功能
 
-## Features
+- 支持上传和阅读 TXT、Markdown、EPUB，单个文件最大 50 MB。
+- 云端书架管理藏书，支持继续阅读、下载原文件和删除书籍。
+- 支持在线搜书、书源管理和添加到云端书架。
+- 提供章节目录、章节筛选和书内关键词搜索。
+- 搜索或从目录跳章后，可一键返回原阅读位置，支持恢复长段落中的阅读位置。
+- 支持上下滚动、左右翻页，以及点击正文中间显示或收起导航。
+- 可调整字体、字号、行距、首行缩进和阅读主题，设置即时生效。
+- 阅读进度在电脑和手机之间同步，并提供同步状态、重试与冲突选择。
+- 底部左侧显示同步云朵，右侧显示全书进度百分比；章节导航独立显示在下方。
+- 已打开的书籍可在本机缓存，支持离线继续阅读，联网后同步进度。
 
-- Original TXT, Markdown, EPUB uploads up to 50 MB, addressed and verified by SHA-256.
-- R2 stores original bytes; D1 stores the catalog and reading progress, with legacy bookmark data retained for sync compatibility.
-- Toolbar separates the library (cloud files and local import), chapter directory, online source search, in-book search and settings. The globe opens online search; the library icon owns uploaded cloud data.
-- The library uses a compact study header, a continue-reading card based on actual reading activity, and responsive typography covers. The page retains the existing light/dark backgrounds. File-name acquisition suffixes are hidden only in display titles; the per-book details keep the full original file name and download. Reopening the active book preserves its current reading position.
-- Online search, TOCs, chapter content and source management run on this Site without a desktop bridge. Source settings use D1 with revision checks; temporary search results, reading sessions and rule-test handles use D1 metadata and R2 payloads so requests can run on different Workers.
-- Online search uses a reading-room layout with the existing page background: a unified search field, enabled-source hint, initial/loading empty states, and collapsible third-party usage notes with visible attribution links.
-- Directory, in-book search and settings share an explicit back header. Long panels retain the header while scrolling; back preserves the reading position and search query, and settings returns to the library when no book is open. Embedded directory sidebars remain compact.
-- In-book search uses a separate reading-room title, a unified search field, readable excerpt cards with literal keyword highlights, explicit scope/result counts, and empty/no-match states. Result selection still opens the matching paragraph directly.
-- The standalone directory shares this title/filter layout, wraps long chapter names, marks the current chapter with a reading label, and can restore the current chapter after filtering without navigating. Sequence-number filtering and display-only prefix cleanup keep long directories easy to scan; embedded sidebars retain their compact layout and full titles.
-- Reading settings use compact typography and appearance groups, with navigation/prefetch controls in an expandable section. A synthetic paragraph previews the current font, size, spacing, indentation and reading colors. Existing preferences still apply and persist immediately.
-- Adding a search result to the cloud library fetches chapters on the current page, shows progress/cancellation, validates the 50 MB limit and uploads the assembled TXT through the existing SHA-256 file route. Keep that page open while fetching; leaving cancels unfinished work.
-- Shared reader bundle from `../codex-novel-reader`, preserving chapter and paragraph parsing.
-- IndexedDB caches opened originals and reader data; service worker caches only the reader shell. API data is never put in the HTTP cache. Offline copies remain on the device.
-- Durable client progress journal, optimistic revision checks, explicit conflict choices, idempotent operation IDs.
-- Quiet cloud status appears only while reading, including immersive mode, in the lower-left corner. Library, search, TOC and settings views hide the icon and details while background progress sync continues: a green check inside the cloud confirms synchronization, arrows show pending/syncing work, and an alert marks offline/conflict states. Click for sync details, retry, and explicit conflict resolution without resizing the reading area. Progress sends after one second of inactivity or within five seconds during continuous reading; leaving the page triggers a best-effort flush backed by the durable journal.
-- Reading status reserves one row outside the text: cloud sync on the left and percentage alone on the right in scroll and paged modes. Chapter navigation occupies its own row below the status and follows the existing center-tap/navigation-pinning visibility setting. The optional progress bar also uses whole-book progress; chapter page counters are removed.
-- Device-local navigation pinning in reading settings, enabled by default on phone-size viewports. Keeps the top navigation and bottom chapter display visible; turning it off restores center-tap immersive reading.
-- File/cloud books pre-paginate the previous, current, and next two chapters in one bounded native scroll track. Crossing a chapter boundary advances one page without replacing the article. Settled progress records the visible paragraph directly; rapid reverse gestures continue from their logical target rather than a temporary chapter-start position. Reflow retains a semantic text anchor. Online-only chapter loads retain their loading transition.
-- Compact chapter openings show only the chapter title at 1.15× body size, with 18px before the text. Duplicate chapter counts and decorative rules are removed; long titles wrap naturally and paged titles appear only on their chapter's first page.
-- Website controls omit native full screen. Search fields use 16px text on touch/narrow screens to avoid mobile focus zoom, while preserving manual zoom.
-- Cloud books appear by their latest upload or reading time across devices, so a newly uploaded book goes first until another book is read more recently. Actual reader visits update a separate timestamp; existing saved positions provide a fallback for older books. Offline reading timestamps are queued for the next connection.
-- Uploads show measured byte progress, server-save confirmation, per-file outcomes and retry controls. The upload queue survives in-site navigation; refresh/close still interrupts unfinished work and requires files to be reselected.
-- Local bridge keeps its Site service token in a mode-0600 configuration outside source/browser bundles. Browser requests use same-origin routes only.
+## 使用说明
 
-## Development
+### 打开与登录
 
-Run the Sites dependency installer, `npm run db:generate` for new schema changes, and the Sites build helper. Apply generated migrations to local D1 before `npm run dev`. Do not replay existing migrations. The local preview simulates sign-in; production authentication is enforced by Sites.
+打开[云端阅读器](https://saya-novel-library.zycode1561.chatgpt.site)，使用拥有站点访问权限的账号登录。电脑和手机可使用同一账号接着阅读。
 
-To refresh the reader bundle: build the sibling reader and run its `.code/build-cloud-reader.mjs`. For online engine changes, also run `node .code/build-cloud-online.mjs` in the sibling reader. Then rebuild this Site. Do not edit generated public/reader/reader.js directly.
+### 上传和打开书籍
 
-API integration check: `node .code/api-check.mjs` against the local preview. It uses a synthetic TXT only. Reader sync unit tests live in the sibling reader `tests/cloud-sync.test.ts`.
+1. 在“书库 → 云端书库”中点击“上传书籍”，选择 TXT、Markdown 或 EPUB 文件。
+2. 等待上传完成，点击书籍开始阅读。
+3. 下次进入书库时，点击“继续上次阅读”回到上次的位置。
+4. 在书籍的“更多操作”中查看详情、下载原文件或删除书籍。
 
-## Device setup
+“本机与导入”用于在当前设备打开本地文件；需要跨设备访问时，请上传到云端书库。
 
-Open the deployed URL on the phone and sign in with the owning ChatGPT account. Open each book online once to cache it for offline reading. Upload is explicit; no automatic scanning or upload of local books. Older local entries need their original file reselected for first upload. Reader display preferences remain device-local.
+### 阅读与导航
 
-Keep the cloud server and local reader's parser versions aligned when changing parsing. This first release does not synchronize with third-party novel app accounts, delete cloud books, or offer shared libraries.
+- 在“阅读设置 → 阅读与导航”中选择上下滚动或左右翻页。
+- 左右翻页时可滑动屏幕，或点击正文左右两侧翻页。
+- 关闭“导航栏常驻”后，点击正文中间可显示或收起工具栏和下方的章节导航。
+- 通过“目录”跳转章节，也可输入章节名或序号筛选。
+- 通过“书内搜索”查找关键词，点击结果回到对应正文。在线阅读时，搜索范围为当前已加载章节。
 
-Online route integration tests: `../codex-novel-reader/node_modules/.bin/vitest run --config .code/online-tests.config.ts`. They use an in-memory database and synthetic source responses; they do not touch the live library.
+### 返回原阅读位置
 
+从搜索结果或目录跳转后，底部状态行会显示“返回原阅读位置”。点击可回到跳转前的位置；连续查阅多个章节时保留最初的位置。点击旁边的关闭按钮可放弃返回。该入口仅在当前阅读会话中保留，返回、关闭或切换书籍后收起。普通翻页不会生成返回记录。
+
+### 调整阅读外观
+
+打开“阅读设置”，选择字体、字号、行距、缩进和主题。修改立即生效，并保存在当前设备上。
+
+### 在线搜书
+
+在“搜书”中启用或导入可用书源，输入书名或关键词进行搜索。打开结果后可在线阅读，也可添加到云端书架。添加期间请保持页面打开，并仅使用有权访问的内容。
+
+### 同步与离线阅读
+
+- 云朵内的绿色勾表示进度已同步；箭头表示等待同步或正在同步。
+- 点击云朵可查看最近同步时间、立即同步或重试。
+- 出现进度冲突时，可选择采用云端位置或保留本机位置。
+- 离线使用前，请先联网打开所需书籍，让当前设备完成缓存。离线进度会保存在本机，恢复网络后继续同步。

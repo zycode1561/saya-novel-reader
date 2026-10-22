@@ -9750,6 +9750,18 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		const [error, setError] = (0, import_react.useState)(null);
 		const [notices, setNotices] = (0, import_react.useState)([]);
 		const [pendingParagraph, setPendingParagraph] = (0, import_react.useState)(null);
+		const [pendingLocation, setPendingLocation] = (0, import_react.useState)(null);
+		const [returnLocation, setReturnLocation] = (0, import_react.useState)(null);
+		const returnLocationRef = (0, import_react.useRef)(null);
+		const readingAnchorRef = (0, import_react.useRef)(null);
+		const dismissReturnPosition = (0, import_react.useCallback)(() => {
+			returnLocationRef.current = null;
+			setReturnLocation(null);
+		}, []);
+		const clearPendingParagraph = (0, import_react.useCallback)(() => {
+			setPendingParagraph(null);
+			setPendingLocation(null);
+		}, []);
 		const [pageVisible, setPageVisible] = (0, import_react.useState)(() => document.visibilityState !== "hidden");
 		const hostHydrated = (0, import_react.useRef)(false);
 		const [ready, setReady] = (0, import_react.useState)(false);
@@ -9895,6 +9907,11 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			return () => window.removeEventListener("dnr-cloud-position", apply);
 		}, [book, setProgressByBook]);
 		const activateBook = (0, import_react.useCallback)((nextBook) => {
+			if (activeSnapshot.current.book?.id !== nextBook.id) {
+				dismissReturnPosition();
+				readingAnchorRef.current = null;
+				setPendingLocation(null);
+			}
 			if (!nextBook.onlineReading) {
 				readingCache.current?.dispose();
 				readingCache.current = null;
@@ -10168,6 +10185,9 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				clearCloudBookState(cloudId);
 			} catch {}
 			if (activeMatches) {
+				dismissReturnPosition();
+				readingAnchorRef.current = null;
+				setPendingLocation(null);
 				readingRequest.current?.abort();
 				readingCache.current?.dispose();
 				readingCache.current = null;
@@ -10216,6 +10236,8 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			if (book === null) return;
 			const chapter = book.chapters[Math.max(0, Math.min(book.chapters.length - 1, chapterIndex))];
 			if (chapter === void 0) return;
+			readingAnchorRef.current = null;
+			setPendingLocation(null);
 			if (book.onlineReading) {
 				loadReadingChapter(chapter.index);
 				return;
@@ -10235,6 +10257,8 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		}, [book, loadReadingChapter]);
 		const goToParagraph = (0, import_react.useCallback)((paragraphIndex, targetChapterIndex) => {
 			if (book === null) return;
+			readingAnchorRef.current = null;
+			setPendingLocation(null);
 			if (book.onlineReading && targetChapterIndex !== void 0 && targetChapterIndex !== book.onlineReading.chapterIndex) {
 				loadReadingChapter(targetChapterIndex, paragraphIndex);
 				return;
@@ -10273,6 +10297,45 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				}
 			}));
 		}, [book]);
+		const updateReadingAnchor = (0, import_react.useCallback)((anchor) => {
+			if (anchor.bookId === activeSnapshot.current.book?.id) readingAnchorRef.current = anchor;
+		}, []);
+		const rememberReadingPosition = (0, import_react.useCallback)(() => {
+			const current = activeSnapshot.current;
+			if (!current.book || !current.progress || returnLocationRef.current) return;
+			const position = initialPosition(current.book, progressRef.current);
+			const anchor = readingAnchorRef.current;
+			const location = anchor && anchor.bookId === current.book.id && anchor.chapterIndex === position.chapterIndex && anchor.paragraphIndex === position.paragraphIndex ? { ...anchor } : {
+				bookId: current.book.id,
+				chapterIndex: position.chapterIndex,
+				paragraphIndex: position.paragraphIndex,
+				textOffset: 0,
+				viewportOffset: 0
+			};
+			returnLocationRef.current = location;
+			setReturnLocation(location);
+		}, []);
+		const returnToReadingPosition = (0, import_react.useCallback)(async () => {
+			const origin = returnLocationRef.current;
+			const current = activeSnapshot.current;
+			if (!origin || !current.book || !current.progress || origin.bookId !== current.book.id) return false;
+			if (current.book.onlineReading && origin.chapterIndex !== current.book.onlineReading.chapterIndex) {
+				if (!await loadReadingChapter(origin.chapterIndex, origin.paragraphIndex, {
+					bookId: current.book.id,
+					location: current.progress
+				})) return false;
+			} else goToParagraph(origin.paragraphIndex, origin.chapterIndex);
+			if (returnLocationRef.current !== origin || activeSnapshot.current.book?.id !== origin.bookId) return false;
+			setPendingParagraph(origin.paragraphIndex);
+			setPendingLocation(origin);
+			readingAnchorRef.current = origin;
+			dismissReturnPosition();
+			return true;
+		}, [
+			dismissReturnPosition,
+			goToParagraph,
+			loadReadingChapter
+		]);
 		const value = (0, import_react.useMemo)(() => ({
 			book,
 			settings,
@@ -10284,6 +10347,8 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			error,
 			notices,
 			pendingParagraph,
+			pendingLocation,
+			returnLocation,
 			ready,
 			applySyncedChapter,
 			setReaderActive,
@@ -10301,7 +10366,11 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			goToChapter,
 			goToParagraph,
 			markParagraphVisible,
-			clearPendingParagraph: () => setPendingParagraph(null),
+			updateReadingAnchor,
+			rememberReadingPosition,
+			returnToReadingPosition,
+			dismissReturnPosition,
+			clearPendingParagraph,
 			clearError: () => setError(null)
 		}), [
 			book,
@@ -10314,6 +10383,8 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			error,
 			notices,
 			pendingParagraph,
+			pendingLocation,
+			returnLocation,
 			ready,
 			applySyncedChapter,
 			loadFile,
@@ -10329,7 +10400,12 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			setPanelWidth,
 			goToChapter,
 			goToParagraph,
-			markParagraphVisible
+			markParagraphVisible,
+			updateReadingAnchor,
+			rememberReadingPosition,
+			returnToReadingPosition,
+			dismissReturnPosition,
+			clearPendingParagraph
 		]);
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ReaderContext.Provider, {
 			value,
@@ -12132,13 +12208,13 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		const selection = container.ownerDocument.getSelection();
 		return Boolean(selection && !selection.isCollapsed && (container.contains(selection.anchorNode) || container.contains(selection.focusNode)));
 	}
-	function visibleTextOffset(container, paragraph) {
+	function visibleTextOffset(container, paragraph, paged = true) {
 		const bounds = container.getBoundingClientRect();
 		let low = 0, high = Math.max(0, (paragraph.textContent?.length ?? 0) - 1);
 		while (low < high) {
 			const middle = Math.floor((low + high) / 2);
 			const rect = textRect(paragraph, middle);
-			if (rect && rect.right <= bounds.left + 24) low = middle + 1;
+			if (rect && (paged ? rect.right <= bounds.left + 24 : rect.bottom <= bounds.top)) low = middle + 1;
 			else high = middle;
 		}
 		return low;
@@ -12163,7 +12239,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 //#endregion
 //#region src/client/components/ContinuousPagedReader.tsx
 	const ContinuousPagedReader = (0, import_react.forwardRef)(function ContinuousPagedReader$1({ searchQuery, glyphFont }, ref) {
-		const { book, progress: progress$1, settings, panel, pendingParagraph, clearPendingParagraph, markParagraphVisible, updatePanel, goToChapter } = useReader();
+		const { book, progress: progress$1, settings, panel, pendingParagraph, pendingLocation = null, clearPendingParagraph, markParagraphVisible, updateReadingAnchor, updatePanel, goToChapter } = useReader();
 		const scrollerRef = (0, import_react.useRef)(null);
 		const [center, setCenter] = (0, import_react.useState)(progress$1?.chapterIndex ?? 0);
 		const [width, setWidth] = (0, import_react.useState)(1);
@@ -12225,6 +12301,13 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				paragraph: index,
 				offset: visible ? visibleTextOffset(el$1, visible) : 0
 			};
+			if (anchor.current) updateReadingAnchor?.({
+				bookId: book.id,
+				chapterIndex: position.chapter,
+				paragraphIndex: index,
+				textOffset: anchor.current.offset,
+				viewportOffset: 0
+			});
 			markParagraphVisible(index, position.page * el$1.clientWidth);
 		};
 		const settle = () => {
@@ -12273,7 +12356,21 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		};
 		(0, import_react.useImperativeHandle)(ref, () => ({
 			turnPage,
-			goToChapter
+			goToChapter,
+			capturePosition: () => {
+				const el$1 = scrollerRef.current;
+				if (!el$1 || !layoutKey.current || seek.current) return;
+				const page = Math.max(0, Math.min(total - 1, target.current ?? Math.round(el$1.scrollLeft / Math.max(1, el$1.clientWidth))));
+				el$1.scrollTo({
+					left: page * el$1.clientWidth,
+					top: 0,
+					behavior: "instant"
+				});
+				target.current = null;
+				const position = locate(page);
+				setView(position);
+				recordPosition(position);
+			}
 		}), [panes, goToChapter]);
 		(0, import_react.useEffect)(() => {
 			const el$1 = scrollerRef.current;
@@ -12322,7 +12419,8 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				if (chapter) {
 					seek.current = {
 						chapter: chapter.index,
-						paragraph: pendingParagraph
+						paragraph: pendingParagraph,
+						offset: pendingLocation?.bookId === book.id && pendingLocation.paragraphIndex === pendingParagraph ? pendingLocation.textOffset : 0
 					};
 					consumedPending.current = pendingParagraph;
 					anchor.current = null;
@@ -12373,7 +12471,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			let page = intent && "page" in intent ? intent.page : view.page;
 			const saved = intent && "paragraph" in intent ? {
 				paragraph: intent.paragraph,
-				offset: 0
+				offset: intent.offset ?? 0
 			} : !intent ? anchor.current : null;
 			if (saved) {
 				const node = el$1.querySelector(`[data-pindex="${saved.paragraph}"]`);
@@ -12618,7 +12716,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		return Math.max(1, Math.ceil((contentWidth - 1) / width));
 	}
 	const LegacyReaderBody = (0, import_react.forwardRef)(function ReaderBody$1({ searchQuery, glyphFont }, forwardedRef) {
-		const { book, progress: progress$1, settings, pendingParagraph, clearPendingParagraph, markParagraphVisible, updatePanel, panel, goToChapter, loading, error } = useReader();
+		const { book, progress: progress$1, settings, pendingParagraph, pendingLocation = null, clearPendingParagraph, markParagraphVisible, updateReadingAnchor, updatePanel, panel, goToChapter, loading, error } = useReader();
 		const scrollerRef = (0, import_react.useRef)(null);
 		const frameRef = (0, import_react.useRef)(null);
 		const measureFrameRef = (0, import_react.useRef)(null);
@@ -12656,17 +12754,29 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			if (visible !== void 0) {
 				const index = Number(visible.dataset.pindex);
 				if (Number.isFinite(index)) {
-					if (chapter) anchorRef.current = {
-						chapterId: chapter.id,
-						paragraphIndex: index,
-						offset: paged ? visibleTextOffset(container, visible) : 0
-					};
+					const offset = visibleTextOffset(container, visible, paged);
+					if (chapter) {
+						anchorRef.current = {
+							chapterId: chapter.id,
+							paragraphIndex: index,
+							offset
+						};
+						updateReadingAnchor?.({
+							bookId: book.id,
+							chapterIndex: chapter.index,
+							paragraphIndex: index,
+							textOffset: offset,
+							viewportOffset: (textRect(visible, offset)?.top ?? bounds.top) - bounds.top
+						});
+					}
 					markParagraphVisible(index, paged ? container.scrollLeft : container.scrollTop);
 				}
 			}
 		}, [
+			book,
 			chapter,
 			markParagraphVisible,
+			updateReadingAnchor,
 			paged
 		]);
 		const { active: chapterTurnRef, begin: beginChapterTurn, reveal: revealChapter, cancel: cancelChapterTurn } = useChapterTransition(scrollerRef, () => {
@@ -12778,8 +12888,29 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		}, [error, cancelChapterTurn]);
 		(0, import_react.useImperativeHandle)(forwardedRef, () => ({
 			turnPage,
-			goToChapter: navigateChapter
-		}), [turnPage, navigateChapter]);
+			goToChapter: navigateChapter,
+			capturePosition: () => {
+				const container = scrollerRef.current;
+				if (!container || restoringRef.current) return;
+				if (paged) {
+					const width = Math.max(1, container.clientWidth);
+					const page = targetPageRef.current ?? Math.round(container.scrollLeft / width);
+					container.scrollTo({
+						left: page * width,
+						top: 0,
+						behavior: "instant"
+					});
+					targetPageRef.current = null;
+				}
+				if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+				updatePosition();
+			}
+		}), [
+			turnPage,
+			navigateChapter,
+			paged,
+			updatePosition
+		]);
 		(0, import_react.useEffect)(() => {
 			const container = scrollerRef.current;
 			if (!container) return;
@@ -12872,7 +13003,8 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					container.clientHeight,
 					layoutRevision
 				].join(":");
-				if (!(pendingParagraph !== null || restoreKeyRef.current !== restoreKey || landOnLastPageRef.current)) return;
+				const location = pendingLocation?.bookId === book.id && pendingLocation.chapterIndex === chapter.index ? pendingLocation : null;
+				if (!(pendingParagraph !== null || location !== null || restoreKeyRef.current !== restoreKey || landOnLastPageRef.current)) return;
 				targetPageRef.current = null;
 				touchRef.current = null;
 				if (settleTimerRef.current !== null) clearTimeout(settleTimerRef.current);
@@ -12887,8 +13019,12 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 						behavior: "instant"
 					});
 				} else {
-					const anchor = pendingParagraph === null && anchorRef.current?.chapterId === chapter.id ? anchorRef.current : null;
-					const targetIndex = pendingParagraph ?? anchor?.paragraphIndex ?? progress$1.paragraphIndex;
+					const anchor = location ? {
+						chapterId: chapter.id,
+						paragraphIndex: location.paragraphIndex,
+						offset: location.textOffset
+					} : pendingParagraph === null && anchorRef.current?.chapterId === chapter.id ? anchorRef.current : null;
+					const targetIndex = location?.paragraphIndex ?? pendingParagraph ?? anchor?.paragraphIndex ?? progress$1.paragraphIndex;
 					const exact = container.querySelector(`[data-pindex="${targetIndex}"]`);
 					const fallback = paragraphs.find((paragraph) => paragraph.index >= targetIndex);
 					const target = exact ?? (fallback === void 0 ? null : container.querySelector(`[data-pindex="${fallback.index}"]`));
@@ -12913,10 +13049,17 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 						top: 0,
 						left: 0
 					});
-					else target.scrollIntoView({ block: "start" });
+					else if (location) {
+						const rect = textRect(target, location.textOffset) ?? target.getBoundingClientRect();
+						container.scrollTo({
+							top: Math.max(0, container.scrollTop + rect.top - container.getBoundingClientRect().top - location.viewportOffset),
+							left: 0,
+							behavior: "instant"
+						});
+					} else target.scrollIntoView({ block: "start" });
 				}
 				restoreKeyRef.current = restoreKey;
-				if (pendingParagraph !== null) clearPendingParagraph();
+				if (pendingParagraph !== null || location !== null) clearPendingParagraph();
 				if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
 				if (paged) if (chapterTurnRef.current) revealChapter(book.id, chapter.index);
 				else {
@@ -12946,6 +13089,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			panel.width,
 			paragraphs,
 			pendingParagraph,
+			pendingLocation,
 			progress$1,
 			settings.firstLineIndent,
 			settings.fontFamily,
@@ -13195,7 +13339,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		return parts;
 	}
 	function SearchPanel({ query, onQueryChange, onSelect, onBack }) {
-		const { book, goToParagraph } = useReader();
+		const { book, goToParagraph, rememberReadingPosition } = useReader();
 		const inputRef = (0, import_react.useRef)(null);
 		const [selected, setSelected] = (0, import_react.useState)(0);
 		const results = (0, import_react.useMemo)(() => book === null ? [] : searchBook(book, query), [book, query]);
@@ -13207,6 +13351,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			const result = results[index];
 			if (result === void 0) return;
 			setSelected(index);
+			rememberReadingPosition?.();
 			goToParagraph(result.paragraphIndex, result.chapterIndex);
 			onSelect();
 		};
@@ -16127,8 +16272,8 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 	function chapterDisplayTitle(title) {
 		return title.replace(/^第[零〇一二三四五六七八九十百千万两\d]+[章回节](?:\s+|[：:、.．-]\s*)/u, "").trim() || title;
 	}
-	function TableOfContents({ embedded = false, onSelect, onBack }) {
-		const { book, progress: progress$1, goToChapter } = useReader();
+	function TableOfContents({ embedded = false, onSelect, onBack, onBeforeSelect }) {
+		const { book, progress: progress$1, goToChapter, rememberReadingPosition } = useReader();
 		const [query, setQuery] = (0, import_react.useState)("");
 		const [locateRequest, setLocateRequest] = (0, import_react.useState)(0);
 		const inputRef = (0, import_react.useRef)(null);
@@ -16219,6 +16364,8 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 						className: progress$1?.chapterIndex === chapter.index ? "is-active" : "",
 						style: { paddingLeft: `${12 + (chapter.level - 1) * 12}px` },
 						onClick: () => {
+							onBeforeSelect?.();
+							rememberReadingPosition?.();
 							goToChapter(chapter.index);
 							onSelect?.();
 						},
@@ -16670,6 +16817,50 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 	}
 
 //#endregion
+//#region src/client/components/ReturnToPosition.tsx
+	function ReturnToPosition() {
+		const { book, returnLocation, returnToReadingPosition, dismissReturnPosition } = useReader();
+		const [returning, setReturning] = (0, import_react.useState)(false);
+		if (!returnLocation || returnLocation.bookId !== book?.id) return null;
+		const restore = async () => {
+			if (returning) return;
+			setReturning(true);
+			try {
+				await returnToReadingPosition();
+			} finally {
+				setReturning(false);
+			}
+		};
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "dnr-return-position",
+			"aria-label": "阅读位置返回",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+				type: "button",
+				disabled: returning,
+				"aria-label": "返回原阅读位置",
+				title: `返回第 ${returnLocation.chapterIndex + 1} 章的原阅读位置`,
+				onClick: () => void restore(),
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
+					name: "chevron-left",
+					width: "13",
+					height: "13"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: returning ? "正在返回…" : "返回原阅读位置" })]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+				type: "button",
+				disabled: returning,
+				className: "dnr-return-dismiss",
+				"aria-label": "关闭返回位置提示",
+				onClick: dismissReturnPosition,
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
+					name: "close",
+					width: "13",
+					height: "13"
+				})
+			})]
+		});
+	}
+
+//#endregion
 //#region src/client/components/NovelReaderApp.tsx
 	function durationLabel(seconds) {
 		if (seconds < 60) return "< 1 分钟";
@@ -16683,7 +16874,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 		const supportsOnline = cloudHosted || supportsLocalOnline;
 		const hostTheme = useHostTheme();
 		const colorScheme = settings.theme === "light" || settings.theme === "dark" ? settings.theme : hostTheme;
-		const [view, setView] = (0, import_react.useState)(cloudHosted ? "library" : "reader");
+		const [view, setViewState] = (0, import_react.useState)(cloudHosted ? "library" : "reader");
 		const [toolbarTarget, setToolbarTarget] = (0, import_react.useState)(null);
 		const [fanqieVisited, setFanqieVisited] = (0, import_react.useState)(false);
 		(0, import_react.useEffect)(() => {
@@ -16693,6 +16884,10 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 		const [searchQuery, setSearchQuery] = (0, import_react.useState)("");
 		const [hostNotice, setHostNotice] = (0, import_react.useState)(null);
 		const readerBodyRef = (0, import_react.useRef)(null);
+		const setView = (0, import_react.useCallback)((next) => {
+			readerBodyRef.current?.capturePosition?.();
+			setViewState(next);
+		}, []);
 		const navigateChapter = (0, import_react.useCallback)((index) => {
 			if (readerBodyRef.current) readerBodyRef.current.goToChapter(index);
 			else goToChapter(index);
@@ -16896,7 +17091,10 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 						view === "settings" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, { onBack: () => setView(book === null ? "library" : "reader") }),
 						showReader && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: `dnr-reading-grid ${settings.tocPosition === "left" ? "has-toc" : ""}`,
-							children: [settings.tocPosition === "left" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableOfContents, { embedded: true }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ReaderBody, {
+							children: [settings.tocPosition === "left" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableOfContents, {
+								embedded: true,
+								onBeforeSelect: () => readerBodyRef.current?.capturePosition?.()
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ReaderBody, {
 								ref: readerBodyRef,
 								searchQuery
 							})]
@@ -16909,14 +17107,18 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "dnr-reading-status",
 						"aria-label": "阅读状态",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-							className: "dnr-reading-sync",
-							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudSync, { visible: showReader })
-						}), showReader && progress$1 !== null && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-							className: "dnr-book-progress",
-							"aria-label": `全书阅读进度 ${progressSnapshot.bookPercent.toFixed(1)}%`,
-							children: [progressSnapshot.bookPercent.toFixed(1), "%"]
-						})]
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "dnr-reading-sync",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudSync, { visible: showReader })
+							}),
+							showReader && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ReturnToPosition, {}),
+							showReader && progress$1 !== null && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "dnr-book-progress",
+								"aria-label": `全书阅读进度 ${progressSnapshot.bookPercent.toFixed(1)}%`,
+								children: [progressSnapshot.bookPercent.toFixed(1), "%"]
+							})
+						]
 					}), showReader && progress$1 !== null && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("footer", {
 						className: "dnr-footer",
 						children: [
@@ -17573,6 +17775,10 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-reading-status { position: relative; z-index: 9; display: flex; align-items: center; gap: 6px; height: var(--dnr-status-height); padding: 0 12px 0 4px; background: var(--dnr-reading-bg); color: var(--dnr-reading-text); }
 .dnr-reading-sync { flex: 0 0 32px; min-width: 0; }
 .dnr-book-progress { margin-left: auto; flex-shrink: 0; color: color-mix(in srgb, var(--dnr-reading-text) 55%, transparent); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dnr-return-position { display: flex; align-items: center; min-width: 0; margin-left: auto; color: var(--dnr-muted); }
+.dnr-return-position > button { display: flex; align-items: center; justify-content: center; gap: 2px; height: var(--dnr-status-height); min-width: 0; padding: 0 3px; border: 0; border-radius: 4px; background: transparent; font-size: 11px; white-space: nowrap; }
+.dnr-return-position > button:hover { color: var(--dnr-text); background: var(--dnr-accent-soft); }
+.dnr-return-position > .dnr-return-dismiss { flex-shrink: 0; width: 24px; margin-left: 2px; }
 @media (pointer: coarse) { .dnr-shell { --dnr-status-height: 44px; } }
 .dnr-sync-control { width: 32px; height: var(--dnr-status-height); }
 .dnr-sync-button { position: relative; display: grid; place-items: center; width: 32px; height: 100%; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--dnr-muted); }
