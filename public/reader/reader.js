@@ -7320,6 +7320,7 @@ var import_client = /* @__PURE__ */ __toESM(require_client());
 var import_react = /* @__PURE__ */ __toESM(require_react());
 	var import_jsx_runtime = /* @__PURE__ */ __toESM(require_jsx_runtime());
 	const paths = {
+		upload: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M12 16V4m-4 4 4-4 4 4M4 16v4h16v-4" }) }),
 		cloud: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M7 18a5 5 0 0 1-1-9.9A6 6 0 0 1 17.6 7a5.5 5.5 0 0 1 .9 11H7Z" }),
 		library: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M4 4v16M8 4v16M12 4v16M16 5l4 14" }) }),
 		sync: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M20 7v5h-5M4 17v-5h5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M6.1 7a7 7 0 0 1 11.6-1.4L20 8M4 16l2.3 2.4A7 7 0 0 0 17.9 17" })] }),
@@ -11401,12 +11402,10 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 						type: "button",
 						className: "dnr-cloud-upload",
 						disabled: uploading,
+						"aria-busy": uploading,
 						onClick: () => input.current?.click(),
 						"aria-label": "上传书籍",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-							"aria-hidden": "true",
-							children: "＋"
-						}), uploading ? "上传中…" : "上传"]
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "upload" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: uploading ? "上传中…" : "上传书籍" })]
 					})]
 				}),
 				navigation,
@@ -11484,11 +11483,13 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "把第一本书放进书房" }),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "上传 TXT、Markdown 或 EPUB，随时接着读。" }),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 							type: "button",
+							className: "dnr-cloud-upload",
 							disabled: uploading,
+							"aria-busy": uploading,
 							onClick: () => input.current?.click(),
-							children: "上传书籍"
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "upload" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: uploading ? "上传中…" : "上传书籍" })]
 						})
 					]
 				}),
@@ -17151,8 +17152,10 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-cloud-heading h1 { font:500 clamp(26px,4cqw,32px)/1.3 "Songti SC","Noto Serif SC",STSong,serif; letter-spacing:.06em; margin:0; }
 .dnr-cloud-heading p { margin:6px 0 0; color:var(--dnr-muted); font-size:12px; }
 .dnr-cloud-library button { border:1px solid var(--dnr-line); background:var(--dnr-surface); padding:9px 13px; border-radius:9px; }
-.dnr-cloud-library .dnr-cloud-upload { display:flex; align-items:center; gap:5px; flex-shrink:0; min-height:40px; background:var(--dnr-shelf-accent); color:var(--dnr-shelf-on-accent); border-color:transparent; }
-.dnr-cloud-upload > span { font-size:18px; line-height:1; }
+.dnr-cloud-library .dnr-cloud-upload { display:inline-flex; align-items:center; justify-content:center; gap:6px; flex-shrink:0; min-height:36px; min-width:108px; padding:0 13px; border:1px solid color-mix(in srgb,var(--dnr-shelf-accent) 25%,var(--dnr-bg)); border-radius:20px; background:color-mix(in srgb,var(--dnr-shelf-accent) 4%,var(--dnr-bg)); color:var(--dnr-shelf-accent); font-size:13px; font-weight:500; line-height:1.4; white-space:nowrap; }
+.dnr-cloud-upload > svg { width:16px; height:16px; flex-shrink:0; }
+.dnr-cloud-library .dnr-cloud-upload:hover:not(:disabled) { background:color-mix(in srgb,var(--dnr-shelf-accent) 9%,var(--dnr-bg)); border-color:color-mix(in srgb,var(--dnr-shelf-accent) 45%,var(--dnr-bg)); }
+.dnr-cloud-library .dnr-cloud-upload:active:not(:disabled) { background:color-mix(in srgb,var(--dnr-shelf-accent) 14%,var(--dnr-bg)); }
 .dnr-cloud-library > .dnr-library-tabs { padding:0; margin-bottom:22px; }
 .dnr-cloud-library .dnr-library-tabs button { padding:0 0 12px; border:0; border-radius:0; border-bottom:2px solid transparent; background:transparent; }
 .dnr-cloud-library .dnr-library-tabs button[aria-pressed="true"] { color:var(--dnr-shelf-accent); border-bottom-color:var(--dnr-shelf-accent); }
