@@ -11297,8 +11297,23 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 
 //#endregion
 //#region src/client/cloud/CloudLibrary.tsx
-	function CloudLibrary({ onOpened, onBack }) {
-		const { recents, loadOnlineBook } = useReader();
+	function displayName(name) {
+		return name.replace(/--book-[a-z0-9]+$/i, "").trim() || name;
+	}
+	function bookFormat(entry) {
+		return entry.filename.split(".").pop()?.toUpperCase() || "TXT";
+	}
+	function BookCover({ entry }) {
+		const tone = [...entry.id].reduce((sum, char) => sum + char.charCodeAt(0), 0) % 3;
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+			className: "dnr-cloud-cover",
+			"data-tone": tone,
+			"aria-hidden": "true",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: displayName(entry.name) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: bookFormat(entry) })]
+		});
+	}
+	function CloudLibrary({ onOpened, onBack, navigation }) {
+		const { book, recents, loadOnlineBook } = useReader();
 		const [books, setBooks] = (0, import_react.useState)(() => read("catalog", []));
 		const [message, setMessage] = (0, import_react.useState)("");
 		const [openingId, setOpeningId] = (0, import_react.useState)(null);
@@ -11340,6 +11355,10 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			};
 		}, []);
 		const openBook = async (entry) => {
+			if (book && (book.id === `cloud-${entry.id}` || bindings()[book.id] === entry.id)) {
+				onOpened();
+				return;
+			}
 			setOpeningId(entry.id);
 			setMessage("");
 			try {
@@ -11366,27 +11385,28 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			});
 			onOpened();
 		};
+		const times = readingTimes(), linked = bindings();
+		const lastRead = (entry) => Math.max(entry.last_read_at || 0, times[entry.id] || 0, ...recents.filter((recent) => recent.id === `cloud-${entry.id}` || linked[recent.id] === entry.id).map((recent) => recent.openedAt));
+		const recentBook = [...books].filter((entry) => lastRead(entry) > 0).sort((a, b) => lastRead(b) - lastRead(a))[0];
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 			className: "dnr-cloud-library",
+			"aria-label": "云端书架",
 			children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-					onClick: onBack,
-					children: "← 返回"
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "PRIVATE LIBRARY" })] }),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: "故事，随身而行。" }),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "上传一次，在电脑和手机接着读。已打开的书籍会保留离线副本。" }),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "dnr-cloud-actions",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", {
+					className: "dnr-cloud-heading",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: "沙耶的书房" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [books.length, " 本藏书 · 随时接着读"] })] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						type: "button",
+						className: "dnr-cloud-upload",
 						disabled: uploading,
 						onClick: () => input.current?.click(),
-						children: uploading ? "上传进行中…" : "＋ 上传书籍"
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-						disabled: refreshing,
-						onClick: () => void refresh(),
-						children: refreshing ? "正在刷新…" : "刷新书库"
+						"aria-label": "上传书籍",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							"aria-hidden": "true",
+							children: "＋"
+						}), uploading ? "上传中…" : "上传"]
 					})]
 				}),
+				navigation,
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(UploadStatus, {}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
 					ref: input,
@@ -11419,35 +11439,115 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					className: "dnr-cloud-message",
 					children: message
 				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("h2", { children: ["云端书库 ", /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [books.length, " 本 · 最近上传或阅读优先"] })] }),
-				!books.length && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				recentBook && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
+					className: "dnr-cloud-continue",
+					"aria-label": "最近在读",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(BookCover, { entry: recentBook }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "dnr-cloud-eyebrow",
+							children: "最近在读"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: displayName(recentBook.name) }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							disabled: openingId !== null,
+							onClick: () => void openBook(recentBook),
+							children: [openingId === recentBook.id ? "正在打开…" : "继续上次阅读", /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
+								name: "chevron-right",
+								width: "14",
+								height: "14"
+							})]
+						})
+					] })]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "dnr-cloud-section-heading",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "全部书籍" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "最近上传或阅读优先" })] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						className: "dnr-cloud-refresh",
+						type: "button",
+						disabled: refreshing,
+						onClick: () => void refresh(),
+						"aria-label": refreshing ? "正在刷新书库" : "刷新书库",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "sync" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: refreshing ? "刷新中…" : "刷新" })]
+					})]
+				}),
+				!books.length && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "dnr-cloud-empty",
-					children: "还没有上传书籍。选择文件，开始你的跨设备阅读。"
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
+							name: "book",
+							width: "32",
+							height: "32"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "把第一本书放进书房" }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "上传 TXT、Markdown 或 EPUB，随时接着读。" }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							disabled: uploading,
+							onClick: () => input.current?.click(),
+							children: "上传书籍"
+						})
+					]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "dnr-cloud-books",
-					children: sortCloudBooks(books).map((entry) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-						"aria-hidden": "true",
-						className: "dnr-cloud-cover",
-						children: entry.name.slice(0, 4)
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: entry.name }),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
-							(entry.size / 1024 / 1024).toFixed(1),
-							" MB · ",
-							entry.filename.split(".").pop()?.toUpperCase()
-						] }),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+					children: sortCloudBooks(books).map((entry) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", {
+						className: "dnr-cloud-book",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							className: "dnr-cloud-book-open",
+							type: "button",
 							disabled: openingId !== null,
 							onClick: () => void openBook(entry),
-							children: openingId === entry.id ? "正在打开…" : "打开阅读"
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
-							href: `/api/cloud/books/${entry.id}/file`,
-							download: entry.filename,
-							children: "下载原文件"
-						})
-					] })] }, entry.id))
+							"aria-label": `${openingId === entry.id ? "正在打开" : "打开阅读"} ${displayName(entry.name)}`,
+							title: displayName(entry.name),
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(BookCover, { entry }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: displayName(entry.name) })]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "dnr-cloud-book-meta",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+								bookFormat(entry),
+								" · ",
+								formatBytes$1(entry.size)
+							] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", {
+								className: "dnr-cloud-book-more",
+								onToggle: (event) => {
+									if (event.currentTarget.open) event.currentTarget.closest(".dnr-cloud-books")?.querySelectorAll("details[open]").forEach((other) => {
+										if (other !== event.currentTarget) other.open = false;
+									});
+								},
+								onKeyDown: (event) => {
+									if (event.key === "Escape") {
+										event.currentTarget.open = false;
+										event.currentTarget.querySelector("summary")?.focus();
+									}
+								},
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("summary", {
+									"aria-label": `更多操作 ${displayName(entry.name)}`,
+									children: "···"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "dnr-cloud-book-menu",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "完整文件名" }),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: entry.filename }),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
+											href: `/api/cloud/books/${entry.id}/file`,
+											download: entry.filename,
+											children: "下载原文件"
+										})
+									]
+								})]
+							})]
+						})]
+					}, entry.id))
+				}),
+				book && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+					type: "button",
+					className: "dnr-cloud-back",
+					onClick: onBack,
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
+						name: "chevron-left",
+						width: "14",
+						height: "14"
+					}), "返回阅读"]
 				}),
 				!cloudHosted && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "本地书籍" }),
@@ -11649,29 +11749,31 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 //#region src/client/components/LibraryPanel.tsx
 	function LibraryPanel({ onOpened, onBack }) {
 		const [tab, setTab] = (0, import_react.useState)(cloudHosted ? "cloud" : "local");
-		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
-			className: "dnr-library-panel",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", {
-				className: "dnr-library-tabs",
-				"aria-label": "书库分类",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-					type: "button",
-					"aria-pressed": tab === "cloud",
-					onClick: () => setTab("cloud"),
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "cloud" }), "云端书库"]
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-					type: "button",
-					"aria-pressed": tab === "local",
-					onClick: () => setTab("local"),
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "file" }), "本机书籍与导入"]
-				})]
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "dnr-library-content",
-				children: tab === "cloud" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudLibrary, {
-					onBack,
-					onOpened
-				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileLoader, { onOpened })
+		const navigation = /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", {
+			className: "dnr-library-tabs",
+			"aria-label": "书库分类",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+				type: "button",
+				"aria-pressed": tab === "cloud",
+				onClick: () => setTab("cloud"),
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "cloud" }), "云端书库"]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+				type: "button",
+				"aria-pressed": tab === "local",
+				onClick: () => setTab("local"),
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "file" }), "本机书籍与导入"]
 			})]
+		});
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("section", {
+			className: "dnr-library-panel",
+			children: tab === "cloud" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudLibrary, {
+				onBack,
+				onOpened,
+				navigation
+			}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [navigation, /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "dnr-library-content",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FileLoader, { onOpened })
+			})] })
 		});
 	}
 
@@ -16699,30 +16801,72 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 @media (prefers-reduced-motion:reduce) { .dnr-fanqie-sync.is-syncing svg { animation:none; } }
 
 .dnr-library-panel { height: 100%; min-height: 0; display: flex; flex-direction: column; }
-.dnr-library-tabs { display: flex; flex-shrink: 0; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--dnr-line); }
-.dnr-library-tabs button { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border: 1px solid var(--dnr-line); border-radius: 8px; background: var(--dnr-bg); color: var(--dnr-muted); }
-.dnr-library-tabs button[aria-pressed="true"] { color: var(--dnr-text); background: var(--dnr-accent-soft); }
+.dnr-library-tabs { display: flex; flex-shrink: 0; gap: 24px; padding: 12px 20px 0; border-bottom: 1px solid var(--dnr-line); }
+.dnr-library-tabs button { display: flex; align-items: center; gap: 6px; padding: 0 0 12px; min-height: 40px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: var(--dnr-muted); }
+.dnr-library-tabs button[aria-pressed="true"] { color: var(--dnr-text); border-bottom-color: var(--dnr-text); }
 .dnr-library-tabs svg { width: 16px; height: 16px; }
 .dnr-library-content { flex: 1; min-height: 0; }
-.dnr-cloud-library { height:100%; overflow:auto; padding:24px clamp(16px,5vw,48px) 60px; max-width:900px; margin:auto; }
-.dnr-cloud-library header { display:flex; align-items:center; justify-content:space-between; color:var(--dnr-muted); font-size:10px; letter-spacing:.12em; }
-.dnr-cloud-library h1 { font:500 clamp(26px,5vw,38px)/1.3 Georgia,serif; margin:32px 0 12px; }
-.dnr-cloud-library h2 { font-size:17px; margin-top:30px; }
-.dnr-cloud-library h2 small { color:var(--dnr-muted); font-weight:400; font-size:12px; }
-.dnr-cloud-library p { color:var(--dnr-muted); line-height:1.8; }
-.dnr-cloud-library button { border:1px solid var(--dnr-line); background:var(--dnr-surface); padding:9px 13px; border-radius:8px; }
-.dnr-cloud-library a { color:inherit; margin-left:8px; text-underline-offset:4px; }
-.dnr-cloud-actions { display:flex; gap:10px; margin:24px 0; }
-.dnr-cloud-actions button:first-child { background:var(--dnr-text); color:var(--dnr-bg); }
-.dnr-cloud-books { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:14px; }
-.dnr-cloud-books article { display:flex; gap:16px; padding:20px; border:1px solid var(--dnr-line); border-radius:12px; }
-.dnr-cloud-books h3 { font-size:15px; margin:0; overflow-wrap:anywhere; }
-.dnr-cloud-cover { width:48px; height:72px; flex-shrink:0; background:#d8e2d4; color:#334731; padding:8px; font-family:serif; border-radius:3px 7px 7px 3px; box-shadow:inset 3px 0 #0001; }
+.dnr-cloud-library { --dnr-shelf-accent:#3e5945; --dnr-shelf-on-accent:#fff; width:100%; height:100%; min-height:0; overflow:auto; padding:26px clamp(20px,4cqw,44px) 80px; max-width:1040px; margin:0 auto; background:var(--dnr-bg); scrollbar-width:thin; scrollbar-color:var(--dnr-line) transparent; }
+.dnr-shell[data-color-scheme="dark"] .dnr-cloud-library { --dnr-shelf-accent:#bfd0b8; --dnr-shelf-on-accent:#202b22; }
+.dnr-cloud-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; }
+.dnr-cloud-heading h1 { font:500 clamp(26px,4cqw,32px)/1.3 "Songti SC","Noto Serif SC",STSong,serif; letter-spacing:.06em; margin:0; }
+.dnr-cloud-heading p { margin:6px 0 0; color:var(--dnr-muted); font-size:12px; }
+.dnr-cloud-library button { border:1px solid var(--dnr-line); background:var(--dnr-surface); padding:9px 13px; border-radius:9px; }
+.dnr-cloud-library .dnr-cloud-upload { display:flex; align-items:center; gap:5px; flex-shrink:0; min-height:40px; background:var(--dnr-shelf-accent); color:var(--dnr-shelf-on-accent); border-color:transparent; }
+.dnr-cloud-upload > span { font-size:18px; line-height:1; }
+.dnr-cloud-library > .dnr-library-tabs { padding:0; margin-bottom:22px; }
+.dnr-cloud-library .dnr-library-tabs button { padding:0 0 12px; border:0; border-radius:0; border-bottom:2px solid transparent; background:transparent; }
+.dnr-cloud-library .dnr-library-tabs button[aria-pressed="true"] { color:var(--dnr-shelf-accent); border-bottom-color:var(--dnr-shelf-accent); }
+.dnr-cloud-library a { color:inherit; text-underline-offset:4px; }
+.dnr-cloud-continue { display:flex; gap:18px; align-items:center; padding:18px; background:var(--dnr-surface); border-radius:13px; margin:0 0 26px; }
+.dnr-cloud-continue > div { min-width:0; }
+.dnr-cloud-eyebrow { color:var(--dnr-muted); font-size:11px; letter-spacing:.08em; }
+.dnr-cloud-continue h2 { font-size:16px; font-weight:500; line-height:1.6; margin:5px 0 7px; overflow-wrap:anywhere; }
+.dnr-cloud-library .dnr-cloud-continue button { display:flex; gap:5px; align-items:center; min-height:36px; padding:0; border:0; border-radius:4px; background:transparent; color:var(--dnr-shelf-accent); }
+.dnr-cloud-section-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 0 16px; }
+.dnr-cloud-section-heading > div { display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 12px; }
+.dnr-cloud-section-heading h2 { margin:0; font-size:15px; font-weight:500; }
+.dnr-cloud-section-heading > div > span { color:var(--dnr-muted); font-size:11px; }
+.dnr-cloud-library .dnr-cloud-refresh { border:0; background:transparent; display:flex; align-items:center; gap:5px; flex-shrink:0; padding:8px 0 8px 8px; color:var(--dnr-muted); min-height:36px; }
+.dnr-cloud-refresh svg { width:14px; height:14px; }
+.dnr-cloud-books { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:26px 18px; }
+.dnr-cloud-book { position:relative; min-width:0; }
+.dnr-cloud-library .dnr-cloud-book-open { display:block; width:100%; text-align:left; border:0; border-radius:4px; background:transparent; padding:0; }
+.dnr-cloud-cover { display:flex; position:relative; flex-direction:column; justify-content:space-between; width:100%; aspect-ratio:2/3; overflow:hidden; padding:18px 12px 14px 16px; background:#dce3d4; color:#30452f; border-radius:2px 7px 7px 2px; box-shadow:inset 4px 0 #0000000a,2px 4px 7px #0000000a; font-family:"Songti SC","Noto Serif SC",STSong,serif; }
+.dnr-cloud-cover::before { content:''; position:absolute; left:6px; top:0; bottom:0; width:1px; background:#ffffff30; }
+.dnr-cloud-cover strong { display:-webkit-box; -webkit-line-clamp:5; -webkit-box-orient:vertical; overflow:hidden; font-size:clamp(14px,2.7cqw,20px); font-weight:500; line-height:1.65; overflow-wrap:anywhere; }
+.dnr-cloud-cover small { font:400 10px/1.5 -apple-system,BlinkMacSystemFont,sans-serif; letter-spacing:.12em; margin-top:8px; }
+.dnr-cloud-cover[data-tone="1"] { background:#e9ddd2; color:#674638; }
+.dnr-cloud-cover[data-tone="2"] { background:#dbe2e7; color:#3d505e; }
+.dnr-shell[data-color-scheme="dark"] .dnr-cloud-cover { background:#394533; color:#e2ebd9; }
+.dnr-shell[data-color-scheme="dark"] .dnr-cloud-cover[data-tone="1"] { background:#514236; color:#f0ded0; }
+.dnr-shell[data-color-scheme="dark"] .dnr-cloud-cover[data-tone="2"] { background:#34424b; color:#dae7ef; }
+.dnr-cloud-continue .dnr-cloud-cover { flex:0 0 68px; width:68px; height:102px; padding:11px 9px 9px 13px; }
+.dnr-cloud-continue .dnr-cloud-cover strong { font-size:12px; line-height:1.6; -webkit-line-clamp:4; }
+.dnr-cloud-continue .dnr-cloud-cover small { font-size:9px; }
+.dnr-cloud-books h3 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:13px; font-weight:500; line-height:1.65; height:3.3em; margin:12px 0 2px; overflow-wrap:anywhere; }
+.dnr-cloud-book-meta { display:flex; gap:3px; justify-content:space-between; align-items:center; color:var(--dnr-muted); font-size:10px; }
+.dnr-cloud-book-meta > span { overflow-wrap:anywhere; }
+.dnr-cloud-book-more summary { display:grid; place-items:center; width:28px; min-height:32px; border-radius:5px; list-style:none; cursor:pointer; color:var(--dnr-text); font-size:17px; }
+.dnr-cloud-book-more summary::-webkit-details-marker { display:none; }
+.dnr-cloud-book-more summary:hover, .dnr-cloud-book-more[open] summary { background:var(--dnr-surface); }
+.dnr-cloud-book-menu { position:absolute; z-index:5; top:100%; left:0; right:0; padding:12px; margin-top:4px; color:var(--dnr-text); background:var(--dnr-bg); border:1px solid var(--dnr-line); border-radius:9px; box-shadow:0 6px 18px #0001; overflow-wrap:anywhere; }
+.dnr-cloud-book-menu > span { color:var(--dnr-muted); font-size:10px; }
+.dnr-cloud-book-menu p { margin:6px 0 12px; font-size:11px; }
+.dnr-cloud-book-menu a { display:block; font-size:11px; line-height:1.8; padding:5px 0; }
+.dnr-cloud-library .dnr-cloud-back { display:flex; align-items:center; gap:4px; margin-top:28px; padding:8px 0; border:0; background:transparent; color:var(--dnr-muted); }
 .dnr-cloud-local { display:flex; gap:12px; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--dnr-line); }
 .dnr-cloud-local button { flex-shrink:0; }
 .dnr-cloud-url { overflow-wrap:anywhere; }
-.dnr-cloud-empty { padding:30px 20px; border:1px dashed var(--dnr-line); color:var(--dnr-muted); border-radius:12px; }
+.dnr-cloud-empty { display:flex; flex-direction:column; align-items:center; text-align:center; padding:36px 14px; color:var(--dnr-muted); }
+.dnr-cloud-empty h3 { margin:16px 0 6px; color:var(--dnr-text); font-weight:500; font-size:17px; }
+.dnr-cloud-empty p { margin:0 0 20px; line-height:1.8; }
 .dnr-cloud-message { padding:12px; background:var(--dnr-surface); border-radius:8px; }
+@container (max-width:359px) { .dnr-cloud-books { grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px 18px; } .dnr-cloud-section-heading > div { display:block; } .dnr-cloud-section-heading > div > span { display:block; margin-top:3px; } }
+@container (min-width:600px) { .dnr-cloud-books { grid-template-columns:repeat(4,minmax(0,1fr)); gap:30px 24px; } .dnr-cloud-continue { max-width:620px; } }
+@container (min-width:820px) { .dnr-cloud-books { grid-template-columns:repeat(5,minmax(0,1fr)); } }
+@container (min-width:1000px) { .dnr-cloud-books { grid-template-columns:repeat(6,minmax(0,1fr)); } }
+@media (pointer:coarse) { .dnr-cloud-book-more summary { min-width:32px; min-height:44px; } .dnr-cloud-library :is(.dnr-cloud-upload,.dnr-cloud-refresh,.dnr-cloud-continue button,.dnr-cloud-back), .dnr-library-tabs button { min-height:44px; } .dnr-cloud-book-menu a { min-height:44px; } }
 .dnr-shell:not(.is-immersive):has(> .dnr-footer) { --dnr-sync-footer-offset: var(--dnr-footer-height); }
 .dnr-sync-control { position: absolute; z-index: 9; left: 4px; bottom: calc(var(--dnr-sync-footer-offset) + max(2px, env(safe-area-inset-bottom))); width: 40px; height: 40px; }
 .dnr-sync-button { position: relative; display: grid; place-items: center; width: 40px; height: 40px; padding: 6px; border: 0; border-radius: 10px; background: var(--dnr-bg); color: var(--dnr-muted); }

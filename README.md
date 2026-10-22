@@ -7,6 +7,7 @@ Private Sites companion for the local Codex novel reader. This deployment is a *
 - Original TXT, Markdown, EPUB uploads up to 50 MB, addressed and verified by SHA-256.
 - R2 stores original bytes; D1 stores the catalog and reading progress, with legacy bookmark data retained for sync compatibility.
 - Toolbar separates the library (cloud files and local import), chapter directory, online source search, in-book search and settings. The globe opens online search; the library icon owns uploaded cloud data.
+- The library uses a compact study header, a continue-reading card based on actual reading activity, and responsive typography covers. The page retains the existing light/dark backgrounds. File-name acquisition suffixes are hidden only in display titles; the per-book details keep the full original file name and download. Reopening the active book preserves its current reading position.
 - Online search, TOCs, chapter content and source management run on this Site without a desktop bridge. Source settings use D1 with revision checks; temporary search results, reading sessions and rule-test handles use D1 metadata and R2 payloads so requests can run on different Workers.
 - Adding a search result to the cloud library fetches chapters on the current page, shows progress/cancellation, validates the 50 MB limit and uploads the assembled TXT through the existing SHA-256 file route. Keep that page open while fetching; leaving cancels unfinished work.
 - Shared reader bundle from `../codex-novel-reader`, preserving chapter and paragraph parsing.
