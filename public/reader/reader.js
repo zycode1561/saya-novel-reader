@@ -12439,10 +12439,9 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			else scheduleSettle();
 		};
 		if (!book || !progress$1) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {});
-		const visibleCount = counts[book.chapters[view.chapter]?.id ?? ""] ?? 1;
-		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 			className: "dnr-reader-stage is-paged",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				ref: scrollerRef,
 				className: "dnr-reader-scroll dnr-reader-scroll--paged dnr-continuous-scroll",
 				onScroll: scheduleSettle,
@@ -12532,15 +12531,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 						}
 					}, i$1))
 				})]
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-				className: "dnr-page-number",
-				"aria-live": "polite",
-				children: [
-					view.page + 1,
-					" / ",
-					visibleCount
-				]
-			})]
+			})
 		});
 	});
 
@@ -12644,7 +12635,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		const anchorRef = (0, import_react.useRef)(null);
 		const [pageWidth, setPageWidth] = (0, import_react.useState)(1);
 		const [layoutRevision, setLayoutRevision] = (0, import_react.useState)(0);
-		const [pageIndex, setPageIndex] = (0, import_react.useState)(0);
 		const [pageCount, setPageCount] = (0, import_react.useState)(1);
 		const chapter = book?.chapters[progress$1?.chapterIndex ?? 0];
 		const paged = settings.pageMode === "paged";
@@ -12674,7 +12664,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					markParagraphVisible(index, paged ? container.scrollLeft : container.scrollTop);
 				}
 			}
-			if (paged) setPageIndex(Math.max(0, Math.min(pageTotal(container) - 1, Math.round(container.scrollLeft / Math.max(1, container.clientWidth)))));
 		}, [
 			chapter,
 			markParagraphVisible,
@@ -12697,7 +12686,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				top: 0,
 				behavior: "instant"
 			});
-			setPageIndex(page);
 			if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
 			frameRef.current = requestAnimationFrame(() => {
 				restoringRef.current = false;
@@ -12723,7 +12711,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				top: 0,
 				behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth"
 			});
-			setPageIndex(target);
 			scheduleSettle();
 		}, [scheduleSettle]);
 		const navigateChapter = (0, import_react.useCallback)((index, lastPage = false) => {
@@ -12861,7 +12848,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					top: 0,
 					behavior: "instant"
 				});
-				setPageIndex(firstPage);
 			}
 			if (measureFrameRef.current !== null) cancelAnimationFrame(measureFrameRef.current);
 			measureFrameRef.current = requestAnimationFrame(() => {
@@ -12886,10 +12872,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					container.clientHeight,
 					layoutRevision
 				].join(":");
-				if (!(pendingParagraph !== null || restoreKeyRef.current !== restoreKey || landOnLastPageRef.current)) {
-					if (paged) setPageIndex(Math.max(0, Math.min(total - 1, Math.round(container.scrollLeft / width))));
-					return;
-				}
+				if (!(pendingParagraph !== null || restoreKeyRef.current !== restoreKey || landOnLastPageRef.current)) return;
 				targetPageRef.current = null;
 				touchRef.current = null;
 				if (settleTimerRef.current !== null) clearTimeout(settleTimerRef.current);
@@ -12903,7 +12886,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 						top: 0,
 						behavior: "instant"
 					});
-					setPageIndex(last);
 				} else {
 					const anchor = pendingParagraph === null && anchorRef.current?.chapterId === chapter.id ? anchorRef.current : null;
 					const targetIndex = pendingParagraph ?? anchor?.paragraphIndex ?? progress$1.paragraphIndex;
@@ -12927,7 +12909,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 							top: 0,
 							behavior: "instant"
 						});
-						setPageIndex(targetPage);
 					} else if (target === null) container.scrollTo({
 						top: 0,
 						left: 0
@@ -13043,9 +13024,9 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				turnPage(dx < 0 ? 1 : -1);
 			} else scheduleSettle();
 		};
-		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 			className: `dnr-reader-stage ${paged ? "is-paged" : "is-scroll"}`,
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				ref: scrollerRef,
 				className: `dnr-reader-scroll ${paged ? "dnr-reader-scroll--paged" : ""}`,
 				"aria-busy": Boolean(book.onlineReading && loading),
@@ -13121,15 +13102,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 						}
 					}, index))
 				})]
-			}), paged && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-				className: "dnr-page-number",
-				"aria-live": "polite",
-				children: [
-					pageIndex + 1,
-					" / ",
-					pageCount
-				]
-			})]
+			})
 		});
 	});
 	const ReaderBody = (0, import_react.forwardRef)(function ReaderBody$1(props, ref) {
@@ -13394,7 +13367,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	}];
 	const footerDisplays = [{
 		value: "chapter-progress",
-		label: "章节进度条"
+		label: "全书进度条"
 	}, {
 		value: "chapter-title",
 		label: "章节名称"
@@ -16873,7 +16846,6 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 					onClick: () => setHostNotice(null),
 					children: hostNotice ?? notices[0]
 				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudSync, { visible: showReader }),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudReadingActivity, { active: showReader }),
 				view !== "library" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(UploadStatus, {
 					compact: true,
@@ -16931,36 +16903,58 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 						})
 					]
 				}),
-				showReader && progress$1 !== null && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("footer", {
-					className: "dnr-footer",
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("footer", {
+					className: "dnr-reading-status",
+					hidden: !showReader,
+					"aria-label": "阅读状态",
 					children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-							type: "button",
-							onClick: () => navigateChapter(currentChapter - 1),
-							disabled: currentChapter <= 0,
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "chevron-left" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "上一章" })]
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "dnr-reading-sync",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudSync, { visible: showReader })
 						}),
-						settings.footerDisplay === "chapter-progress" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-							className: "dnr-chapter-progress",
-							title: `本章 ${progressSnapshot.chapterPercent.toFixed(1)}% · 全书 ${progressSnapshot.bookPercent.toFixed(1)}%`,
-							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { style: { width: `${progressSnapshot.chapterPercent}%` } })
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-							className: "dnr-reading-time",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
-								name: "clock",
-								width: "14",
-								height: "14"
-							}), durationLabel(progress$1.readingSeconds)]
-						})] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-							className: "dnr-chapter-title",
-							title: currentChapterTitle,
-							children: currentChapterTitle
+						showReader && progress$1 !== null && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "dnr-footer dnr-status-navigation",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+									type: "button",
+									"aria-label": "上一章",
+									onClick: () => navigateChapter(currentChapter - 1),
+									disabled: currentChapter <= 0,
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "chevron-left" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "上一章" })]
+								}),
+								settings.footerDisplay === "chapter-progress" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "dnr-chapter-progress",
+									title: `全书 ${progressSnapshot.bookPercent.toFixed(1)}%`,
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { style: { width: `${progressSnapshot.bookPercent}%` } })
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "dnr-reading-time",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
+										name: "clock",
+										width: "14",
+										height: "14"
+									}), durationLabel(progress$1.readingSeconds)]
+								})] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "dnr-chapter-title",
+									title: currentChapterTitle,
+									children: currentChapterTitle
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+									type: "button",
+									"aria-label": "下一章",
+									onClick: () => navigateChapter(currentChapter + 1),
+									disabled: currentChapter >= book.chapters.length - 1,
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "下一章" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "chevron-right" })]
+								})
+							]
 						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-							type: "button",
-							onClick: () => navigateChapter(currentChapter + 1),
-							disabled: currentChapter >= book.chapters.length - 1,
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "下一章" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "chevron-right" })]
+						showReader && progress$1 !== null && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "dnr-book-progress",
+							"aria-label": `全书阅读进度 ${progressSnapshot.bookPercent.toFixed(1)}%`,
+							children: [
+								"全书 ",
+								progressSnapshot.bookPercent.toFixed(1),
+								"%"
+							]
 						})
 					]
 				})
@@ -16990,7 +16984,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
   --dnr-reading-text: var(--dnr-text);
   --dnr-error: #b13b3b;
   --dnr-footer-height: 44px;
-  --dnr-sync-footer-offset: 0px;
+  --dnr-status-height: 44px;
   position: relative; display: flex; flex-direction: column; width: 100%; height: 100%; min-width: 0;
   color: var(--dnr-text); background: var(--dnr-bg); container-type: inline-size; overflow: hidden;
   font: 400 12px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -17081,7 +17075,6 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
   column-gap: calc(var(--dnr-page-pad) + var(--dnr-page-pad)); column-fill: auto;
 }
 .dnr-reader-article[data-page-mode="paged"] header, .dnr-reader-article[data-page-mode="paged"] footer { break-inside: avoid-column; }
-.dnr-page-number { position: absolute; z-index: 2; right: 12px; bottom: 8px; padding: 2px 6px; border-radius: 4px; background: var(--dnr-reading-bg); color: color-mix(in srgb, var(--dnr-reading-text) 55%, transparent); font-size: 11px; font-variant-numeric: tabular-nums; pointer-events: none; }
 .dnr-chapter-snapshot { position: absolute; inset: 0; z-index: 3; overflow: hidden; scroll-snap-type: none; scroll-behavior: auto; pointer-events: none; }
 .dnr-reader-stage.is-chapter-changing > .dnr-reader-scroll { pointer-events: none; }
 .dnr-reader-stage.is-chapter-animating > .dnr-reader-scroll { will-change: transform; animation: dnr-chapter-in 220ms cubic-bezier(.22,.61,.36,1) both; }
@@ -17579,9 +17572,18 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 @container (min-width:820px) { .dnr-cloud-books { grid-template-columns:repeat(5,minmax(0,1fr)); } }
 @container (min-width:1000px) { .dnr-cloud-books { grid-template-columns:repeat(6,minmax(0,1fr)); } }
 @media (pointer:coarse) { .dnr-cloud-book-more summary { min-width:32px; min-height:44px; } .dnr-cloud-library :is(.dnr-cloud-upload,.dnr-cloud-refresh,.dnr-cloud-continue button,.dnr-cloud-back), .dnr-library-tabs button { min-height:44px; } .dnr-cloud-book-menu a { min-height:44px; } }
-.dnr-shell:not(.is-immersive):has(> .dnr-footer) { --dnr-sync-footer-offset: var(--dnr-footer-height); }
-.dnr-sync-control { position: absolute; z-index: 9; left: 4px; bottom: calc(var(--dnr-sync-footer-offset) + max(2px, env(safe-area-inset-bottom))); width: 40px; height: 40px; }
-.dnr-sync-button { position: relative; display: grid; place-items: center; width: 40px; height: 40px; padding: 6px; border: 0; border-radius: 10px; background: var(--dnr-bg); color: var(--dnr-muted); }
+/* Reserve a real row outside the scrolling text in both reading modes. */
+.dnr-reading-status { position: relative; z-index: 9; display: flex; align-items: center; gap: 6px; height: calc(var(--dnr-status-height) + env(safe-area-inset-bottom)); flex: 0 0 calc(var(--dnr-status-height) + env(safe-area-inset-bottom)); padding: 0 12px env(safe-area-inset-bottom) 4px; background: var(--dnr-reading-bg); color: var(--dnr-reading-text); }
+.dnr-reading-status[hidden] { display: none; }
+.dnr-reading-sync { flex: 0 0 32px; min-width: 0; }
+.dnr-reading-status > .dnr-status-navigation { flex: 1; min-width: 0; height: auto; padding: 0; border: 0; background: transparent; }
+.dnr-book-progress { margin-left: auto; flex-shrink: 0; color: color-mix(in srgb, var(--dnr-reading-text) 55%, transparent); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dnr-shell.is-immersive { --dnr-status-height: 28px; }
+.dnr-shell.is-immersive .dnr-status-navigation { display: none; }
+@container (max-width: 459px) { .dnr-status-navigation { gap: 4px; } .dnr-status-navigation > button > span { display: none; } .dnr-status-navigation .dnr-reading-time { display: none; } }
+@media (pointer: coarse) { .dnr-shell.is-immersive { --dnr-status-height: 44px; } }
+.dnr-sync-control { width: 32px; height: var(--dnr-status-height); }
+.dnr-sync-button { position: relative; display: grid; place-items: center; width: 32px; height: 100%; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--dnr-muted); }
 .dnr-sync-button:hover, .dnr-sync-button[aria-expanded="true"] { background: var(--dnr-surface); }
 .dnr-shell.is-immersive .dnr-sync-button { background: var(--dnr-reading-bg); color: var(--dnr-reading-text); }
 .dnr-sync-check { stroke: #2f925f; }
@@ -17590,7 +17592,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-sync-button.is-syncing .dnr-sync-arrows { animation: dnr-sync-spin 1.2s linear infinite; }
 .dnr-sync-alert { color: var(--dnr-error); }
 .dnr-sync-dot { position: absolute; top: 9px; right: 8px; width: 4px; height: 4px; border-radius: 50%; background: var(--dnr-error); box-shadow: 0 0 0 2px var(--dnr-bg); }
-.dnr-sync-details { position: absolute; z-index: 20; left: 12px; bottom: calc(var(--dnr-sync-footer-offset) + 50px + env(safe-area-inset-bottom)); width: min(296px, calc(100% - 24px)); max-height: calc(100% - 100px - var(--dnr-sync-footer-offset)); overflow: auto; padding: 16px; border: 1px solid var(--dnr-line); border-radius: 12px; background: var(--dnr-bg); box-shadow: 0 8px 30px #0002; color: var(--dnr-text); font-size: 12px; }
+.dnr-sync-details { position: absolute; z-index: 20; left: 12px; bottom: calc(100% + 8px); width: min(296px, calc(100% - 24px)); max-height: min(420px, calc(100dvh - var(--dnr-status-height) - env(safe-area-inset-bottom) - 24px)); overflow: auto; padding: 16px; border: 1px solid var(--dnr-line); border-radius: 12px; background: var(--dnr-bg); box-shadow: 0 8px 30px #0002; color: var(--dnr-text); font-size: 12px; }
 .dnr-sync-heading { display: flex; align-items: center; justify-content: space-between; }
 .dnr-sync-heading strong { font-size: 13px; font-weight: 600; }
 .dnr-sync-heading button { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--dnr-muted); }
@@ -17600,7 +17602,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-sync-retry { width: 100%; margin-top: 14px; }
 .dnr-sync-actions { display: flex; gap: 8px; margin-top: 14px; }
 .dnr-sync-actions button { flex: 1; }
-.dnr-sync-conflict { position: absolute; z-index: 9; right: 12px; bottom: 56px; max-width: calc(100% - 24px); padding: 9px 12px; border: 1px solid var(--dnr-line); border-radius: 10px; color: var(--dnr-text); background: var(--dnr-bg); box-shadow: 0 3px 12px #0001; }
+.dnr-sync-conflict { position: absolute; z-index: 9; right: 12px; bottom: calc(100% + 8px); max-width: calc(100% - 24px); padding: 9px 12px; border: 1px solid var(--dnr-line); border-radius: 10px; color: var(--dnr-text); background: var(--dnr-bg); box-shadow: 0 3px 12px #0001; }
 @media (prefers-reduced-motion: reduce) { .dnr-sync-button.is-syncing .dnr-sync-arrows { animation: none; } }
 .dnr-upload-status { margin:0 0 24px; padding:18px; border:1px solid var(--dnr-line); border-radius:12px; background:var(--dnr-surface); color:var(--dnr-text); }
 .dnr-upload-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
