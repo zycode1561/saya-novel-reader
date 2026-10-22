@@ -15927,9 +15927,9 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 								className: "dnr-toc-title",
 								children: embedded ? chapter.title : chapterDisplayTitle(chapter.title)
 							}),
-							!embedded && progress?.chapterIndex === chapter.index && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							!embedded && progress?.chapterIndex === chapter.index && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 								className: "dnr-toc-current",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "book" }), "正在读"]
+								children: "正在读"
 							})
 						]
 					}, chapter.id)), chapters.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
@@ -16778,7 +16778,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-search-field button { width: 22px; height: 22px; display: grid; place-items: center; padding: 0; border: 0; background: transparent; color: var(--dnr-muted); }
 .dnr-search-field--small { height: 32px; }
 .dnr-search-field--small input { font-size: 11px; }
-.dnr-toc--page { --dnr-toc-accent: #365749; --dnr-toc-active: #f0f5f1; width: 100%; max-width: 680px; margin-inline: auto; padding: 24px clamp(20px, 4cqw, 32px); }
+.dnr-toc--page { --dnr-toc-accent: #365749; --dnr-toc-active: #f5f8f5; width: 100%; max-width: 680px; margin-inline: auto; padding: 24px clamp(20px, 4cqw, 32px); }
 .dnr-shell[data-color-scheme="dark"] .dnr-toc--page { --dnr-toc-accent: #b9d1b6; --dnr-toc-active: #29382d; }
 .dnr-toc--page > :not(.dnr-toc-list) { flex-shrink: 0; }
 .dnr-toc--page > .dnr-panel-header { min-height: 44px; padding: 0; margin: 0; }
@@ -16796,14 +16796,15 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-toc-context > button { display: flex; align-items: center; gap: 5px; min-height: 44px; padding: 0; border: 0; background: transparent; color: var(--dnr-toc-accent); font-size: 12px; white-space: nowrap; }
 .dnr-toc-context svg { width: 14px; height: 14px; }
 .dnr-toc--page .dnr-toc-list { padding: 0; overscroll-behavior: contain; }
-.dnr-toc--page .dnr-toc-list button { grid-template-columns: minmax(30px, max-content) minmax(0, 1fr) auto; gap: 12px; min-height: 58px; margin-bottom: 3px; padding-block: 12px; padding-right: 12px; border-bottom: 1px solid var(--dnr-line); border-radius: 0; color: var(--dnr-text); }
+.dnr-toc--page .dnr-toc-list button { grid-template-columns: minmax(30px, max-content) minmax(0, 1fr) auto; gap: 12px; min-height: 48px; margin-bottom: 0; padding-block: 8px; padding-right: 12px; border-bottom: 1px solid var(--dnr-line); border-radius: 0; color: var(--dnr-text); }
 .dnr-toc--page .dnr-toc-index { color: var(--dnr-muted); font-size: 11px; opacity: 1; }
 .dnr-toc--page .dnr-toc-list .dnr-toc-title { white-space: normal; overflow: visible; overflow-wrap: anywhere; font-size: 15px; font-weight: 400; line-height: 1.7; }
 .dnr-toc--page .dnr-toc-list button:hover { background: var(--dnr-surface); }
-.dnr-toc--page .dnr-toc-list button.is-active { background: var(--dnr-toc-active); color: var(--dnr-toc-accent); border-color: transparent; border-radius: 9px; box-shadow: inset 3px 0 var(--dnr-toc-accent); }
-.dnr-toc--page .is-active .dnr-toc-index { color: var(--dnr-toc-accent); }
-.dnr-toc-current { display: inline-flex; align-items: center; gap: 4px; color: var(--dnr-toc-accent); font-size: 11px; white-space: nowrap; font-weight: 400; }
-.dnr-toc-current svg { width: 13px; height: 13px; }
+.dnr-toc--page .dnr-toc-list button.is-active { position: relative; background: var(--dnr-toc-active); border-color: transparent; border-radius: 8px; }
+.dnr-toc--page .dnr-toc-list button.is-active::before { content: ''; position: absolute; left: 0; top: 50%; width: 2px; height: 20px; border-radius: 1px; background: var(--dnr-toc-accent); transform: translateY(-50%); }
+.dnr-toc--page .is-active .dnr-toc-index { color: var(--dnr-muted); font-weight: 400; }
+.dnr-toc--page .dnr-toc-list .is-active .dnr-toc-title { color: var(--dnr-toc-accent); font-weight: 500; }
+.dnr-toc-current { display: inline-flex; align-items: center; padding: 2px 6px; border-radius: 4px; background: color-mix(in srgb, var(--dnr-toc-accent) 7%, transparent); color: var(--dnr-toc-accent); font-size: 11px; white-space: nowrap; font-weight: 400; }
 .dnr-toc-help { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0; padding-top: 20px; color: var(--dnr-muted); font-size: 11px; line-height: 1.8; }
 .dnr-toc-help svg { width: 13px; height: 13px; }
 @container (max-width: 459px) { .dnr-toc-intro { padding-top: 16px; } .dnr-toc-intro h1 { font-size: 29px; } .dnr-toc--page .dnr-toc-list button { grid-template-columns: minmax(25px, max-content) minmax(0, 1fr) auto; gap: 9px; padding-right: 10px; } .dnr-toc--page .dnr-toc-list .dnr-toc-title { font-size: 14px; } }
