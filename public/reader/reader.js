@@ -16936,7 +16936,8 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-settings-status { margin: 18px 0 0; color: var(--dnr-muted); font-size: 11px; line-height: 1.8; text-align: center; }
 @container (max-width: 459px) { .dnr-settings-intro { padding-top: 16px; margin-bottom: 24px; } .dnr-settings-intro h1 { font-size: 29px; } .dnr-settings-row { gap: 12px; } .dnr-settings-row select { width: 142px; } }
 @media (max-width: 600px), (pointer: coarse) { .dnr-settings-row select { font-size: 16px; } }
-.dnr-settings-row .dnr-settings-font-select { font-size: 14px; }
+.dnr-settings-row .dnr-settings-font-select { width: 120px; height: 36px; padding: 0 8px; border-radius: 8px; background: var(--dnr-bg); font-size: 14px; cursor: pointer; }
+.dnr-settings-row .dnr-settings-font-select:hover { border-color: color-mix(in srgb, var(--dnr-settings-accent) 40%, var(--dnr-line)); }
 @media (pointer: coarse) { .dnr-settings-segments button { min-height: 44px; } .dnr-settings-themes button { min-height: 54px; } }
 
 /* The start screen and book lists use the same restrained surfaces as the host. */
