@@ -7321,6 +7321,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	var import_jsx_runtime = /* @__PURE__ */ __toESM(require_jsx_runtime());
 	const paths = {
 		upload: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M12 16V4m-4 4 4-4 4 4M4 16v4h16v-4" }) }),
+		download: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M12 4v12m-4-4 4 4 4-4M4 16v4h16v-4" }),
 		cloud: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M7 18a5 5 0 0 1-1-9.9A6 6 0 0 1 17.6 7a5.5 5.5 0 0 1 .9 11H7Z" }),
 		library: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M4 4v16M8 4v16M12 4v16M16 5l4 14" }) }),
 		sync: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M20 7v5h-5M4 17v-5h5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", { d: "M6.1 7a7 7 0 0 1 11.6-1.4L20 8M4 16l2.3 2.4A7 7 0 0 0 17.9 17" })] }),
@@ -7423,13 +7424,16 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	function write(key, value) {
 		localStorage.setItem(`dnr-cloud:${key}`, JSON.stringify(value));
 	}
-	async function original(id$1, file) {
-		const db$1 = await new Promise((resolve, reject) => {
+	function openOriginals() {
+		return new Promise((resolve, reject) => {
 			const req = indexedDB.open("dnr-originals", 1);
 			req.onupgradeneeded = () => req.result.createObjectStore("files");
 			req.onsuccess = () => resolve(req.result);
 			req.onerror = () => reject(req.error);
 		});
+	}
+	async function original(id$1, file) {
+		const db$1 = await openOriginals();
 		return new Promise((resolve, reject) => {
 			const tx = db$1.transaction("files", file ? "readwrite" : "readonly");
 			const req = file ? tx.objectStore("files").put(file, id$1) : tx.objectStore("files").get(id$1);
@@ -7442,6 +7446,33 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				reject(tx.error);
 			};
 		});
+	}
+	async function removeOriginal(id$1) {
+		const db$1 = await openOriginals();
+		return new Promise((resolve, reject) => {
+			const tx = db$1.transaction("files", "readwrite");
+			tx.objectStore("files").delete(id$1);
+			tx.oncomplete = () => {
+				db$1.close();
+				resolve();
+			};
+			tx.onerror = () => {
+				db$1.close();
+				reject(tx.error);
+			};
+		});
+	}
+	function clearCloudBookState(id$1) {
+		const linked = bindings();
+		for (const [localId, cloudId] of Object.entries(linked)) if (cloudId === id$1) delete linked[localId];
+		write("bindings", linked);
+		write("catalog", read("catalog", []).filter((book) => book.id !== id$1));
+		for (const key of ["reading-times", "reading-pending"]) {
+			const values = read(key, {});
+			delete values[id$1];
+			write(key, values);
+		}
+		localStorage.removeItem(`dnr-cloud:sync:${id$1}`);
 	}
 	const SITE_URL = "https://saya-novel-library.zycode1561.chatgpt.site";
 	const cloudHosted = typeof window !== "undefined" && window.__CODEX_NOVEL_READER_CLOUD__ === true;
@@ -10135,6 +10166,31 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				await deleteBook(id$1);
 			} catch {}
 		}, []);
+		const forgetCloudBook = (0, import_react.useCallback)(async (cloudId) => {
+			const cachedId = `cloud-${cloudId}`;
+			const activeMatches = book && (book.id === cachedId || bindings()[book.id] === cloudId);
+			try {
+				clearCloudBookState(cloudId);
+			} catch {}
+			if (activeMatches) {
+				readingRequest.current?.abort();
+				readingCache.current?.dispose();
+				readingCache.current = null;
+				setBook(null);
+				setPendingParagraph(null);
+				setError(null);
+				setNotices([]);
+				setLoading(false);
+			}
+			setRecents((current) => current.filter((item) => item.id !== cachedId));
+			setProgressByBook((current) => {
+				const next = { ...current };
+				delete next[cachedId];
+				return next;
+			});
+			setBookmarks((current) => current.filter((item) => item.bookId !== cachedId));
+			await Promise.allSettled([deleteBook(cachedId), removeOriginal(cachedId)]);
+		}, [book, setProgressByBook]);
 		const updateSettings = (0, import_react.useCallback)((patch) => {
 			setSettings((current) => ({
 				...current,
@@ -10242,6 +10298,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			retryOnlineChapter,
 			openRecent,
 			removeRecent,
+			forgetCloudBook,
 			updateSettings,
 			updatePanel,
 			togglePanel,
@@ -10270,6 +10327,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			retryOnlineChapter,
 			openRecent,
 			removeRecent,
+			forgetCloudBook,
 			updateSettings,
 			updatePanel,
 			togglePanel,
@@ -11307,6 +11365,13 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	function bookFormat(entry) {
 		return entry.filename.split(".").pop()?.toUpperCase() || "TXT";
 	}
+	function bookDate(at) {
+		return at > 0 && Number.isFinite(at) ? new Date(at).toLocaleDateString("zh-CN", {
+			year: "numeric",
+			month: "numeric",
+			day: "numeric"
+		}) : "—";
+	}
 	function BookCover({ entry }) {
 		const tone = [...entry.id].reduce((sum, char) => sum + char.charCodeAt(0), 0) % 3;
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
@@ -11317,14 +11382,32 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		});
 	}
 	function CloudLibrary({ onOpened, onBack, navigation }) {
-		const { book, recents, loadOnlineBook } = useReader();
+		const { book, recents, loadOnlineBook, forgetCloudBook } = useReader();
 		const [books, setBooks] = (0, import_react.useState)(() => read("catalog", []));
 		const [message, setMessage] = (0, import_react.useState)("");
 		const [openingId, setOpeningId] = (0, import_react.useState)(null);
 		const [refreshing, setRefreshing] = (0, import_react.useState)(false);
+		const [deleteTarget, setDeleteTarget] = (0, import_react.useState)(null);
+		const [deleting, setDeleting] = (0, import_react.useState)(false);
+		const [deleteError, setDeleteError] = (0, import_react.useState)("");
+		const [deleteNotice, setDeleteNotice] = (0, import_react.useState)("");
+		const deleteDialog = (0, import_react.useRef)(null);
+		const deleteTrigger = (0, import_react.useRef)(null);
+		const deleteBusy = (0, import_react.useRef)(false);
+		const catalogVersion = (0, import_react.useRef)(0);
 		const { running: uploading } = useUploads();
 		const input = (0, import_react.useRef)(null);
 		const library = (0, import_react.useRef)(null);
+		(0, import_react.useEffect)(() => {
+			if (!deleteTarget) return;
+			const dialog = deleteDialog.current;
+			dialog?.showModal();
+			dialog?.querySelector("[data-cancel-delete]")?.focus();
+			return () => {
+				dialog?.close();
+				deleteTrigger.current?.focus();
+			};
+		}, [deleteTarget?.id]);
 		(0, import_react.useEffect)(() => {
 			const dismissOutside = (event) => {
 				if (!(event.target instanceof Node)) return;
@@ -11337,9 +11420,11 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			return () => document.removeEventListener("pointerdown", dismissOutside, true);
 		}, []);
 		const refresh = async () => {
+			const version = catalogVersion.current;
 			setRefreshing(true);
 			try {
 				const rows = await (await api("/books")).json();
+				if (version !== catalogVersion.current) return;
 				write("catalog", rows);
 				setBooks(rows);
 				setMessage("");
@@ -11401,6 +11486,27 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			});
 			onOpened();
 		};
+		const deleteBook$1 = async () => {
+			if (!deleteTarget || deleteBusy.current) return;
+			const entry = deleteTarget;
+			deleteBusy.current = true;
+			setDeleting(true);
+			setDeleteError("");
+			try {
+				if (!(await api(`/books/${entry.id}`, { method: "DELETE" })).ok) throw new Error("删除失败，请重试。");
+				catalogVersion.current += 1;
+				await forgetCloudBook(entry.id);
+				setBooks((current) => current.filter((item) => item.id !== entry.id));
+				setDeleteTarget(null);
+				setDeleteNotice(`已删除《${displayName(entry.name)}》`);
+				window.dispatchEvent(new Event("dnr-cloud-catalog-updated"));
+			} catch (error) {
+				setDeleteError(error instanceof Error ? error.message : "删除失败，请重试。");
+			} finally {
+				deleteBusy.current = false;
+				setDeleting(false);
+			}
+		};
 		const times = readingTimes(), linked = bindings();
 		const lastRead = (entry) => Math.max(entry.last_read_at || 0, times[entry.id] || 0, ...recents.filter((recent) => recent.id === `cloud-${entry.id}` || linked[recent.id] === entry.id).map((recent) => recent.openedAt));
 		const recentBook = [...books].filter((entry) => lastRead(entry) > 0).sort((a, b) => lastRead(b) - lastRead(a))[0];
@@ -11453,6 +11559,11 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					role: "status",
 					className: "dnr-cloud-message",
 					children: message
+				}),
+				deleteNotice && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					role: "status",
+					className: "dnr-cloud-delete-notice",
+					children: deleteNotice
 				}),
 				recentBook && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 					className: "dnr-cloud-continue",
@@ -11549,13 +11660,39 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 									children: "···"
 								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 									className: "dnr-cloud-book-menu",
+									role: "region",
+									"aria-label": "书籍详情",
 									children: [
-										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "完整文件名" }),
-										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: entry.filename }),
-										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
-											href: `/api/cloud/books/${entry.id}/file`,
-											download: entry.filename,
-											children: "下载原文件"
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "dnr-cloud-detail-heading",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(BookCover, { entry }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: displayName(entry.name) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+												bookFormat(entry),
+												" · ",
+												formatBytes$1(entry.size)
+											] })] })]
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("dl", {
+											className: "dnr-cloud-detail-meta",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("dt", { children: "加入书架" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("dd", { children: bookDate(entry.created_at) })] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("dt", { children: "最近阅读" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("dd", { children: lastRead(entry) ? bookDate(lastRead(entry)) : "尚未阅读" })] })]
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "dnr-cloud-detail-actions",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("a", {
+												href: `/api/cloud/books/${entry.id}/file`,
+												download: entry.filename,
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "download" }), "下载书籍"]
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+												type: "button",
+												className: "dnr-cloud-delete",
+												onClick: (event) => {
+													const details = event.currentTarget.closest("details");
+													deleteTrigger.current = details.querySelector("summary");
+													details.open = false;
+													setDeleteError("");
+													setDeleteTarget(entry);
+												},
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "trash" }), "删除书籍"]
+											})]
 										})
 									]
 								})]
@@ -11599,7 +11736,68 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 							children: bindings()[b.id] ? "已同步 · 检查" : "同步到云端"
 						})]
 					}, b.id))
-				] })
+				] }),
+				deleteTarget && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("dialog", {
+					ref: deleteDialog,
+					className: "dnr-cloud-delete-dialog",
+					"aria-labelledby": "dnr-delete-title",
+					"aria-describedby": "dnr-delete-description",
+					onKeyDown: (event) => {
+						event.stopPropagation();
+						if (event.key === "Escape") {
+							event.preventDefault();
+							if (!deleteBusy.current) setDeleteTarget(null);
+						}
+					},
+					onCancel: (event) => {
+						event.preventDefault();
+						if (!deleteBusy.current) setDeleteTarget(null);
+					},
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "dnr-cloud-delete-symbol",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "trash" })
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+							id: "dnr-delete-title",
+							children: "删除这本书？"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+							className: "dnr-cloud-delete-name",
+							children: [
+								"《",
+								displayName(deleteTarget.name),
+								"》"
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							id: "dnr-delete-description",
+							children: "将删除云端书籍及其云端阅读进度，此操作无法撤销。本地独立导入的副本保留。"
+						}),
+						deleteError && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							role: "alert",
+							className: "dnr-cloud-delete-error",
+							children: deleteError
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "dnr-cloud-delete-dialog-actions",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
+								"data-cancel-delete": true,
+								disabled: deleting,
+								onClick: () => setDeleteTarget(null),
+								children: "取消"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								type: "button",
+								className: "dnr-cloud-delete-confirm",
+								disabled: deleting,
+								"aria-busy": deleting,
+								onClick: () => void deleteBook$1(),
+								children: deleting ? "正在删除…" : "删除书籍"
+							})]
+						})
+					]
+				})
 			]
 		});
 	}
@@ -17170,8 +17368,8 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-library-tabs button[aria-pressed="true"] { color: var(--dnr-text); border-bottom-color: var(--dnr-text); }
 .dnr-library-tabs svg { width: 16px; height: 16px; }
 .dnr-library-content { flex: 1; min-height: 0; }
-.dnr-cloud-library { --dnr-shelf-accent:#3e5945; --dnr-shelf-on-accent:#fff; width:100%; height:100%; min-height:0; overflow:auto; padding:26px clamp(20px,4cqw,44px) 80px; max-width:1040px; margin:0 auto; background:var(--dnr-bg); scrollbar-width:thin; scrollbar-color:var(--dnr-line) transparent; }
-.dnr-shell[data-color-scheme="dark"] .dnr-cloud-library { --dnr-shelf-accent:#bfd0b8; --dnr-shelf-on-accent:#202b22; }
+.dnr-cloud-library { --dnr-shelf-accent:#3e5945; --dnr-shelf-on-accent:#fff; --dnr-shelf-danger:#9c4541; width:100%; height:100%; min-height:0; overflow:auto; padding:26px clamp(20px,4cqw,44px) 80px; max-width:1040px; margin:0 auto; background:var(--dnr-bg); scrollbar-width:thin; scrollbar-color:var(--dnr-line) transparent; }
+.dnr-shell[data-color-scheme="dark"] .dnr-cloud-library { --dnr-shelf-accent:#bfd0b8; --dnr-shelf-on-accent:#202b22; --dnr-shelf-danger:#e8aaa4; }
 .dnr-cloud-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; }
 .dnr-cloud-heading h1 { font:500 clamp(26px,4cqw,32px)/1.3 "Songti SC","Noto Serif SC",STSong,serif; letter-spacing:.06em; margin:0; }
 .dnr-cloud-heading p { margin:6px 0 0; color:var(--dnr-muted); font-size:12px; }
@@ -17219,10 +17417,35 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-cloud-book-more summary { display:grid; place-items:center; width:28px; min-height:32px; border-radius:5px; list-style:none; cursor:pointer; color:var(--dnr-text); font-size:17px; }
 .dnr-cloud-book-more summary::-webkit-details-marker { display:none; }
 .dnr-cloud-book-more summary:hover, .dnr-cloud-book-more[open] summary { background:var(--dnr-surface); }
-.dnr-cloud-book-menu { position:absolute; z-index:5; bottom:calc(100% + 8px); right:0; width:min(240px,calc(100cqw - 40px)); max-height:min(320px,50cqh); overflow-y:auto; padding:14px; color:var(--dnr-text); background:var(--dnr-bg); border:1px solid var(--dnr-line); border-radius:10px; box-shadow:0 4px 20px #00000012; overflow-wrap:anywhere; }
-.dnr-cloud-book-menu > span { color:var(--dnr-muted); font-size:10px; }
-.dnr-cloud-book-menu p { margin:6px 0 12px; font-size:11px; }
-.dnr-cloud-book-menu a { display:block; font-size:11px; line-height:1.8; padding:5px 0; }
+.dnr-cloud-book-menu { position:absolute; z-index:5; bottom:calc(100% + 8px); right:0; width:min(260px,calc(100cqw - 40px)); max-height:min(360px,60cqh); overflow-y:auto; padding:16px; color:var(--dnr-text); background:var(--dnr-bg); border:1px solid var(--dnr-line); border-radius:12px; box-shadow:0 4px 20px #00000012; overflow-wrap:anywhere; }
+.dnr-cloud-detail-heading { display:flex; align-items:center; gap:12px; }
+.dnr-cloud-detail-heading > div { min-width:0; }
+.dnr-cloud-detail-heading .dnr-cloud-cover { flex:0 0 44px; width:44px; height:64px; padding:8px 5px 6px 9px; }
+.dnr-cloud-detail-heading .dnr-cloud-cover strong { font-size:9px; line-height:1.55; -webkit-line-clamp:3; }
+.dnr-cloud-detail-heading .dnr-cloud-cover small { display:none; }
+.dnr-cloud-detail-heading h4 { margin:0 0 6px; font-size:14px; font-weight:500; line-height:1.6; }
+.dnr-cloud-detail-heading > div > span { color:var(--dnr-muted); font-size:11px; }
+.dnr-cloud-detail-meta { display:grid; gap:9px; margin:18px 0 14px; font-size:11px; line-height:1.6; }
+.dnr-cloud-detail-meta > div { display:flex; justify-content:space-between; gap:12px; }
+.dnr-cloud-detail-meta dt { color:var(--dnr-muted); flex-shrink:0; }
+.dnr-cloud-detail-meta dd { margin:0; text-align:right; }
+.dnr-cloud-detail-actions { border-top:1px solid var(--dnr-line); }
+.dnr-cloud-library .dnr-cloud-detail-actions :is(a,button) { display:flex; align-items:center; gap:8px; width:100%; min-height:40px; padding:8px 2px; border:0; border-radius:0; background:transparent; color:var(--dnr-shelf-accent); font-size:12px; text-decoration:none; text-align:left; }
+.dnr-cloud-detail-actions svg { width:15px; height:15px; }
+.dnr-cloud-library .dnr-cloud-detail-actions .dnr-cloud-delete { border-top:1px solid var(--dnr-line); color:var(--dnr-shelf-danger); }
+.dnr-cloud-detail-actions :is(a,button):hover { text-decoration:underline; text-underline-offset:4px; }
+.dnr-cloud-delete-notice { margin:0 0 18px; padding:10px 12px; border-radius:8px; background:var(--dnr-surface); color:var(--dnr-shelf-accent); font-size:12px; line-height:1.6; }
+.dnr-cloud-delete-dialog { width:min(340px,calc(100% - 40px)); max-height:calc(100% - 40px); overflow:auto; padding:24px; border:1px solid var(--dnr-line); border-radius:16px; background:var(--dnr-bg); color:var(--dnr-text); box-shadow:0 12px 40px #0002; }
+.dnr-cloud-delete-dialog::backdrop { background:#0005; }
+.dnr-cloud-delete-symbol { display:grid; place-items:center; width:38px; height:38px; margin-bottom:16px; border-radius:50%; color:var(--dnr-shelf-danger); background:color-mix(in srgb,var(--dnr-shelf-danger) 9%,var(--dnr-bg)); }
+.dnr-cloud-delete-dialog h2 { margin:0 0 10px; font-size:18px; font-weight:500; }
+.dnr-cloud-delete-name { margin:0 0 12px; font-size:14px; line-height:1.6; overflow-wrap:anywhere; }
+.dnr-cloud-delete-dialog #dnr-delete-description { margin:0; color:var(--dnr-muted); font-size:12px; line-height:1.8; }
+.dnr-cloud-delete-error { margin:12px 0 0; color:var(--dnr-shelf-danger); font-size:12px; line-height:1.6; }
+.dnr-cloud-delete-dialog-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:22px; }
+.dnr-cloud-delete-dialog-actions button { min-height:40px; padding:8px 16px; font-size:13px; }
+.dnr-cloud-library .dnr-cloud-delete-confirm { background:var(--dnr-shelf-danger); border-color:transparent; color:var(--dnr-bg); }
+@media (pointer:coarse) { .dnr-cloud-detail-actions :is(a,button), .dnr-cloud-delete-dialog-actions button { min-height:44px; } }
 .dnr-cloud-library .dnr-cloud-back { display:flex; align-items:center; gap:4px; margin-top:28px; padding:8px 0; border:0; background:transparent; color:var(--dnr-muted); }
 .dnr-cloud-local { display:flex; gap:12px; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--dnr-line); }
 .dnr-cloud-local button { flex-shrink:0; }
