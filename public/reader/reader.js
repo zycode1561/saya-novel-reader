@@ -15781,33 +15781,46 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 
 //#endregion
 //#region src/client/components/TableOfContents.tsx
+	function chapterDisplayTitle(title) {
+		return title.replace(/^第[零〇一二三四五六七八九十百千万两\d]+[章回节](?:\s+|[：:、.．-]\s*)/u, "").trim() || title;
+	}
 	function TableOfContents({ embedded = false, onSelect, onBack }) {
 		const { book, progress, goToChapter } = useReader();
 		const [query, setQuery] = (0, import_react.useState)("");
+		const [locateRequest, setLocateRequest] = (0, import_react.useState)(0);
+		const inputRef = (0, import_react.useRef)(null);
 		const listRef = (0, import_react.useRef)(null);
 		const chapters = (0, import_react.useMemo)(() => {
 			if (book === null) return [];
 			const needle = query.trim().toLocaleLowerCase();
-			return needle.length === 0 ? book.chapters : book.chapters.filter((chapter) => chapter.title.toLocaleLowerCase().includes(needle));
-		}, [book, query]);
+			if (needle.length === 0) return book.chapters;
+			return book.chapters.filter((chapter) => !embedded && /^\d+$/.test(needle) ? chapter.index + 1 === Number(needle) : chapter.title.toLocaleLowerCase().includes(needle));
+		}, [
+			book,
+			query,
+			embedded
+		]);
 		(0, import_react.useLayoutEffect)(() => {
 			listRef.current?.querySelector("[aria-current=\"true\"]")?.scrollIntoView({
 				block: "center",
 				inline: "nearest"
 			});
-		}, [chapters, progress?.chapterIndex]);
+		}, [
+			chapters,
+			progress?.chapterIndex,
+			locateRequest
+		]);
 		if (book === null) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {});
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
-			className: `dnr-toc ${embedded ? "dnr-toc--embedded" : ""}`,
+			className: `dnr-toc ${embedded ? "dnr-toc--embedded" : "dnr-toc--page"}`,
 			"aria-label": "目录",
 			children: [
-				!embedded && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PanelHeader, {
-					title: "目录",
-					onBack,
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [book.chapters.length, " 章"] })
-				}),
+				!embedded && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PanelHeader, { onBack }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "dnr-toc-intro",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: "目录" })
+				})] }),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
-					className: "dnr-search-field dnr-search-field--small",
+					className: `dnr-search-field ${embedded ? "dnr-search-field--small" : "dnr-toc-filter"}`,
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
 							name: "search",
@@ -15815,14 +15828,19 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 							height: "15"
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+							ref: inputRef,
 							value: query,
 							onChange: (event) => setQuery(event.target.value),
-							placeholder: "筛选章节"
+							placeholder: embedded ? "筛选章节" : "输入章节名或序号",
+							"aria-label": "筛选章节"
 						}),
 						query !== "" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 							type: "button",
 							"aria-label": "清空筛选",
-							onClick: () => setQuery(""),
+							onClick: () => {
+								setQuery("");
+								inputRef.current?.focus({ preventScroll: true });
+							},
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
 								name: "close",
 								width: "13",
@@ -15831,6 +15849,21 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 						})
 					]
 				}),
+				!embedded && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "dnr-toc-context",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						"aria-live": "polite",
+						children: query.trim() ? `${chapters.length} 章匹配 · 共 ${book.chapters.length} 章` : `共 ${book.chapters.length} 章`
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						type: "button",
+						disabled: progress === null || book.chapters[progress.chapterIndex] === void 0,
+						onClick: () => {
+							setQuery("");
+							setLocateRequest((value) => value + 1);
+						},
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "toc" }), "定位当前章"]
+					})]
+				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					ref: listRef,
 					className: "dnr-toc-list",
@@ -15838,6 +15871,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 					children: [chapters.map((chapter) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 						type: "button",
 						role: "treeitem",
+						"aria-label": chapter.title,
 						"aria-current": progress?.chapterIndex === chapter.index ? "true" : void 0,
 						className: progress?.chapterIndex === chapter.index ? "is-active" : "",
 						style: { paddingLeft: `${12 + (chapter.level - 1) * 12}px` },
@@ -15845,14 +15879,29 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 							goToChapter(chapter.index);
 							onSelect?.();
 						},
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-							className: "dnr-toc-index",
-							children: String(chapter.index + 1).padStart(2, "0")
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: chapter.title })]
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "dnr-toc-index",
+								"aria-hidden": "true",
+								children: String(chapter.index + 1).padStart(2, "0")
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "dnr-toc-title",
+								children: embedded ? chapter.title : chapterDisplayTitle(chapter.title)
+							}),
+							!embedded && progress?.chapterIndex === chapter.index && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "dnr-toc-current",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "book" }), "正在读"]
+							})
+						]
 					}, chapter.id)), chapters.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 						className: "dnr-empty-small",
 						children: "没有匹配的章节"
 					})]
+				}),
+				!embedded && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+					className: "dnr-toc-help",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "chevron-right" }), "点击章节，继续阅读"]
 				})
 			]
 		});
@@ -16691,6 +16740,36 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-search-field button { width: 22px; height: 22px; display: grid; place-items: center; padding: 0; border: 0; background: transparent; color: var(--dnr-muted); }
 .dnr-search-field--small { height: 32px; }
 .dnr-search-field--small input { font-size: 11px; }
+.dnr-toc--page { --dnr-toc-accent: #365749; --dnr-toc-active: #f0f5f1; width: 100%; max-width: 680px; margin-inline: auto; padding: 24px clamp(20px, 4cqw, 32px); }
+.dnr-shell[data-color-scheme="dark"] .dnr-toc--page { --dnr-toc-accent: #b9d1b6; --dnr-toc-active: #29382d; }
+.dnr-toc--page > :not(.dnr-toc-list) { flex-shrink: 0; }
+.dnr-toc--page > .dnr-panel-header { min-height: 44px; padding: 0; margin: 0; }
+.dnr-toc-intro { padding-top: 36px; }
+.dnr-toc-intro h1 { margin: 0; font: 500 32px/1.3 "Songti SC", "Noto Serif SC", "SimSun", serif; letter-spacing: 1px; }
+.dnr-toc-filter { height: 54px; gap: 11px; margin-top: 24px; padding: 3px 6px 3px 16px; border-radius: 13px; }
+.dnr-toc-filter > svg { width: 20px; height: 20px; flex-shrink: 0; }
+.dnr-toc-filter input { height: 100%; font-size: 16px; }
+.dnr-toc-filter:focus-within { border-color: var(--dnr-toc-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--dnr-toc-accent) 8%, transparent); }
+/* The enclosing filter supplies the visible keyboard focus ring. */
+.dnr-shell .dnr-toc-filter input:focus-visible { outline: 0; }
+.dnr-toc-filter button { width: 40px; height: 44px; flex-shrink: 0; border-radius: 6px; }
+.dnr-toc-context { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; margin: 7px 2px 15px; color: var(--dnr-muted); font-size: 12px; }
+.dnr-toc-context > span { font-variant-numeric: tabular-nums; }
+.dnr-toc-context > button { display: flex; align-items: center; gap: 5px; min-height: 44px; padding: 0; border: 0; background: transparent; color: var(--dnr-toc-accent); font-size: 12px; white-space: nowrap; }
+.dnr-toc-context svg { width: 14px; height: 14px; }
+.dnr-toc--page .dnr-toc-list { padding: 0; overscroll-behavior: contain; }
+.dnr-toc--page .dnr-toc-list button { grid-template-columns: minmax(30px, max-content) minmax(0, 1fr) auto; gap: 12px; min-height: 58px; margin-bottom: 3px; padding-block: 12px; padding-right: 12px; border-bottom: 1px solid var(--dnr-line); border-radius: 0; color: var(--dnr-text); }
+.dnr-toc--page .dnr-toc-index { color: var(--dnr-muted); font-size: 11px; opacity: 1; }
+.dnr-toc--page .dnr-toc-list .dnr-toc-title { white-space: normal; overflow: visible; overflow-wrap: anywhere; font-size: 15px; font-weight: 400; line-height: 1.7; }
+.dnr-toc--page .dnr-toc-list button:hover { background: var(--dnr-surface); }
+.dnr-toc--page .dnr-toc-list button.is-active { background: var(--dnr-toc-active); color: var(--dnr-toc-accent); border-color: transparent; border-radius: 9px; box-shadow: inset 3px 0 var(--dnr-toc-accent); }
+.dnr-toc--page .is-active .dnr-toc-index { color: var(--dnr-toc-accent); }
+.dnr-toc-current { display: inline-flex; align-items: center; gap: 4px; color: var(--dnr-toc-accent); font-size: 11px; white-space: nowrap; font-weight: 400; }
+.dnr-toc-current svg { width: 13px; height: 13px; }
+.dnr-toc-help { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0; padding-top: 20px; color: var(--dnr-muted); font-size: 11px; line-height: 1.8; }
+.dnr-toc-help svg { width: 13px; height: 13px; }
+@container (max-width: 459px) { .dnr-toc-intro { padding-top: 32px; } .dnr-toc-intro h1 { font-size: 29px; } .dnr-toc--page .dnr-toc-list button { grid-template-columns: minmax(25px, max-content) minmax(0, 1fr) auto; gap: 9px; padding-right: 10px; } .dnr-toc--page .dnr-toc-list .dnr-toc-title { font-size: 14px; } }
+@media (max-height: 600px) { .dnr-toc--page { padding-block: 12px; } .dnr-toc-intro { padding-top: 12px; } .dnr-toc-intro h1 { font-size: 24px; } .dnr-toc-filter { margin-top: 14px; height: 48px; } .dnr-toc-context { margin-block: 3px 5px; } .dnr-toc-help { padding-top: 8px; } }
 /* Keep native mobile focus from zooming small search text; preserve pinch zoom. */
 @media (max-width: 600px), (pointer: coarse) {
   .dnr-shell .dnr-search-field input { font-size: 16px; }
