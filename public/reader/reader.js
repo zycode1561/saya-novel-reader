@@ -10380,7 +10380,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		pending: false,
 		lastSyncedAt: 0
 	};
-	function CloudSync() {
+	function CloudSync({ visible }) {
 		const { book, progress, bookmarks } = useReader();
 		const [status, setStatus] = (0, import_react.useState)(initialStatus);
 		const [conflict, setConflict] = (0, import_react.useState)(null);
@@ -10528,7 +10528,10 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			return () => clearTimeout(timer);
 		}, [working]);
 		(0, import_react.useEffect)(() => {
-			if (!open) return;
+			if (!visible) setOpen(false);
+		}, [visible]);
+		(0, import_react.useEffect)(() => {
+			if (!visible || !open) return;
 			const outside = (event) => {
 				if (!detailsRef.current?.contains(event.target) && !buttonRef.current?.contains(event.target)) setOpen(false);
 			};
@@ -10545,8 +10548,8 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				document.removeEventListener("pointerdown", outside);
 				window.removeEventListener("keydown", escape$1, { capture: true });
 			};
-		}, [open]);
-		if (!currentCloudId) return null;
+		}, [visible, open]);
+		if (!visible || !currentCloudId) return null;
 		const showDetails = () => {
 			setOpen((value) => !value);
 		};
@@ -12842,8 +12845,34 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	}
 
 //#endregion
+//#region src/client/components/PanelHeader.tsx
+	function PanelHeader({ title, onBack, children, className = "" }) {
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", {
+			className: `dnr-panel-header ${className}`,
+			children: [
+				onBack && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+					className: "dnr-panel-back dnr-online-back",
+					type: "button",
+					onClick: onBack,
+					"aria-label": "返回",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
+						name: "chevron-left",
+						width: "16",
+						height: "16"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "返回" })]
+				}),
+				title && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: title }),
+				children && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "dnr-panel-header-detail",
+					children
+				})
+			]
+		});
+	}
+
+//#endregion
 //#region src/client/components/SearchPanel.tsx
-	function SearchPanel({ query, onQueryChange, onSelect }) {
+	function SearchPanel({ query, onQueryChange, onSelect, onBack }) {
 		const { book, goToParagraph } = useReader();
 		const inputRef = (0, import_react.useRef)(null);
 		const [selected, setSelected] = (0, import_react.useState)(0);
@@ -12862,9 +12891,10 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 			className: "dnr-search-panel",
 			children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "dnr-panel-heading",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: book?.onlineReading ? "本章搜索" : "全文搜索" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: results.length > 0 ? `${selected + 1} / ${results.length}` : "0 条" })]
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PanelHeader, {
+					title: "书内搜索",
+					onBack,
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: results.length > 0 ? `${selected + 1} / ${results.length}` : "0 条" })
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
 					className: "dnr-search-field",
@@ -12894,9 +12924,9 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 						})
 					]
 				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
 					className: "dnr-search-help",
-					children: "Enter 下一个 · Shift+Enter 上一个 · Esc 关闭"
+					children: [book?.onlineReading ? "本章搜索" : "全文搜索", " · Enter 下一个 · Shift+Enter 上一个 · Esc 关闭"]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "dnr-search-results",
@@ -12999,14 +13029,15 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		value: "chapter-title",
 		label: "章节名称"
 	}];
-	function SettingsPanel() {
+	function SettingsPanel({ onBack } = {}) {
 		const { settings, updateSettings } = useReader();
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 			className: "dnr-settings",
 			children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "dnr-panel-heading",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "阅读设置" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [settings.fontSize, "px"] })]
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PanelHeader, {
+					title: "阅读设置",
+					onBack,
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [settings.fontSize, "px"] })
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "dnr-setting-group",
@@ -15249,25 +15280,16 @@ var import_dist = /* @__PURE__ */ __toESM(require_dist());
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 			className: "dnr-online-panel",
 			children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", {
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PanelHeader, {
 					className: "dnr-online-search-heading",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-						className: "dnr-online-back",
-						type: "button",
-						onClick: onBack,
-						"aria-label": "返回",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
-							name: "chevron-left",
-							width: "16",
-							height: "16"
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "返回" })]
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+					onBack,
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 						className: "dnr-online-manage",
 						type: "button",
 						disabled: activeJob || searching || opening,
 						onClick: () => setManagingRules(true),
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "settings" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "书源管理" })]
-					})]
+					})
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "dnr-online-intro",
@@ -15721,7 +15743,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 
 //#endregion
 //#region src/client/components/TableOfContents.tsx
-	function TableOfContents({ embedded = false, onSelect }) {
+	function TableOfContents({ embedded = false, onSelect, onBack }) {
 		const { book, progress, goToChapter } = useReader();
 		const [query, setQuery] = (0, import_react.useState)("");
 		const listRef = (0, import_react.useRef)(null);
@@ -15741,9 +15763,10 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 			className: `dnr-toc ${embedded ? "dnr-toc--embedded" : ""}`,
 			"aria-label": "目录",
 			children: [
-				!embedded && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "dnr-panel-heading",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "目录" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [book.chapters.length, " 章"] })]
+				!embedded && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PanelHeader, {
+					title: "目录",
+					onBack,
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [book.chapters.length, " 章"] })
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
 					className: "dnr-search-field dnr-search-field--small",
@@ -16178,8 +16201,11 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 						},
 						opening: loading
 					}),
-					book && view === "toc" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableOfContents, { onSelect: () => setView("reader") }),
-					book && view === "settings" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, {}),
+					book && view === "toc" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableOfContents, {
+						onSelect: () => setView("reader"),
+						onBack: () => setView("reader")
+					}),
+					book && view === "settings" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, { onBack: () => setView("reader") }),
 					book && view === "reader" && active$1 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: `dnr-reading-grid ${local.settings.tocPosition === "left" ? "has-toc" : ""}`,
 						children: [local.settings.tocPosition === "left" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableOfContents, { embedded: true }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ReaderBody, {
@@ -16390,7 +16416,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 					onClick: () => setHostNotice(null),
 					children: hostNotice ?? notices[0]
 				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudSync, {}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudSync, { visible: showReader }),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudReadingActivity, { active: showReader }),
 				view !== "library" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(UploadStatus, {
 					compact: true,
@@ -16428,13 +16454,17 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 								toolbarTarget
 							})
 						}),
-						book !== null && view === "toc" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableOfContents, { onSelect: () => setView("reader") }),
+						book !== null && view === "toc" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableOfContents, {
+							onSelect: () => setView("reader"),
+							onBack: () => setView("reader")
+						}),
 						book !== null && view === "search" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SearchPanel, {
 							query: searchQuery,
 							onQueryChange: setSearchQuery,
-							onSelect: () => setView("reader")
+							onSelect: () => setView("reader"),
+							onBack: () => setView("reader")
 						}),
-						view === "settings" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, {}),
+						view === "settings" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SettingsPanel, { onBack: () => setView(book === null ? "library" : "reader") }),
 						showReader && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: `dnr-reading-grid ${settings.tocPosition === "left" ? "has-toc" : ""}`,
 							children: [settings.tocPosition === "left" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TableOfContents, { embedded: true }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ReaderBody, {
@@ -16606,6 +16636,11 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-toc--embedded { border-right: 1px solid var(--dnr-line); padding: 12px 8px; background: var(--dnr-surface); }
 .dnr-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 0 20px; font-size: 17px; font-weight: 600; }
 .dnr-panel-heading span:last-child { color: var(--dnr-muted); font-size: 11px; font-weight: 400; }
+.dnr-panel-header { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; flex-shrink: 0; gap: 18px; min-height: 60px; padding-bottom: 16px; margin-bottom: 4px; background: var(--dnr-bg); }
+.dnr-panel-header .dnr-panel-back { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; gap: 6px; min-width: 44px; height: 44px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--dnr-muted); font-size: 13px; font-weight: 400; }
+.dnr-panel-header .dnr-panel-back:hover { background: var(--dnr-accent-soft); }
+.dnr-panel-header h1 { flex: 1; min-width: 0; margin: 0; font-size: 17px; font-weight: 600; line-height: 1.5; }
+.dnr-panel-header-detail { display: flex; align-items: center; flex-shrink: 0; margin-left: auto; color: var(--dnr-muted); font-size: 11px; font-weight: 400; }
 .dnr-toc-list { min-height: 0; flex: 1; overflow: auto; padding-top: 8px; }
 .dnr-toc-list button { width: 100%; display: grid; grid-template-columns: 25px minmax(0, 1fr); gap: 4px; align-items: center; margin-bottom: 3px; padding: 10px; border: 0; border-radius: 8px; background: transparent; color: var(--dnr-muted); text-align: left; font-size: 12px; line-height: 1.5; }
 .dnr-toc-list button span:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -16718,7 +16753,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 .dnr-online-panel { --dnr-accent: #365749; --dnr-on-accent: #fff; --dnr-accent-soft: rgba(54, 87, 73, .06); display: flex; flex-direction: column; width: 100%; max-width: 680px; height: 100%; margin-inline: auto; padding: 24px clamp(20px, 4cqw, 32px) 24px; overflow: auto; }
 .dnr-shell[data-color-scheme="dark"] .dnr-online-panel { --dnr-accent: #b9d1b6; --dnr-on-accent: #1b2c21; --dnr-accent-soft: rgba(185, 209, 182, .08); }
 .dnr-online-panel > :not(.dnr-online-results) { flex-shrink: 0; }
-.dnr-online-search-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.dnr-online-search-heading { position: static; justify-content: space-between; gap: 16px; min-height: 44px; padding: 0; margin: 0; }
 .dnr-online-search-heading .dnr-online-back { height: 44px; gap: 6px; padding: 0; font-size: 13px; color: var(--dnr-muted); }
 .dnr-online-manage { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; padding: 8px 12px; border: 1px solid var(--dnr-line); border-radius: 9px; background: var(--dnr-bg); font-size: 13px; }
 .dnr-online-manage svg { width: 16px; height: 16px; color: var(--dnr-muted); }
