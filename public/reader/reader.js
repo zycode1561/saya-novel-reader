@@ -16903,60 +16903,55 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 						})
 					]
 				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("footer", {
-					className: "dnr-reading-status",
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "dnr-reading-footer",
 					hidden: !showReader,
-					"aria-label": "阅读状态",
-					children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "dnr-reading-status",
+						"aria-label": "阅读状态",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 							className: "dnr-reading-sync",
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudSync, { visible: showReader })
-						}),
-						showReader && progress$1 !== null && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "dnr-footer dnr-status-navigation",
-							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-									type: "button",
-									"aria-label": "上一章",
-									onClick: () => navigateChapter(currentChapter - 1),
-									disabled: currentChapter <= 0,
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "chevron-left" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "上一章" })]
-								}),
-								settings.footerDisplay === "chapter-progress" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-									className: "dnr-chapter-progress",
-									title: `全书 ${progressSnapshot.bookPercent.toFixed(1)}%`,
-									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { style: { width: `${progressSnapshot.bookPercent}%` } })
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-									className: "dnr-reading-time",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
-										name: "clock",
-										width: "14",
-										height: "14"
-									}), durationLabel(progress$1.readingSeconds)]
-								})] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-									className: "dnr-chapter-title",
-									title: currentChapterTitle,
-									children: currentChapterTitle
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-									type: "button",
-									"aria-label": "下一章",
-									onClick: () => navigateChapter(currentChapter + 1),
-									disabled: currentChapter >= book.chapters.length - 1,
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "下一章" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "chevron-right" })]
-								})
-							]
-						}),
-						showReader && progress$1 !== null && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+						}), showReader && progress$1 !== null && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
 							className: "dnr-book-progress",
 							"aria-label": `全书阅读进度 ${progressSnapshot.bookPercent.toFixed(1)}%`,
-							children: [
-								"全书 ",
-								progressSnapshot.bookPercent.toFixed(1),
-								"%"
-							]
-						})
-					]
+							children: [progressSnapshot.bookPercent.toFixed(1), "%"]
+						})]
+					}), showReader && progress$1 !== null && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("footer", {
+						className: "dnr-footer",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
+								"aria-label": "上一章",
+								onClick: () => navigateChapter(currentChapter - 1),
+								disabled: currentChapter <= 0,
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "chevron-left" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "上一章" })]
+							}),
+							settings.footerDisplay === "chapter-progress" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "dnr-chapter-progress",
+								title: `全书 ${progressSnapshot.bookPercent.toFixed(1)}%`,
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", { style: { width: `${progressSnapshot.bookPercent}%` } })
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "dnr-reading-time",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
+									name: "clock",
+									width: "14",
+									height: "14"
+								}), durationLabel(progress$1.readingSeconds)]
+							})] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "dnr-chapter-title",
+								title: currentChapterTitle,
+								children: currentChapterTitle
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								type: "button",
+								"aria-label": "下一章",
+								onClick: () => navigateChapter(currentChapter + 1),
+								disabled: currentChapter >= book.chapters.length - 1,
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "下一章" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "chevron-right" })]
+							})
+						]
+					})]
 				})
 			]
 		});
@@ -16984,7 +16979,7 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
   --dnr-reading-text: var(--dnr-text);
   --dnr-error: #b13b3b;
   --dnr-footer-height: 44px;
-  --dnr-status-height: 44px;
+  --dnr-status-height: 28px;
   position: relative; display: flex; flex-direction: column; width: 100%; height: 100%; min-width: 0;
   color: var(--dnr-text); background: var(--dnr-bg); container-type: inline-size; overflow: hidden;
   font: 400 12px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -17572,16 +17567,13 @@ html, body, #root { width: 100%; height: 100dvh; min-height: 0; margin: 0; overf
 @container (min-width:820px) { .dnr-cloud-books { grid-template-columns:repeat(5,minmax(0,1fr)); } }
 @container (min-width:1000px) { .dnr-cloud-books { grid-template-columns:repeat(6,minmax(0,1fr)); } }
 @media (pointer:coarse) { .dnr-cloud-book-more summary { min-width:32px; min-height:44px; } .dnr-cloud-library :is(.dnr-cloud-upload,.dnr-cloud-refresh,.dnr-cloud-continue button,.dnr-cloud-back), .dnr-library-tabs button { min-height:44px; } .dnr-cloud-book-menu a { min-height:44px; } }
-/* Reserve a real row outside the scrolling text in both reading modes. */
-.dnr-reading-status { position: relative; z-index: 9; display: flex; align-items: center; gap: 6px; height: calc(var(--dnr-status-height) + env(safe-area-inset-bottom)); flex: 0 0 calc(var(--dnr-status-height) + env(safe-area-inset-bottom)); padding: 0 12px env(safe-area-inset-bottom) 4px; background: var(--dnr-reading-bg); color: var(--dnr-reading-text); }
-.dnr-reading-status[hidden] { display: none; }
+/* Keep status and optional chapter navigation in separate reserved rows. */
+.dnr-reading-footer { flex: 0 0 auto; padding-bottom: env(safe-area-inset-bottom); background: var(--dnr-reading-bg); }
+.dnr-reading-footer[hidden] { display: none; }
+.dnr-reading-status { position: relative; z-index: 9; display: flex; align-items: center; gap: 6px; height: var(--dnr-status-height); padding: 0 12px 0 4px; background: var(--dnr-reading-bg); color: var(--dnr-reading-text); }
 .dnr-reading-sync { flex: 0 0 32px; min-width: 0; }
-.dnr-reading-status > .dnr-status-navigation { flex: 1; min-width: 0; height: auto; padding: 0; border: 0; background: transparent; }
 .dnr-book-progress { margin-left: auto; flex-shrink: 0; color: color-mix(in srgb, var(--dnr-reading-text) 55%, transparent); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.dnr-shell.is-immersive { --dnr-status-height: 28px; }
-.dnr-shell.is-immersive .dnr-status-navigation { display: none; }
-@container (max-width: 459px) { .dnr-status-navigation { gap: 4px; } .dnr-status-navigation > button > span { display: none; } .dnr-status-navigation .dnr-reading-time { display: none; } }
-@media (pointer: coarse) { .dnr-shell.is-immersive { --dnr-status-height: 44px; } }
+@media (pointer: coarse) { .dnr-shell { --dnr-status-height: 44px; } }
 .dnr-sync-control { width: 32px; height: var(--dnr-status-height); }
 .dnr-sync-button { position: relative; display: grid; place-items: center; width: 32px; height: 100%; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--dnr-muted); }
 .dnr-sync-button:hover, .dnr-sync-button[aria-expanded="true"] { background: var(--dnr-surface); }
