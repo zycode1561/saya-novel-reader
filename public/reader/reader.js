@@ -16193,7 +16193,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 											"aria-label": "书库",
 											title: "书库",
 											className: view === "library" ? "is-active" : "",
-											onClick: () => setView("library"),
+											onClick: () => setView((current) => current === "library" ? "reader" : "library"),
 											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "library" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "书库" })]
 										}),
 										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
