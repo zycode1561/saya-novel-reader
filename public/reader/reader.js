@@ -10519,6 +10519,9 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		const [slow, setSlow] = (0, import_react.useState)(false);
 		const buttonRef = (0, import_react.useRef)(null);
 		const detailsRef = (0, import_react.useRef)(null);
+		(0, import_react.useLayoutEffect)(() => {
+			if (open) animateReaderSurface(detailsRef.current, true);
+		}, [open]);
 		const controls = (0, import_react.useRef)(null);
 		const latest = (0, import_react.useRef)(null);
 		const currentCloudId = book ? bindings()[book.id] : void 0;
@@ -11444,25 +11447,40 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		});
 	}
 	function positionShelfMenu(details) {
-		if (!details.open) return;
+		if (!details.open) {
+			readerClosingMenus.delete(details);
+			const menu = details.querySelector(".dnr-cloud-book-menu");
+			readerSurfaceAnimations.get(menu)?.cancel();
+			readerSurfaceAnimations.delete(menu);
+			return;
+		}
+		readerClosingMenus.delete(details);
 		details.closest(".dnr-cloud-books")?.querySelectorAll("details[open]").forEach((other) => {
-			if (other !== details) other.open = false;
+			if (other !== details) closeShelfMenu(other, false);
 		});
 		const menu = details.querySelector(".dnr-cloud-book-menu");
 		const viewport = details.closest(".dnr-shelf-content");
 		if (!menu || !viewport) return;
 		const shelf = viewport.getBoundingClientRect();
-		const trigger = details.getBoundingClientRect(), width = menu.getBoundingClientRect().width;
+		const trigger = details.querySelector("summary").getBoundingClientRect(), width = menu.getBoundingClientRect().width;
+		const anchor = details.getBoundingClientRect();
 		const right = shelf.left + viewport.clientWidth - Number.parseFloat(getComputedStyle(viewport).paddingRight || "0");
 		const left = Math.max(shelf.left, Math.min(trigger.right - width, right - width));
-		menu.style.left = `${left - trigger.left}px`;
+		menu.style.left = `${left - anchor.left}px`;
 		menu.style.right = "auto";
-		// Keep the whole menu inside the scrolling shelf, including short screens.
+		// Keep the menu inside the shelf without covering its trigger on short screens.
 		menu.style.maxHeight = `${Math.max(0, viewport.clientHeight - 16)}px`;
+		const naturalHeight = menu.getBoundingClientRect().height;
+		const above = Math.max(0, trigger.top - shelf.top - 16);
+		const below = Math.max(0, shelf.top + viewport.clientHeight - trigger.bottom - 16);
+		const placeAbove = above >= naturalHeight || above >= below;
+		menu.style.maxHeight = `${placeAbove ? above : below}px`;
 		const height = menu.getBoundingClientRect().height;
-		const top = Math.max(shelf.top + 8, Math.min(trigger.top - height - 8, shelf.top + viewport.clientHeight - height - 8));
+		const top = placeAbove ? trigger.top - height - 8 : trigger.bottom + 8;
 		menu.style.bottom = "auto";
-		menu.style.top = `${top - trigger.top}px`;
+		menu.style.top = `${top - anchor.top}px`;
+		menu.style.transformOrigin = `${trigger.left + trigger.width / 2 - left}px ${trigger.top - top}px`;
+		animateReaderSurface(menu, true);
 	}
 
 //#endregion
@@ -11589,6 +11607,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", {
 									className: "dnr-cloud-book-more",
 									onToggle: (event) => positionShelfMenu(event.currentTarget),
+									onClick: toggleShelfMenu,
 									onKeyDown: (event) => {
 										if (event.key === "Escape") {
 											event.stopPropagation();
@@ -11705,6 +11724,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		});
 		const activeMode = (0, import_react.useRef)(mode);
 		(0, import_react.useLayoutEffect)(() => {
+			if (activeMode.current !== mode) animateReaderSurface(content.current);
 			activeMode.current = mode;
 			if (content.current) content.current.scrollTop = offsets.current[mode];
 		}, [mode]);
@@ -11730,7 +11750,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				if (!(event.target instanceof Node)) return;
 				const target = event.target;
 				library.current?.querySelectorAll(".dnr-cloud-book-more[open]").forEach((details) => {
-					if (!details.contains(target)) details.open = false;
+					if (!details.contains(target)) { readerPointerMotion = true; closeShelfMenu(details); }
 				});
 			};
 			document.addEventListener("pointerdown", dismissOutside, true);
@@ -12006,6 +12026,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: bookFormat(entry) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: formatBytes(entry.size) })] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", {
 										className: "dnr-cloud-book-more",
 										onToggle: (event) => positionShelfMenu(event.currentTarget),
+										onClick: toggleShelfMenu,
 										onKeyDown: (event) => {
 											if (event.key === "Escape") {
 												event.stopPropagation();
@@ -12163,6 +12184,112 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	}
 
 //#endregion
+//#region Site motion: shared selection feedback without changing reader geometry
+	let readerPointerMotion = false;
+	const readerSurfaceAnimations = new WeakMap();
+	const readerClosingMenus = new WeakMap();
+	function readerMotionAllowed() {
+		return readerPointerMotion && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+	}
+	function animateReaderSurface(element, floating = false, leaving = false) {
+		if (!element) return null;
+		const previous = readerSurfaceAnimations.get(element);
+		const current = previous || leaving ? getComputedStyle(element) : null;
+		const from = current ? { opacity: current.opacity, transform: current.transform } : floating ? { opacity: 0, transform: "scale(.97)" } : { opacity: .75 };
+		previous?.cancel();
+		if (!readerMotionAllowed() || typeof element.animate !== "function") return null;
+		const to = leaving ? { opacity: 0, transform: "scale(.97)" } : floating ? { opacity: 1, transform: "scale(1)" } : { opacity: 1 };
+		const animation = element.animate([from, to], {
+			duration: leaving ? 120 : floating ? 180 : 120,
+			easing: getComputedStyle(element).getPropertyValue("--dnr-ease").trim(),
+			fill: leaving ? "forwards" : "none"
+		});
+		readerSurfaceAnimations.set(element, animation);
+		animation.finished.then(() => {
+			if (readerSurfaceAnimations.get(element) === animation && !leaving) readerSurfaceAnimations.delete(element);
+		}).catch(() => {});
+		return animation;
+	}
+	function closeShelfMenu(details, animate = true) {
+		if (!details.open) return;
+		const closing = readerClosingMenus.get(details);
+		if (closing && animate) return;
+		if (closing) { readerClosingMenus.delete(details); closing.cancel(); }
+		const menu = details.querySelector(".dnr-cloud-book-menu");
+		const animation = animate ? animateReaderSurface(menu, true, true) : null;
+		if (!animation) { details.open = false; return; }
+		readerClosingMenus.set(details, animation);
+		animation.finished.then(() => {
+			if (readerClosingMenus.get(details) !== animation) return;
+			readerClosingMenus.delete(details);
+			details.open = false;
+			animation.cancel();
+			readerSurfaceAnimations.delete(menu);
+		}).catch(() => {});
+	}
+	function toggleShelfMenu(event) {
+		const summary = event.target.closest("summary");
+		const details = event.currentTarget;
+		if (!summary || summary.parentElement !== details || !details.open || event.detail === 0) return;
+		event.preventDefault();
+		const closing = readerClosingMenus.get(details);
+		if (closing) {
+			readerClosingMenus.delete(details);
+			animateReaderSurface(details.querySelector(".dnr-cloud-book-menu"), true);
+		} else closeShelfMenu(details);
+	}
+	function SlidingSelection({ value }) {
+		const marker = (0, import_react.useRef)(null);
+		const previous = (0, import_react.useRef)(null);
+		const animation = (0, import_react.useRef)(null);
+		const update = (0, import_react.useCallback)((motion) => {
+			const element = marker.current;
+			const group = element?.parentElement;
+			const selected = group?.querySelector(":scope > button.is-active, :scope > button[aria-pressed=\"true\"]");
+			if (!element || !selected) {
+				animation.current?.cancel();
+				if (element) element.style.opacity = "0";
+				previous.current = null;
+				return;
+			}
+			const next = { x: selected.offsetLeft, y: selected.offsetTop, width: selected.offsetWidth, height: selected.offsetHeight };
+			const last = previous.current;
+			if (last && Object.keys(next).every((key) => last[key] === next[key])) return;
+			const from = getComputedStyle(element).transform;
+			animation.current?.cancel();
+			element.style.width = `${next.width}px`;
+			element.style.height = `${next.height}px`;
+			element.style.transform = `translate3d(${next.x}px, ${next.y}px, 0)`;
+			element.style.opacity = "1";
+			if (last && motion && readerMotionAllowed() && typeof element.animate === "function") {
+				animation.current = element.animate([{ transform: from }, { transform: element.style.transform }], { duration: 180, easing: getComputedStyle(element).getPropertyValue("--dnr-ease").trim() });
+			}
+			previous.current = next;
+		}, []);
+		(0, import_react.useLayoutEffect)(() => update(true), [value, update]);
+		(0, import_react.useEffect)(() => {
+			const group = marker.current?.parentElement;
+			const resized = () => update(false);
+			const observer = typeof ResizeObserver === "function" ? new ResizeObserver(resized) : null;
+			if (group) observer?.observe(group);
+			window.addEventListener("resize", resized);
+			return () => { observer?.disconnect(); window.removeEventListener("resize", resized); animation.current?.cancel(); };
+		}, [update]);
+		return (0, import_jsx_runtime.jsx)("span", { ref: marker, className: "dnr-selection", "aria-hidden": "true" });
+	}
+	function useReaderPresentation(view) {
+		const root = (0, import_react.useRef)(null);
+		(0, import_react.useLayoutEffect)(() => {
+			const main = root.current?.querySelector(".dnr-main");
+			if (view === "reader" || view === "fanqie") {
+				if (main) { readerSurfaceAnimations.get(main)?.cancel(); readerSurfaceAnimations.delete(main); }
+				return;
+			}
+			animateReaderSurface(main);
+		}, [view]);
+		return root;
+	}
+//#endregion
 //#region src/client/components/LibraryPanel.tsx
 	function LibraryPanel({ onOpened, onBack }) {
 		const [tab, setTab] = (0, import_react.useState)(cloudHosted ? "cloud" : "local");
@@ -12175,7 +12302,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				navigation: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", {
 					className: "dnr-library-tabs",
 					"aria-label": "书库分类",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+					children: [(0, import_jsx_runtime.jsx)(SlidingSelection, { value: tab }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 						type: "button",
 						"aria-pressed": tab === "cloud",
 						onClick: () => setTab("cloud"),
@@ -13580,12 +13707,12 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 							className: "dnr-settings-segments",
 							role: "group",
 							"aria-label": "行间距",
-							children: spacings.map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							children: [(0, import_jsx_runtime.jsx)(SlidingSelection, { value: settings.lineSpacing }), ...spacings.map((item) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 								type: "button",
 								"aria-pressed": settings.lineSpacing === item.value,
 								onClick: () => updateSettings({ lineSpacing: item.value }),
 								children: item.label
-							}, item.value))
+							}, item.value))]
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
 							className: "dnr-settings-row dnr-settings-indent",
@@ -16858,6 +16985,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 		const hostTheme = useHostTheme();
 		const colorScheme = settings.theme === "light" || settings.theme === "dark" ? settings.theme : hostTheme;
 		const [view, setViewState] = (0, import_react.useState)(cloudHosted ? "library" : "reader");
+		const presentationRoot = useReaderPresentation(view);
 		const [toolbarTarget, setToolbarTarget] = (0, import_react.useState)(null);
 		const [fanqieVisited, setFanqieVisited] = (0, import_react.useState)(false);
 		(0, import_react.useEffect)(() => {
@@ -16927,6 +17055,9 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 		const toolsVisible = view !== "reader" || settings.keepNavigationVisible || panel.toolsVisible;
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 			className: `dnr-shell dnr-theme-${settings.theme} ${toolsVisible ? "" : "is-immersive"} ${settings.keepNavigationVisible ? "is-navigation-pinned" : ""} ${showReader ? "" : "is-panel-view"}`,
+			ref: presentationRoot,
+			onPointerDownCapture: (event) => { readerPointerMotion = true; event.currentTarget.dataset.motionInput = "pointer"; },
+			onKeyDownCapture: (event) => { readerPointerMotion = false; event.currentTarget.dataset.motionInput = "keyboard"; },
 			"data-color-scheme": colorScheme,
 			"aria-label": "Codex 小说阅读器",
 			children: [
@@ -16956,6 +17087,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 									className: "dnr-toolbar",
 									"aria-label": "阅读工具",
 									children: [
+										(0, import_jsx_runtime.jsx)(SlidingSelection, { value: view }),
 										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 											type: "button",
 											"aria-label": "书库",
