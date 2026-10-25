@@ -11457,6 +11457,12 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		const left = Math.max(shelf.left, Math.min(trigger.right - width, right - width));
 		menu.style.left = `${left - trigger.left}px`;
 		menu.style.right = "auto";
+		// Keep the whole menu inside the scrolling shelf, including short screens.
+		menu.style.maxHeight = `${Math.max(0, viewport.clientHeight - 16)}px`;
+		const height = menu.getBoundingClientRect().height;
+		const top = Math.max(shelf.top + 8, Math.min(trigger.top - height - 8, shelf.top + viewport.clientHeight - height - 8));
+		menu.style.bottom = "auto";
+		menu.style.top = `${top - trigger.top}px`;
 	}
 
 //#endregion

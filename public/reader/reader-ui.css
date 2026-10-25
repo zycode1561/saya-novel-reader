@@ -1,0 +1,181 @@
+/* Site presentation layer. Loaded after the embedded reader's base styles.
+   Keep pagination geometry, reader preferences and sync behavior in reader.js. */
+.dnr-shell {
+  --dnr-bg: #faf8f3;
+  --dnr-surface: #f0eee7;
+  --dnr-text: #282f2b;
+  --dnr-muted: #72776d;
+  --dnr-line: #dedfd5;
+  --dnr-accent: #365b49;
+  --dnr-accent-soft: #e7ede3;
+  --dnr-on-accent: #fffdf7;
+  --dnr-mark: #dce6cc;
+  --dnr-paper: #fffdf8;
+  --dnr-feature: #304d40;
+  --dnr-feature-text: #f7f4e8;
+  --dnr-feature-muted: #c2d0bd;
+  font-size: 13px;
+}
+.dnr-shell[data-color-scheme="dark"] {
+  --dnr-bg: #1d2421;
+  --dnr-surface: #262e29;
+  --dnr-text: #e6e8de;
+  --dnr-muted: #abb3a7;
+  --dnr-line: #38423a;
+  --dnr-accent: #bfd0b8;
+  --dnr-accent-soft: #303f33;
+  --dnr-on-accent: #202b22;
+  --dnr-mark: #43543d;
+  --dnr-paper: #242c27;
+  --dnr-feature: #314738;
+  --dnr-feature-text: #f1f0e3;
+  --dnr-feature-muted: #c5d0bc;
+}
+
+/* A compact navigation rail leaves the book collection as the focal point. */
+.dnr-toolbar-dock { height: 62px; flex-basis: 62px; border-bottom: 1px solid var(--dnr-line); }
+.dnr-toolbar {
+  width: min(100%, 1040px); height: 61px; margin: 0 auto;
+  padding: 10px clamp(16px, 4cqw, 44px); border: 0;
+  grid-auto-columns: minmax(64px, 108px); justify-content: start; gap: 8px;
+}
+.dnr-toolbar button { height: 40px; gap: 7px; border-radius: 7px; }
+.dnr-toolbar button span { font-size: 13px; }
+@container (min-width: 360px) { .dnr-toolbar button span { display: inline; } }
+.dnr-toolbar button.is-active { color: var(--dnr-accent); background: var(--dnr-accent-soft); font-weight: 600; }
+.dnr-toolbar button:disabled { opacity: .5; }
+.dnr-shell :is(button, a, summary) { -webkit-tap-highlight-color: transparent; }
+
+/* The book room: generous heading, a single reading invitation, tactile covers. */
+.dnr-cloud-library { --dnr-shelf-accent: var(--dnr-accent); padding-top: 36px; }
+.dnr-shell[data-color-scheme="dark"] .dnr-cloud-library { --dnr-shelf-accent: var(--dnr-accent); }
+.dnr-cloud-heading { margin-bottom: 24px; }
+.dnr-cloud-heading h1 { font-size: clamp(30px, 4cqw, 38px); letter-spacing: .045em; }
+.dnr-cloud-heading p { margin-top: 10px; font-size: 13px; }
+.dnr-cloud-library .dnr-cloud-upload {
+  min-height: 42px; padding: 0 18px; border-radius: 8px;
+  border-color: var(--dnr-line); background: var(--dnr-paper);
+  color: var(--dnr-accent); box-shadow: 0 2px 3px #172f2010;
+  transition: background 160ms, border-color 160ms;
+}
+.dnr-cloud-library > .dnr-library-tabs { margin-bottom: 26px; gap: 28px; }
+.dnr-cloud-library .dnr-library-tabs button { min-height: 44px; padding-bottom: 14px; font-size: 13px; }
+.dnr-shelf-content { padding-bottom: 36px; }
+.dnr-cloud-continue {
+  position: relative; isolation: isolate; overflow: hidden;
+  max-width: none; min-height: 174px; gap: 25px;
+  padding: 24px 28px; margin-bottom: 30px; border-radius: 12px;
+  background: var(--dnr-feature); color: var(--dnr-feature-text);
+}
+.dnr-cloud-continue::after {
+  content: ''; position: absolute; z-index: -1; pointer-events: none;
+  width: 210px; height: 210px; right: -52px; bottom: -132px;
+  border: 1px solid #cddbb638; border-radius: 50%;
+  box-shadow: 0 0 0 22px #cddbb60a, 0 0 0 44px #cddbb609, 0 0 0 66px #cddbb606;
+}
+.dnr-cloud-continue .dnr-cloud-eyebrow { color: var(--dnr-feature-muted); font-size: 12px; letter-spacing: .16em; }
+.dnr-cloud-continue h2 { margin: 8px 0 11px; font: 500 25px/1.45 "Songti SC", "Noto Serif SC", STSong, serif; }
+.dnr-cloud-library .dnr-cloud-continue button { min-height: 40px; color: var(--dnr-feature-text); font-size: 13px; gap: 10px; }
+.dnr-cloud-library .dnr-cloud-continue button:hover { color: #d6e6b8; }
+.dnr-cloud-continue button:focus-visible { outline-color: var(--dnr-feature-text); }
+.dnr-cloud-continue .dnr-cloud-cover { flex-basis: 78px; width: 78px; height: 117px; box-shadow: 3px 6px 12px #0003; }
+.dnr-cloud-section-heading { margin-bottom: 20px; }
+.dnr-cloud-section-heading h2 { font-size: 16px; font-weight: 600; }
+.dnr-cloud-section-heading > div > span { font-size: 12px; }
+.dnr-cloud-library .dnr-cloud-refresh { font-size: 12px; }
+.dnr-cloud-books { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 30px 24px; }
+.dnr-cloud-cover {
+  padding: 22px 17px 18px 23px; border-radius: 2px 5px 5px 2px;
+  background: #dce1cf; color: #374834;
+  box-shadow: inset 5px 0 6px #34452d12, 1px 2px 0 #fff8, 3px 5px 9px #27332115;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+.dnr-cloud-cover[data-tone="1"] { background: #e8d9c7; color: #694b38; }
+.dnr-cloud-cover[data-tone="2"] { background: #d6e1df; color: #365451; }
+.dnr-cloud-cover::before { left: 8px; background: #fff5; }
+.dnr-cloud-cover::after {
+  content: ''; position: absolute; pointer-events: none;
+  left: 23px; right: 17px; bottom: 42px; height: 24px;
+  border-top: 1px solid currentColor; border-bottom: 1px solid currentColor; opacity: .16;
+}
+.dnr-cloud-cover strong { font-size: clamp(17px, 2.5cqw, 22px); line-height: 1.6; letter-spacing: .045em; -webkit-line-clamp: 5; }
+.dnr-cloud-cover small { font-size: 10px; letter-spacing: .18em; }
+.dnr-cloud-continue .dnr-cloud-cover::after, .dnr-cloud-detail-heading .dnr-cloud-cover::after { display: none; }
+.dnr-cloud-books h3 { margin-top: 16px; font-size: 14px; line-height: 1.65; }
+.dnr-cloud-book-meta { font-size: 11px; align-items: start; }
+.dnr-cloud-book-more summary { min-width: 36px; min-height: 36px; }
+.dnr-cloud-book-menu { background: var(--dnr-paper); border-radius: 10px; box-shadow: 0 8px 30px #14271b20; }
+.dnr-cloud-detail-meta { font-size: 12px; }
+.dnr-cloud-library .dnr-cloud-detail-actions :is(a,button) { min-height: 44px; font-size: 13px; }
+.dnr-cloud-empty { margin-top: 8px; padding: 48px 18px; border: 1px dashed var(--dnr-line); border-radius: 12px; background: var(--dnr-paper); }
+.dnr-cloud-empty > svg { width: 40px; height: 40px; color: var(--dnr-accent); stroke-width: 1.25; }
+.dnr-cloud-empty h3 { margin-top: 22px; font: 500 24px/1.5 "Songti SC", STSong, serif; }
+.dnr-cloud-empty p { font-size: 13px; }
+.dnr-cloud-empty .dnr-cloud-upload { background: var(--dnr-accent); color: var(--dnr-on-accent); }
+.dnr-local-import-hint, .dnr-local-import-hint > span { font-size: 12px; }
+
+/* Shared controls inherit the palette without overriding reading preferences. */
+.dnr-search-field { background: var(--dnr-paper); border-radius: 8px; }
+.dnr-panel-header { border-bottom: 1px solid var(--dnr-line); }
+.dnr-panel-header h1 { font-size: 15px; }
+.dnr-panel-header-detail { font-size: 12px; }
+.dnr-toc--page, .dnr-search-panel { --dnr-toc-accent: var(--dnr-accent); --dnr-toc-active: var(--dnr-accent-soft); --dnr-search-accent: var(--dnr-accent); }
+.dnr-toc-intro, .dnr-book-search-intro { padding-top: 28px; }
+.dnr-toc--page .dnr-toc-list button { min-height: 56px; }
+.dnr-search-results > button { background: var(--dnr-paper); border-radius: 8px; }
+.dnr-settings-preview { padding: 22px; border-radius: 8px; }
+.dnr-settings-segments, .dnr-settings-swatch { border-radius: 7px; }
+.dnr-settings-swatch[data-theme="light"] { background: #faf8f3; }
+.dnr-settings-swatch[data-theme="dark"] { background: #1d2421; }
+.dnr-settings-swatch[data-theme="auto"] { background: linear-gradient(135deg, #faf8f3 50%, #1d2421 50%); }
+.dnr-settings-section h2 { color: var(--dnr-accent); }
+.dnr-settings-hint, .dnr-settings-status { font-size: 12px; }
+.dnr-online-intro h1 { font-family: "Songti SC", "Noto Serif SC", STSong, serif; }
+.dnr-reader-article header { padding-bottom: 18px; border-bottom: 1px solid color-mix(in srgb, var(--dnr-reading-text) 12%, transparent); }
+.dnr-reader-article h1 { font-weight: 500; letter-spacing: .035em; }
+.dnr-reading-status { font-variant-numeric: tabular-nums; }
+
+@media (hover: hover) and (pointer: fine) {
+  .dnr-cloud-book-open:hover .dnr-cloud-cover, .dnr-cloud-book-open:focus-visible .dnr-cloud-cover { transform: translateY(-4px); box-shadow: inset 5px 0 6px #34452d12, 3px 10px 16px #27332120; }
+}
+@container (min-width: 680px) { .dnr-cloud-books { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 34px 28px; } }
+@container (min-width: 1000px) { .dnr-cloud-books { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 36px 30px; } }
+@container (max-width: 479px) {
+  .dnr-toolbar { grid-auto-columns: minmax(0, 1fr); gap: 3px; padding: 8px 12px; height: 57px; }
+  .dnr-toolbar-dock { height: 58px; flex-basis: 58px; }
+  .dnr-toolbar button { height: 40px; gap: 4px; }
+  .dnr-toolbar button span { font-size: 12px; }
+  .dnr-cloud-library { padding: 26px 22px 0; }
+  .dnr-cloud-heading { gap: 12px; margin-bottom: 20px; }
+  .dnr-cloud-heading h1 { font-size: 28px; }
+  .dnr-cloud-heading p { font-size: 12px; }
+  .dnr-cloud-library .dnr-cloud-upload { min-width: 0; min-height: 44px; padding: 0 12px; font-size: 12px; }
+  .dnr-cloud-library > .dnr-library-tabs { margin-bottom: 22px; gap: 24px; }
+  .dnr-cloud-continue { min-height: 160px; padding: 20px; gap: 18px; margin-bottom: 26px; }
+  .dnr-cloud-continue h2 { font-size: 22px; }
+  .dnr-cloud-continue .dnr-cloud-cover { flex-basis: 68px; width: 68px; height: 102px; }
+  .dnr-cloud-books { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 24px; }
+  .dnr-cloud-cover strong { font-size: 20px; }
+  .dnr-cloud-section-heading > div { gap: 3px; flex-direction: column; }
+  .dnr-cloud-section-heading > div > span { font-size: 11px; }
+  .dnr-cloud-book-more summary { min-height: 44px; }
+}
+@container (max-width: 359px) {
+  .dnr-cloud-library { padding-inline: 16px; }
+  .dnr-cloud-heading h1 { font-size: 25px; }
+  .dnr-cloud-heading { gap: 8px; }
+  .dnr-cloud-library .dnr-cloud-upload { padding-inline: 9px; }
+  .dnr-cloud-books { gap: 24px 18px; }
+  .dnr-cloud-cover { padding: 18px 13px 15px 20px; }
+  .dnr-cloud-cover strong { font-size: 18px; }
+  .dnr-cloud-continue { padding: 18px; gap: 14px; }
+}
+@media (max-height: 600px) {
+  .dnr-cloud-library { padding-top: 18px; }
+  .dnr-cloud-heading { margin-bottom: 12px; }
+  .dnr-cloud-library > .dnr-library-tabs { margin-bottom: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dnr-cloud-cover, .dnr-cloud-upload { transition: none; }
+  .dnr-cloud-book-open:hover .dnr-cloud-cover { transform: none; }
+}
