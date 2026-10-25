@@ -13365,11 +13365,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 			className: "dnr-search-panel",
 			children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PanelHeader, { onBack }),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-					className: "dnr-book-search-intro",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: "书内搜索" })
-				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PanelHeader, { onBack, title: "书内搜索" }),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
 					className: "dnr-search-field dnr-book-search-field",
 					children: [
@@ -13530,11 +13526,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 			className: "dnr-settings",
 			children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PanelHeader, { onBack }),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "dnr-settings-intro",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: "阅读设置" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "即时生效" })]
-				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PanelHeader, { onBack, title: "阅读设置", children: "即时生效" }),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 					className: "dnr-settings-section",
 					"aria-label": "正文排版",
@@ -15235,14 +15227,10 @@ var import_dist = /* @__PURE__ */ __toESM(require_dist());
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 			className: "dnr-rules-panel",
 			children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", {
-					className: "dnr-online-heading",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-						type: "button",
-						className: "dnr-online-back",
-						onClick: onBack,
-						children: "‹ 返回搜书"
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: "书源管理" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: ["小说规则 · ", cloudHosted ? "保存在云端" : "保存在本机 Host"] })] })]
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PanelHeader, {
+					title: "书源管理",
+					onBack,
+					children: cloudHosted ? "云端保存" : "本机保存"
 				}),
 				error && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "dnr-alert",
@@ -15815,6 +15803,7 @@ var import_dist = /* @__PURE__ */ __toESM(require_dist());
 			children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PanelHeader, {
 					className: "dnr-online-search-heading",
+					title: "在线搜书",
 					onBack,
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 						className: "dnr-online-manage",
@@ -15823,17 +15812,6 @@ var import_dist = /* @__PURE__ */ __toESM(require_dist());
 						onClick: () => setManagingRules(true),
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "settings" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "书源管理" })]
 					})
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "dnr-online-intro",
-					children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-							className: "dnr-online-eyebrow",
-							children: "发现下一本好书"
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: "在线搜书" }),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "在已启用的书源中，寻找想读的故事。" })
-					]
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
 					className: "dnr-online-search",
@@ -16310,10 +16288,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 			className: `dnr-toc ${embedded ? "dnr-toc--embedded" : "dnr-toc--page"}`,
 			"aria-label": "目录",
 			children: [
-				!embedded && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PanelHeader, { onBack }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-					className: "dnr-toc-intro",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: "目录" })
-				})] }),
+				!embedded && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PanelHeader, { onBack, title: "目录" }),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
 					className: `dnr-search-field ${embedded ? "dnr-search-field--small" : "dnr-toc-filter"}`,
 					children: [
@@ -17044,7 +17019,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 						]
 					})
 				}),
-				(notices.length > 0 || hostNotice !== null) && book !== null && view !== "fanqie" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				(view === "reader" && notices.length > 0 || hostNotice !== null) && book !== null && view !== "fanqie" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "dnr-notice-strip",
 					onClick: () => setHostNotice(null),
 					children: hostNotice ?? notices[0]

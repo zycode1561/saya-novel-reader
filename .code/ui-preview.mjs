@@ -4,10 +4,12 @@ import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 const root = path.resolve('public');
+const longBook = process.env.READER_QA_LONG_BOOK === '1';
 const names = ['山海之间', '长安夜雨', '春日来信', '沿着河流回家', '星辰与远方', '一间只在雨天营业的书店', '人间草木', '漫长的旅途'];
-const books = names.map((name, i) => ({ id: String(i + 1).padStart(64, '0'), name, filename: name + '.txt', format: 'TXT', size: 26800 + i * 3290, created_at: 1792800000000 - i * 100000, last_read_at: i === 0 ? 1792880000000 : 0 }));
+const books = names.map((name, i) => ({ id: (longBook ? 'a' : '0') + String(i + 1).padStart(63, '0'), name, filename: name + '.txt', format: 'TXT', size: 26800 + i * 3290, created_at: 1792800000000 - i * 100000, last_read_at: i === 0 ? 1792880000000 : 0 }));
 const progress = new Map();
-const content = Array.from({ length: 8 }, (_, c) => `第${c + 1}章 ${['山中来信', '渡口', '远行', '雨后'][c % 4]}\n\n` + Array.from({ length: 12 }, (_, p) => `山风从窗外经过，书页轻轻翻动。远处的河流绕过村庄，向着更开阔的地方流去。${p === 0 ? '她把那封来信放在桌上，决定等雨停了就出发。' : '午后的光落在木桌上，街巷渐渐安静下来。那些未曾说出口的话，此刻都变成了纸上的墨迹。'}`).join('\n\n')).join('\n\n');
+const content = Array.from({ length: longBook ? 1900 : 8 }, (_, c) => `第${c + 1}章 ${['山中来信', '渡口', '远行', '雨后'][c % 4]}\n\n` + Array.from({ length: longBook ? 24 : 12 }, (_, p) => `山风从窗外经过，书页轻轻翻动。远处的河流绕过村庄，向着更开阔的地方流去。${p === 0 ? '她把那封来信放在桌上，决定等雨停了就出发。' : '午后的光落在木桌上，街巷渐渐安静下来。那些未曾说出口的话，此刻都变成了纸上的墨迹。'}`).join('\n\n')).join('\n\n');
+if (longBook) books.forEach(book => { book.size = Buffer.byteLength(content); });
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   const send = (data, type = 'application/json', status = 200) => { res.writeHead(status, { 'content-type': type, 'cache-control': 'no-store' }); res.end(typeof data === 'string' ? data : JSON.stringify(data)); };

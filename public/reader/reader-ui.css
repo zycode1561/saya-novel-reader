@@ -40,8 +40,8 @@
 
 /* A quiet glass toolbar, with immediate feedback on every press. */
 .dnr-top-controls { background: var(--dnr-glass); backdrop-filter: blur(18px) saturate(150%); -webkit-backdrop-filter: blur(18px) saturate(150%); }
-.dnr-toolbar-dock { height: 76px; flex-basis: 76px; background: transparent; border-bottom: 0; }
-.dnr-toolbar { width: min(100%, 1080px); height: 76px; margin: 0 auto; padding: 16px clamp(20px, 4cqw, 44px); border: 0; grid-auto-columns: minmax(64px, 112px); justify-content: start; gap: 8px; }
+.dnr-toolbar-dock { height: 56px; flex-basis: 56px; background: transparent; border-bottom: 0; }
+.dnr-toolbar { width: min(100%, 1080px); height: 56px; margin: 0 auto; padding: 6px clamp(20px, 4cqw, 44px); border: 0; grid-auto-columns: minmax(64px, 112px); justify-content: start; gap: 8px; }
 .dnr-toolbar button { height: 44px; border-radius: 14px; gap: 8px; font-weight: 500; }
 .dnr-toolbar button svg { width: 18px; height: 18px; stroke-width: 1.7; }
 .dnr-toolbar button span { font-size: 13px; }
@@ -147,8 +147,8 @@
 @container (min-width: 1000px) { .dnr-cloud-books { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 36px 32px; } }
 @container (min-width: 360px) { .dnr-toolbar button span { display: inline; } }
 @container (max-width: 479px) {
-  .dnr-toolbar { grid-auto-columns: minmax(0, 1fr); gap: 3px; height: 68px; padding: 12px 14px; }
-  .dnr-toolbar-dock { height: 68px; flex-basis: 68px; }
+  .dnr-toolbar { grid-auto-columns: minmax(0, 1fr); gap: 3px; height: 52px; padding: 4px 14px; }
+  .dnr-toolbar-dock { height: 52px; flex-basis: 52px; }
   .dnr-toolbar button { gap: 5px; border-radius: 12px; }
   .dnr-toolbar button span { font-size: 12px; }
   .dnr-toolbar button svg { width: 17px; height: 17px; }
@@ -205,4 +205,25 @@
   .dnr-shell[data-color-scheme="dark"] { --dnr-muted: #c5c5cd; --dnr-line: #85858d; }
   .dnr-top-controls, .dnr-panel-header, .dnr-cloud-book-menu, .dnr-sync-details { background: var(--dnr-paper); backdrop-filter: none; -webkit-backdrop-filter: none; }
   .dnr-cloud-continue, .dnr-settings-section, .dnr-search-results > button { border: 1px solid var(--dnr-line); }
+}
+
+/* Utility pages reserve the viewport for the task, with one shared title row. */
+.dnr-shell :is(.dnr-toc--page, .dnr-search-panel, .dnr-settings, .dnr-online-panel, .dnr-rules-panel) { padding-top: 8px; padding-bottom: 16px; }
+.dnr-shell :is(.dnr-toc--page, .dnr-search-panel, .dnr-settings, .dnr-online-panel, .dnr-rules-panel) > .dnr-panel-header { top: -8px; min-height: 44px; gap: 8px; padding: 0; margin: 0 0 12px; background: var(--dnr-bg); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.dnr-panel-header .dnr-panel-back { width: 44px; margin-left: -12px; border-radius: 12px; }
+.dnr-panel-header .dnr-panel-back > span { display: none; }
+.dnr-panel-header .dnr-panel-back > svg { width: 22px; height: 22px; }
+.dnr-panel-header h1 { font-size: 21px; font-weight: 650; letter-spacing: -.025em; line-height: 1.3; }
+.dnr-toc-filter, .dnr-book-search-field, .dnr-online-search { margin-top: 0; }
+.dnr-toc-context { margin: 2px 2px 8px; }
+.dnr-book-search-context { margin: 8px 2px 16px; }
+.dnr-toc-help { padding-top: 10px; font-size: 11px; }
+.dnr-settings > .dnr-settings-section:first-of-type { margin-top: 0; }
+.dnr-online-source-hint { margin-block: 10px 14px; }
+@container (max-width: 479px) {
+  .dnr-online-manage { gap: 4px; padding-inline: 8px; font-size: 12px; }
+  .dnr-panel-header-detail { font-size: 11px; }
+}
+@media (max-height: 600px) {
+  .dnr-toc-help, .dnr-search-help { display: none; }
 }
