@@ -27,3 +27,12 @@ assert [row[0] for row in conn.execute(query)]==['e','c','b','d','a']
 conn.execute(mark,(400,'a'))
 assert [row[0] for row in conn.execute(query)]==['a','e','c','b','d']
 print('PASS: new uploads lead, later reads take priority, legacy fallback and monotonic reads preserve books/progress.')
+conn.execute('UPDATE progress SET payload=? WHERE id=?',(json.dumps({'position':{'chapterIndex':127,'updatedAt':500}}),'b'))
+conn.row_factory=sqlite3.Row
+entry=next(row for row in conn.execute(query) if row['id']=='b')
+assert entry['chapter_index']==127 and entry['progress_updated_at']==500
+for payload in [None,'broken','{}','{"position":{"chapterIndex":"unknown"}}']:
+    conn.execute('UPDATE progress SET payload=? WHERE id=?',(payload,'b'))
+    entry=next(row for row in conn.execute(query) if row['id']=='b')
+    assert entry['chapter_index'] is None
+print('PASS: catalog exposes saved chapter and handles absent/invalid legacy progress.')

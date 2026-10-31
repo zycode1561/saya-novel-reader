@@ -252,3 +252,30 @@
 @media (prefers-reduced-motion: reduce) {
   .dnr-cloud-book-open:hover .dnr-cloud-cover { transform: none; }
 }
+
+/* The whole resume card is one keyboard- and touch-accessible reading action. */
+.dnr-resume-card { width: 100%; text-align: left; font: inherit; }
+.dnr-resume-content { display: flex; flex: 1; flex-direction: column; align-items: flex-start; min-width: 0; }
+.dnr-resume-title { margin: 8px 0; font-size: clamp(21px, 3cqw, 28px); font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+.dnr-resume-position { color: var(--dnr-muted); font-size: 13px; line-height: 1.6; }
+.dnr-resume-action { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; margin-top: 8px; color: var(--dnr-accent); font-size: 14px; font-weight: 600; }
+.dnr-resume-action svg { width: 16px; height: 16px; }
+.dnr-resume-card:disabled { opacity: .65; }
+@media (hover: hover) and (pointer: fine) {
+  .dnr-resume-card:hover:not(:disabled) { border-color: var(--dnr-accent); }
+}
+/* On a phone the reading tools live below the text, including on tool pages. */
+@container (max-width: 600px) {
+  .dnr-shell[data-reading-context="true"] > .dnr-main { order: 1; }
+  .dnr-shell[data-reading-context="true"] > .dnr-reading-footer { order: 2; }
+  .dnr-shell[data-reading-context="true"] > .dnr-top-dock { order: 3; height: auto; flex-basis: auto; }
+  .dnr-shell[data-reading-context="true"] > .dnr-top-dock::after { display: none; }
+  .dnr-shell[data-reading-context="true"] .dnr-top-controls { position: relative; transform: none; opacity: 1; pointer-events: auto; transition: none; }
+  .dnr-shell[data-reading-context="true"]:not(.is-immersive) .dnr-top-dock { padding-bottom: env(safe-area-inset-bottom, 0px); background: var(--dnr-glass); border-top: 1px solid var(--dnr-line); }
+  .dnr-shell[data-reading-context="true"]:not(.is-immersive) .dnr-reading-footer { padding-bottom: 0; }
+  .dnr-shell[data-reading-context="true"]:not(.is-immersive) .dnr-toolbar-dock { height: 60px; flex-basis: 60px; }
+  .dnr-shell[data-reading-context="true"] .dnr-toolbar { height: 60px; grid-auto-columns: minmax(0, 1fr); justify-content: stretch; gap: 4px; padding: 4px 12px; }
+  .dnr-shell[data-reading-context="true"] .dnr-toolbar button { height: 52px; flex-direction: column; gap: 3px; }
+  .dnr-shell[data-reading-context="true"] .dnr-toolbar button span { display: inline; font-size: 11px; }
+  .dnr-shell[data-reading-context="true"].is-immersive .dnr-top-dock { visibility: hidden; }
+}

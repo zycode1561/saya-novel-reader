@@ -11446,6 +11446,30 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: displayBookName(name) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: format$1 })]
 		});
 	}
+	function resumePosition(local, remote, percent) {
+		const valid = (value) => value && Number.isInteger(value.chapterIndex) && value.chapterIndex >= 0;
+		const useLocal = valid(local) && (!valid(remote) || (local.updatedAt || 0) >= (remote.updatedAt || 0));
+		const position = useLocal ? local : valid(remote) ? remote : null;
+		const parts = position ? [`第 ${position.chapterIndex + 1} 章`] : [];
+		if (useLocal && Number.isFinite(percent)) parts.push(`已读 ${Math.max(0, Math.min(100, Math.round(percent)))}%`);
+		return parts.join(" · ") || "打开后恢复上次阅读位置";
+	}
+	function ContinueReadingCard({ id, name, format, position, disabled, opening, onOpen }) {
+		return (0, import_jsx_runtime.jsxs)("button", {
+			type: "button", className: "dnr-cloud-continue dnr-resume-card", disabled,
+			"aria-busy": opening, onClick: onOpen,
+			"aria-label": `继续阅读《${displayBookName(name)}》，${position}`,
+			children: [
+				(0, import_jsx_runtime.jsx)(ShelfBookCover, { id, name, format }),
+				(0, import_jsx_runtime.jsxs)("span", { className: "dnr-resume-content", children: [
+					(0, import_jsx_runtime.jsx)("span", { className: "dnr-cloud-eyebrow", children: "最近在读" }),
+					(0, import_jsx_runtime.jsx)("strong", { className: "dnr-resume-title", children: displayBookName(name) }),
+					(0, import_jsx_runtime.jsx)("span", { className: "dnr-resume-position", children: position }),
+					(0, import_jsx_runtime.jsxs)("span", { className: "dnr-resume-action", children: [opening ? "正在打开…" : "继续阅读", (0, import_jsx_runtime.jsx)(Icon, { name: "chevron-right" })] })
+				] })
+			]
+		});
+	}
 	function positionShelfMenu(details) {
 		if (!details.open) {
 			readerClosingMenus.delete(details);
@@ -11527,30 +11551,10 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				role: "alert",
 				children: error || failure
 			}),
-			recent && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
-				className: "dnr-cloud-continue",
-				"aria-label": "最近在读",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ShelfBookCover, {
-					id: recent.id,
-					name: recent.name,
-					format: format(recent)
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-						className: "dnr-cloud-eyebrow",
-						children: ["最近在读 · ", source(recent)]
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: displayBookName(recent.name) }),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-						type: "button",
-						disabled: loading || opening !== null,
-						onClick: () => void open(recent),
-						children: [opening === recent.id ? "正在打开…" : "继续上次阅读", /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
-							name: "chevron-right",
-							width: "14",
-							height: "14"
-						})]
-					})
-				] })]
+			recent && (0, import_jsx_runtime.jsx)(ContinueReadingCard, {
+				id: recent.id, name: recent.name, format: format(recent),
+				position: resumePosition(loadProgress()[recent.id], null, recent.progressPercent),
+				disabled: loading || opening !== null, opening: opening === recent.id, onOpen: () => void open(recent)
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 				className: "dnr-cloud-section-heading",
@@ -11957,26 +11961,13 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 							className: "dnr-cloud-delete-notice",
 							children: deleteNotice
 						}),
-						recentBook && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
-							className: "dnr-cloud-continue",
-							"aria-label": "最近在读",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(BookCover, { entry: recentBook }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-									className: "dnr-cloud-eyebrow",
-									children: "最近在读"
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: displayBookName(recentBook.name) }),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-									type: "button",
-									disabled: openingId !== null,
-									onClick: () => void openBook(recentBook),
-									children: [openingId === recentBook.id ? "正在打开…" : "继续上次阅读", /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
-										name: "chevron-right",
-										width: "14",
-										height: "14"
-									})]
-								})
-							] })]
+						recentBook && (0, import_jsx_runtime.jsx)(ContinueReadingCard, {
+							id: recentBook.id, name: recentBook.name, format: bookFormat(recentBook),
+							position: (() => {
+								const recent = recents.filter((item) => item.id === `cloud-${recentBook.id}` || linked[item.id] === recentBook.id).sort((a, b) => b.openedAt - a.openedAt)[0];
+								return resumePosition(loadProgress()[recent?.id || `cloud-${recentBook.id}`], { chapterIndex: recentBook.chapter_index, updatedAt: recentBook.progress_updated_at }, recent?.progressPercent);
+							})(),
+							disabled: openingId !== null, opening: openingId === recentBook.id, onOpen: () => void openBook(recentBook)
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "dnr-cloud-section-heading",
@@ -17052,10 +17043,12 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 		const currentChapter = progress$1?.chapterIndex ?? 0;
 		const currentChapterTitle = book?.chapters[currentChapter]?.title ?? "";
 		const showReader = book !== null && view === "reader";
+		const readingContext = book !== null && ["reader", "toc", "search", "settings"].includes(view);
 		const toolsVisible = view !== "reader" || settings.keepNavigationVisible || panel.toolsVisible;
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 			className: `dnr-shell dnr-theme-${settings.theme} ${toolsVisible ? "" : "is-immersive"} ${settings.keepNavigationVisible ? "is-navigation-pinned" : ""} ${showReader ? "" : "is-panel-view"}`,
 			ref: presentationRoot,
+			"data-reading-context": readingContext ? "true" : "false",
 			onPointerDownCapture: (event) => { readerPointerMotion = true; event.currentTarget.dataset.motionInput = "pointer"; },
 			onKeyDownCapture: (event) => { readerPointerMotion = false; event.currentTarget.dataset.motionInput = "keyboard"; },
 			"data-color-scheme": colorScheme,
@@ -17085,18 +17078,18 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 								className: "dnr-toolbar-dock",
 								children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", {
 									className: "dnr-toolbar",
-									"aria-label": "阅读工具",
+									"aria-label": readingContext ? "阅读工具" : "书架导航",
 									children: [
 										(0, import_jsx_runtime.jsx)(SlidingSelection, { value: view }),
 										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 											type: "button",
-											"aria-label": "书库",
-											title: "书库",
+											"aria-label": "书架",
+											title: "书架",
 											className: view === "library" ? "is-active" : "",
-											onClick: () => setView((current) => current === "library" ? "reader" : "library"),
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "library" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "书库" })]
+											onClick: () => setView("library"),
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "library" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "书架" })]
 										}),
-										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+										readingContext && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 											type: "button",
 											"aria-label": "目录",
 											title: "目录",
@@ -17105,22 +17098,22 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 											onClick: () => setView(view === "toc" ? "reader" : "toc"),
 											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "toc" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "目录" })]
 										}),
-										supportsOnline && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+										supportsOnline && !readingContext && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 											type: "button",
 											"aria-label": "在线搜书",
 											title: "在线搜书",
 											className: view === "online" ? "is-active" : "",
 											onClick: () => setView(view === "online" ? "reader" : "online"),
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "globe" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "搜书" })]
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "globe" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "找书" })]
 										}),
-										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+										readingContext && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 											type: "button",
 											"aria-label": "书内搜索",
 											title: "书内搜索",
 											disabled: book === null,
 											className: view === "search" ? "is-active" : "",
 											onClick: () => setView(view === "search" ? "reader" : "search"),
-											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "search" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "搜索" })]
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "search" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "书内查找" })]
 										}),
 										/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 											type: "button",

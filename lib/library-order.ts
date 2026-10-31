@@ -3,6 +3,9 @@
 export const CATALOG_QUERY = `
 WITH catalog AS (
 SELECT b.id,b.name,b.filename,b.size,b.created_at,
+  CASE WHEN json_valid(p.payload) AND json_type(p.payload,'$.position.chapterIndex')='integer'
+    THEN json_extract(p.payload,'$.position.chapterIndex') END AS chapter_index,
+  CASE WHEN json_valid(p.payload) THEN json_extract(p.payload,'$.position.updatedAt') END AS progress_updated_at,
   COALESCE(NULLIF(b.last_read_at,0),
     CASE WHEN json_valid(p.payload) THEN MAX(0,CAST(json_extract(p.payload,'$.position.updatedAt') AS INTEGER)) ELSE 0 END,
     0) AS last_read_at
