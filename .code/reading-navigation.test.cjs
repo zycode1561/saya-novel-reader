@@ -85,7 +85,7 @@ for (const control of ['dnr-reader-back','dnr-top-dock','dnr-reading-footer']) {
  assert.ok(css.includes('.dnr-shell:not(.is-panel-view) > .'+control+' { position: absolute;'));
 }
 assert.ok(css.includes('.dnr-shell:not(.is-panel-view) .dnr-reading-grid.has-toc { grid-template-columns: 1fr; }'));
-assert.ok(css.includes('.dnr-shell.is-immersive:not(.is-panel-view) :is(.dnr-reader-back, .dnr-top-dock, .dnr-toc--embedded, .dnr-reading-footer) { visibility: hidden; pointer-events: none; }'));
+assert.ok(css.includes('.dnr-shell.is-immersive:not(.is-panel-view) :is(.dnr-reader-back, .dnr-top-dock, .dnr-toc--embedded) { visibility: hidden; pointer-events: none; }'));
 console.log('PASS: all reading tools use overlays, preserve the text rectangle and disappear in immersive mode.');
 const viewStart=source.indexOf('const setView = (0, import_react.useCallback)((next) => {');
 assert.ok(viewStart>0);
@@ -97,3 +97,8 @@ navigationContext.changeView('reader');
 assert.deepEqual(actions,['capture',{toolsVisible:false,immersive:true},'reader']);
 actions.length=0;navigationContext.changeView('library');assert.deepEqual(actions,['capture','library']);
 console.log('PASS: entering the reader dismisses transient tools without altering pinned preferences.');
+
+assert.ok(css.includes('.dnr-shell.is-immersive:not(.is-panel-view) > .dnr-reading-footer { bottom: 0; padding-bottom: env(safe-area-inset-bottom, 0px); border-top: 0; visibility: visible; pointer-events: auto; }'));
+assert.ok(css.includes('.dnr-shell.is-immersive:not(.is-panel-view) .dnr-footer { display: none; }'));
+assert.ok(css.includes('.dnr-shell:not(.is-panel-view) > .dnr-main { margin-bottom: calc(var(--dnr-status-height) + env(safe-area-inset-bottom, 0px)); }'));
+console.log('PASS: immersive mode keeps sync/progress visible and clickable; only chapter controls disappear, with stable text clearance.');
