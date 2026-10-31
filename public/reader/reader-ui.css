@@ -280,6 +280,8 @@
   .dnr-shell[data-reading-context="true"].is-immersive .dnr-top-dock { visibility: hidden; }
 }
 
-/* A contextual exit appears with the reader tools without repaginating text. */
-.dnr-reader-back { position: absolute; z-index: 10; top: max(10px, env(safe-area-inset-top, 0px)); left: max(12px, env(safe-area-inset-left, 0px)); display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 12px 0 8px; border: 1px solid var(--dnr-line); border-radius: 12px; background: var(--dnr-paper); color: var(--dnr-accent); box-shadow: var(--dnr-shadow); font-size: 13px; }
+/* The return row participates in shell layout; it never overlays the text. */
+.dnr-shell > .dnr-reader-back { position: static; order: 0; flex: 0 0 auto; display: flex; align-items: center; justify-content: flex-start; gap: 4px; min-height: 44px; padding: 6px max(16px, env(safe-area-inset-left, 0px)); border: 0; border-bottom: 1px solid var(--dnr-line); border-radius: 0; background: var(--dnr-reading-bg); color: var(--dnr-reading-text); box-shadow: none; font-size: 13px; }
 .dnr-reader-back svg { width: 20px; height: 20px; }
+.dnr-shell > .dnr-reader-back:active:not(:disabled) { transform: none; background: var(--dnr-surface); }
+.dnr-shell > .dnr-reader-back:focus-visible { outline-offset: -3px; }

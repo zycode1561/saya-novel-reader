@@ -53,3 +53,18 @@ for(const showReader of [false,true]) for(const toolsVisible of [false,true]) {
  if(result){assert.equal(result.props['aria-label'],'返回书架');result.props.onClick();assert.equal(destination,'library');}
 }
 console.log('PASS: upper-left back button follows reader/tool visibility and returns to shelf.');
+// Regression: the back action must reserve a shell row, outside the text viewport.
+let backContainer;
+function findBackContainer(node) {
+ if (ts.isObjectLiteralExpression(node) && node.properties.some(p=>p.name?.getText(file)==='className' && p.initializer?.text==='dnr-reader-back')) {
+  for(let parent=node.parent;parent;parent=parent.parent) {
+   if(ts.isObjectLiteralExpression(parent) && parent.properties.some(p=>p.name?.getText(file)==='className')) {backContainer=parent;break;}
+  }
+ }
+ ts.forEachChild(node,findBackContainer);
+}
+findBackContainer(file);
+assert.ok(backContainer.properties.some(p=>p.name?.getText(file)==='className' && p.initializer.getText(file).includes('dnr-shell')));
+const css=fs.readFileSync('public/reader/reader-ui.css','utf8');
+assert.match(css,/\.dnr-shell > \.dnr-reader-back \{ position: static; order: 0; flex: 0 0 auto;/);
+console.log('PASS: return row is outside the reading viewport and participates in layout.');
