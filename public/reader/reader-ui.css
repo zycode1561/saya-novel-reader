@@ -280,29 +280,28 @@
   .dnr-shell[data-reading-context="true"].is-immersive .dnr-top-dock { visibility: hidden; }
 }
 
-/* The return row participates in shell layout; it never overlays the text. */
+/* Full-width return surface, shown only while reading controls are visible. */
 .dnr-shell > .dnr-reader-back { position: static; order: 0; flex: 0 0 auto; display: flex; align-items: center; justify-content: flex-start; gap: 4px; min-height: 44px; padding: 6px max(16px, env(safe-area-inset-left, 0px)); border: 0; border-bottom: 1px solid var(--dnr-line); border-radius: 0; background: var(--dnr-reading-bg); color: var(--dnr-reading-text); box-shadow: none; font-size: 13px; }
 .dnr-reader-back svg { width: 20px; height: 20px; }
 .dnr-shell > .dnr-reader-back:active:not(:disabled) { transform: none; background: var(--dnr-surface); }
 .dnr-shell > .dnr-reader-back:focus-visible { outline-offset: -3px; }
 
-/* Reserve the same reading rectangle in both tool states. Hiding controls must
-   not resize columns, repaginate the book or restore a different text anchor. */
+/* Reading controls overlay a full-size, invariant text viewport. */
 .dnr-shell:not(.is-panel-view) { background: var(--dnr-reading-bg); }
-.dnr-shell:not(.is-panel-view) > .dnr-top-dock { height: 56px; flex: 0 0 56px; }
+.dnr-shell:not(.is-panel-view) > .dnr-reader-back { position: absolute; z-index: 20; top: 0; left: 0; right: 0; width: 100%; min-height: calc(44px + env(safe-area-inset-top, 0px)); padding-top: calc(6px + env(safe-area-inset-top, 0px)); }
+.dnr-shell:not(.is-panel-view) > .dnr-top-dock { position: absolute; z-index: 20; top: auto; bottom: 0; left: 0; right: 0; height: auto; padding-bottom: env(safe-area-inset-bottom, 0px); border-top: 1px solid var(--dnr-line); background: var(--dnr-bg); }
 .dnr-shell:not(.is-panel-view) > .dnr-top-dock::after { display: none; }
-.dnr-shell:not(.is-panel-view) .dnr-top-controls { position: relative; transform: none; opacity: 1; pointer-events: auto; transition: none; }
-.dnr-shell:not(.is-panel-view) .dnr-toolbar-dock { height: 56px; flex: 0 0 56px; transition: none; }
+.dnr-shell:not(.is-panel-view) .dnr-top-controls { position: relative; transform: none; opacity: 1; pointer-events: auto; transition: none; background: var(--dnr-bg); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.dnr-shell:not(.is-panel-view) .dnr-toolbar-dock { height: 60px; flex: 0 0 60px; transition: none; }
+.dnr-shell:not(.is-panel-view) .dnr-toolbar { height: 60px; }
+.dnr-shell:not(.is-panel-view) > .dnr-reading-footer { position: absolute; z-index: 20; bottom: calc(61px + env(safe-area-inset-bottom, 0px)); left: 0; right: 0; padding-bottom: 0; border-top: 1px solid var(--dnr-line); }
 .dnr-shell:not(.is-panel-view) .dnr-footer { height: var(--dnr-footer-height); flex-basis: var(--dnr-footer-height); padding: 0 12px; border-top: 1px solid var(--dnr-line); }
-.dnr-shell:not(.is-panel-view) .dnr-reading-grid.has-toc { grid-template-columns: minmax(160px, 28%) minmax(0, 1fr); }
-.dnr-shell:not(.is-panel-view) .dnr-toc--embedded { display: flex; }
-.dnr-shell.is-immersive:not(.is-panel-view) :is(.dnr-reader-back, .dnr-top-dock, .dnr-toc--embedded, .dnr-footer) { visibility: hidden; pointer-events: none; }
+.dnr-shell:not(.is-panel-view) .dnr-reading-grid.has-toc { grid-template-columns: 1fr; }
+.dnr-shell:not(.is-panel-view) .dnr-toc--embedded { position: absolute; z-index: 15; top: calc(44px + env(safe-area-inset-top, 0px)); bottom: calc(62px + var(--dnr-status-height) + var(--dnr-footer-height) + env(safe-area-inset-bottom, 0px)); left: 0; width: min(28%, 280px); min-width: 160px; height: auto; display: flex; }
+.dnr-shell.is-immersive:not(.is-panel-view) :is(.dnr-reader-back, .dnr-top-dock, .dnr-toc--embedded, .dnr-reading-footer) { visibility: hidden; pointer-events: none; }
 @container (max-width: 600px) {
-  .dnr-shell:not(.is-panel-view) > .dnr-top-dock { height: auto; flex: 0 0 auto; padding-bottom: env(safe-area-inset-bottom, 0px); border-top: 1px solid var(--dnr-line); }
-  .dnr-shell:not(.is-panel-view) .dnr-toolbar-dock { height: 60px; flex-basis: 60px; }
-  .dnr-shell:not(.is-panel-view) .dnr-reading-footer { padding-bottom: 0; }
+  .dnr-shell[data-reading-context="true"]:not(.is-panel-view):not(.is-immersive) > .dnr-top-dock { background: var(--dnr-bg); }
 }
 @container (max-width: 599px) {
-  .dnr-shell:not(.is-panel-view) .dnr-reading-grid.has-toc { grid-template-columns: 1fr; }
   .dnr-shell:not(.is-panel-view) .dnr-toc--embedded { display: none; }
 }

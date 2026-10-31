@@ -9609,7 +9609,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		return {
 			...DEFAULT_SETTINGS,
 			...stored,
-			keepNavigationVisible: typeof stored.keepNavigationVisible === "boolean" ? stored.keepNavigationVisible : globalThis.matchMedia?.("(max-width: 600px)").matches ?? false,
+			keepNavigationVisible: typeof stored.keepNavigationVisible === "boolean" ? stored.keepNavigationVisible : false,
 			prefetchChapters: normalizePrefetchChapters(stored.prefetchChapters)
 		};
 	}
@@ -16967,7 +16967,7 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 		return `${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分`;
 	}
 	function NovelReaderApp() {
-		const { book, panel, settings, progress: progress$1, setReaderActive, error, loading, retryOnlineChapter, notices, goToChapter } = useReader();
+		const { book, panel, settings, updatePanel, progress: progress$1, setReaderActive, error, loading, retryOnlineChapter, notices, goToChapter } = useReader();
 		const supportsLocalOnline = window.__CODEX_NOVEL_READER_PREVIEW_API__ === true;
 		const supportsOnline = cloudHosted || supportsLocalOnline;
 		const hostTheme = useHostTheme();
@@ -16985,8 +16985,9 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 		const readerBodyRef = (0, import_react.useRef)(null);
 		const setView = (0, import_react.useCallback)((next) => {
 			readerBodyRef.current?.capturePosition?.();
+			if (next === "reader") updatePanel({ toolsVisible: false, immersive: true });
 			setViewState(next);
-		}, []);
+		}, [updatePanel]);
 		const navigateChapter = (0, import_react.useCallback)((index) => {
 			if (readerBodyRef.current) readerBodyRef.current.goToChapter(index);
 			else goToChapter(index);

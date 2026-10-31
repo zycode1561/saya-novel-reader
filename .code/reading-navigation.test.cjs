@@ -54,7 +54,7 @@ for(const showReader of [false,true]) for(const toolsVisible of [false,true]) {
  if(result){assert.equal(result.props['aria-label'],'返回书架');result.props.onClick();assert.equal(destination,'library');}
 }
 console.log('PASS: upper-left back button follows reader/tool visibility and returns to shelf.');
-// Regression: the back action must reserve a shell row, outside the text viewport.
+// Regression: controls stay outside the text viewport, now in overlay layers.
 let backContainer;
 function findBackContainer(node) {
  if (ts.isObjectLiteralExpression(node) && node.properties.some(p=>p.name?.getText(file)==='className' && p.initializer?.text==='dnr-reader-back')) {
@@ -68,7 +68,7 @@ findBackContainer(file);
 assert.ok(backContainer.properties.some(p=>p.name?.getText(file)==='className' && p.initializer.getText(file).includes('dnr-shell')));
 const css=fs.readFileSync('public/reader/reader-ui.css','utf8');
 assert.match(css,/\.dnr-shell > \.dnr-reader-back \{ position: static; order: 0; flex: 0 0 auto;/);
-console.log('PASS: return row is outside the reading viewport and participates in layout.');
+console.log('PASS: return action remains outside the reading viewport.');
 
 // Visibility alone must not invalidate either pagination engine's text anchor.
 for(const key of ['const key = [', 'const restoreKey = [']) {
@@ -80,3 +80,20 @@ for(const key of ['const key = [', 'const restoreKey = [']) {
  assert.ok(expression.includes('settings.fontSize'));
 }
 console.log('PASS: tool toggles preserve the return row and do not invalidate pagination anchors.');
+
+for (const control of ['dnr-reader-back','dnr-top-dock','dnr-reading-footer']) {
+ assert.ok(css.includes('.dnr-shell:not(.is-panel-view) > .'+control+' { position: absolute;'));
+}
+assert.ok(css.includes('.dnr-shell:not(.is-panel-view) .dnr-reading-grid.has-toc { grid-template-columns: 1fr; }'));
+assert.ok(css.includes('.dnr-shell.is-immersive:not(.is-panel-view) :is(.dnr-reader-back, .dnr-top-dock, .dnr-toc--embedded, .dnr-reading-footer) { visibility: hidden; pointer-events: none; }'));
+console.log('PASS: all reading tools use overlays, preserve the text rectangle and disappear in immersive mode.');
+const viewStart=source.indexOf('const setView = (0, import_react.useCallback)((next) => {');
+assert.ok(viewStart>0);
+const viewCallback=source.slice(viewStart,source.indexOf('}, [updatePanel]);',viewStart)+'}, [updatePanel]);'.length).replace('const setView =','globalThis.changeView =');
+const actions=[];
+const navigationContext=vm.createContext({import_react:{useCallback:fn=>fn},readerBodyRef:{current:{capturePosition:()=>actions.push('capture')}},updatePanel:p=>actions.push({...p}),setViewState:v=>actions.push(v)});
+vm.runInContext(viewCallback,navigationContext);
+navigationContext.changeView('reader');
+assert.deepEqual(actions,['capture',{toolsVisible:false,immersive:true},'reader']);
+actions.length=0;navigationContext.changeView('library');assert.deepEqual(actions,['capture','library']);
+console.log('PASS: entering the reader dismisses transient tools without altering pinned preferences.');
