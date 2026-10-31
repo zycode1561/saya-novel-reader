@@ -285,3 +285,24 @@
 .dnr-reader-back svg { width: 20px; height: 20px; }
 .dnr-shell > .dnr-reader-back:active:not(:disabled) { transform: none; background: var(--dnr-surface); }
 .dnr-shell > .dnr-reader-back:focus-visible { outline-offset: -3px; }
+
+/* Reserve the same reading rectangle in both tool states. Hiding controls must
+   not resize columns, repaginate the book or restore a different text anchor. */
+.dnr-shell:not(.is-panel-view) { background: var(--dnr-reading-bg); }
+.dnr-shell:not(.is-panel-view) > .dnr-top-dock { height: 56px; flex: 0 0 56px; }
+.dnr-shell:not(.is-panel-view) > .dnr-top-dock::after { display: none; }
+.dnr-shell:not(.is-panel-view) .dnr-top-controls { position: relative; transform: none; opacity: 1; pointer-events: auto; transition: none; }
+.dnr-shell:not(.is-panel-view) .dnr-toolbar-dock { height: 56px; flex: 0 0 56px; transition: none; }
+.dnr-shell:not(.is-panel-view) .dnr-footer { height: var(--dnr-footer-height); flex-basis: var(--dnr-footer-height); padding: 0 12px; border-top: 1px solid var(--dnr-line); }
+.dnr-shell:not(.is-panel-view) .dnr-reading-grid.has-toc { grid-template-columns: minmax(160px, 28%) minmax(0, 1fr); }
+.dnr-shell:not(.is-panel-view) .dnr-toc--embedded { display: flex; }
+.dnr-shell.is-immersive:not(.is-panel-view) :is(.dnr-reader-back, .dnr-top-dock, .dnr-toc--embedded, .dnr-footer) { visibility: hidden; pointer-events: none; }
+@container (max-width: 600px) {
+  .dnr-shell:not(.is-panel-view) > .dnr-top-dock { height: auto; flex: 0 0 auto; padding-bottom: env(safe-area-inset-bottom, 0px); border-top: 1px solid var(--dnr-line); }
+  .dnr-shell:not(.is-panel-view) .dnr-toolbar-dock { height: 60px; flex-basis: 60px; }
+  .dnr-shell:not(.is-panel-view) .dnr-reading-footer { padding-bottom: 0; }
+}
+@container (max-width: 599px) {
+  .dnr-shell:not(.is-panel-view) .dnr-reading-grid.has-toc { grid-template-columns: 1fr; }
+  .dnr-shell:not(.is-panel-view) .dnr-toc--embedded { display: none; }
+}

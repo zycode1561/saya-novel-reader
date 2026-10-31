@@ -49,7 +49,8 @@ findBack(file); assert.ok(backExpression);
 for(const showReader of [false,true]) for(const toolsVisible of [false,true]) {
  let destination;
  const result=vm.runInNewContext(backExpression,{showReader,toolsVisible,import_jsx_runtime:{jsx,jsxs:jsx},Icon:'Icon',setView:v=>destination=v});
- assert.equal(Boolean(result),showReader && toolsVisible);
+ assert.equal(Boolean(result),showReader);
+ if(result){assert.equal(result.props["aria-hidden"],!toolsVisible);assert.equal(result.props.tabIndex,toolsVisible?0:-1);}
  if(result){assert.equal(result.props['aria-label'],'返回书架');result.props.onClick();assert.equal(destination,'library');}
 }
 console.log('PASS: upper-left back button follows reader/tool visibility and returns to shelf.');
@@ -68,3 +69,14 @@ assert.ok(backContainer.properties.some(p=>p.name?.getText(file)==='className' &
 const css=fs.readFileSync('public/reader/reader-ui.css','utf8');
 assert.match(css,/\.dnr-shell > \.dnr-reader-back \{ position: static; order: 0; flex: 0 0 auto;/);
 console.log('PASS: return row is outside the reading viewport and participates in layout.');
+
+// Visibility alone must not invalidate either pagination engine's text anchor.
+for(const key of ['const key = [', 'const restoreKey = [']) {
+ const start=source.indexOf(key, source.indexOf('function useReaderPresentation'));
+ assert.ok(start>0);
+ const expression=source.slice(start,source.indexOf('].join(":")',start));
+ assert.ok(!expression.includes('panel.toolsVisible'));
+ assert.ok(expression.includes('clientHeight'));
+ assert.ok(expression.includes('settings.fontSize'));
+}
+console.log('PASS: tool toggles preserve the return row and do not invalidate pagination anchors.');

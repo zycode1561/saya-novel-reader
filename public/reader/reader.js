@@ -12581,7 +12581,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				settings.fontFamily,
 				settings.lineSpacing,
 				settings.firstLineIndent,
-				panel.toolsVisible,
 				glyphFont,
 				searchQuery,
 				...panes.map((p$4) => p$4.count)
@@ -13124,7 +13123,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					settings.fontFamily,
 					settings.lineSpacing,
 					settings.firstLineIndent,
-					panel.toolsVisible,
 					container.clientHeight,
 					layoutRevision
 				].join(":");
@@ -13209,7 +13207,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			clearPendingParagraph,
 			pageWidth,
 			paged,
-			panel.toolsVisible,
 			loading,
 			panel.width,
 			paragraphs,
@@ -17154,9 +17151,11 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 					compact: true,
 					onOpen: () => setView("library")
 				}),
-						showReader && toolsVisible && (0, import_jsx_runtime.jsxs)("button", {
+						showReader && (0, import_jsx_runtime.jsxs)("button", {
 							type: "button",
 							className: "dnr-reader-back",
+							"aria-hidden": !toolsVisible,
+							tabIndex: toolsVisible ? 0 : -1,
 							"aria-label": "返回书架",
 							onClick: () => setView("library"),
 							children: [(0, import_jsx_runtime.jsx)(Icon, { name: "chevron-left" }), (0, import_jsx_runtime.jsx)("span", { children: "返回书架" })]
