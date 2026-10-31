@@ -279,3 +279,7 @@
   .dnr-shell[data-reading-context="true"] .dnr-toolbar button span { display: inline; font-size: 11px; }
   .dnr-shell[data-reading-context="true"].is-immersive .dnr-top-dock { visibility: hidden; }
 }
+
+/* A contextual exit appears with the reader tools without repaginating text. */
+.dnr-reader-back { position: absolute; z-index: 10; top: max(10px, env(safe-area-inset-top, 0px)); left: max(12px, env(safe-area-inset-left, 0px)); display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 12px 0 8px; border: 1px solid var(--dnr-line); border-radius: 12px; background: var(--dnr-paper); color: var(--dnr-accent); box-shadow: var(--dnr-shadow); font-size: 13px; }
+.dnr-reader-back svg { width: 20px; height: 20px; }

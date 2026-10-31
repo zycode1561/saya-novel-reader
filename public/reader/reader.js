@@ -17157,6 +17157,13 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", {
 					className: "dnr-main",
 					children: [
+						showReader && toolsVisible && (0, import_jsx_runtime.jsxs)("button", {
+							type: "button",
+							className: "dnr-reader-back",
+							"aria-label": "返回书架",
+							onClick: () => setView("library"),
+							children: [(0, import_jsx_runtime.jsx)(Icon, { name: "chevron-left" }), (0, import_jsx_runtime.jsx)("span", { children: "返回书架" })]
+						}),
 						(view === "library" || book === null && view === "reader") && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LibraryPanel, {
 							onBack: () => setView("reader"),
 							onOpened: () => setView("reader")

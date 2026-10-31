@@ -40,3 +40,16 @@ for (const [view, readingContext, expected] of [
  buttons[0].props.onClick(); assert.equal(next,'library', 'book shelf button must always return to shelf');
 }
 console.log('PASS: resume progress precedence, missing data, full-card activation and contextual navigation.');
+let backExpression;
+function findBack(node) {
+ if (ts.isObjectLiteralExpression(node) && node.properties.some(p=>p.name?.getText(file)==='className' && p.initializer?.text==='dnr-reader-back')) backExpression=node.parent.parent.getText(file);
+ ts.forEachChild(node,findBack);
+}
+findBack(file); assert.ok(backExpression);
+for(const showReader of [false,true]) for(const toolsVisible of [false,true]) {
+ let destination;
+ const result=vm.runInNewContext(backExpression,{showReader,toolsVisible,import_jsx_runtime:{jsx,jsxs:jsx},Icon:'Icon',setView:v=>destination=v});
+ assert.equal(Boolean(result),showReader && toolsVisible);
+ if(result){assert.equal(result.props['aria-label'],'返回书架');result.props.onClick();assert.equal(destination,'library');}
+}
+console.log('PASS: upper-left back button follows reader/tool visibility and returns to shelf.');
