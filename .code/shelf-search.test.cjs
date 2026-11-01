@@ -74,15 +74,19 @@ function cssValue(selector,prop){let value;css.walkRules(rule=>{if(rule.selector
 assert.equal(cssValue('.dnr-cloud-library','overflow'),'auto');
 assert.equal(cssValue('.dnr-cloud-library','display'),'block');
 assert.equal(cssValue('.dnr-cloud-library > .dnr-shelf-content','overflow'),'visible');
-assert.equal(cssValue('.dnr-cloud-library > .dnr-shelf-search','position'),'sticky');
-assert.equal(cssValue('.dnr-cloud-library > .dnr-shelf-search','top'),'0');
+assert.equal(cssValue('.dnr-cloud-library > .dnr-shelf-search-bar','position'),'sticky');
+assert.equal(cssValue('.dnr-cloud-library > .dnr-shelf-search-bar','top'),'0');
 console.log('PASS: scrolling toolbar placement, one shelf scrollport, per-tab restoration, filtering at the search row and sticky-search styles.');
 
-// A sticky search mask must not paint over the preceding tabs before it sticks.
-const shadow=cssValue('.dnr-cloud-library > .dnr-shelf-search','box-shadow');
-const mask=shadow.split(',')[0].trim().split(/\s+/).slice(0,4).map(parseFloat);
-assert.ok(mask.every(Number.isFinite),'search mask uses measurable offsets');
-const upperReach=Math.max(0, -mask[1]+mask[3]);
-const tabGap=parseFloat(cssValue('.dnr-cloud-library > .dnr-library-tabs','margin-bottom'));
-assert.ok(upperReach<tabGap,`search mask reaches ${upperReach}px into the ${tabGap}px tab gap`);
-console.log('PASS: search background leaves the full tab control visible before sticking.');
+// The rounded field is backed by a full-width opaque rectangle, with no outward painting.
+const backing=nodes(root).find(n=>n.props.className==='dnr-shelf-search-bar');
+assert.equal(backing.props.children.type,ctx.ShelfSearch);
+const bar='.dnr-cloud-library > .dnr-shelf-search-bar';
+assert.equal(cssValue(bar,'background'),'var(--dnr-bg)');
+assert.equal(cssValue(bar,'border-radius'),'0');
+assert.equal(cssValue(bar,'box-shadow'),'none');
+assert.equal(cssValue(bar,'margin'),'0 calc(-1 * var(--dnr-shelf-inline)) 8px');
+assert.equal(cssValue(bar,'padding'),'8px var(--dnr-shelf-inline) 10px');
+assert.equal(cssValue('.dnr-shelf-search-bar > .dnr-shelf-search','box-shadow'),'none');
+assert.equal(cssValue('.dnr-shelf-search-bar > .dnr-shelf-search','margin'),'0');
+console.log('PASS: opaque full-width sticky backing, inset rounded search field and no shadow overlap with tabs.');

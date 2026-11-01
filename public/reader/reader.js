@@ -11550,7 +11550,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		const viewport = details.closest(".dnr-cloud-library");
 		if (!menu || !viewport) return;
 		const viewportBounds = viewport.getBoundingClientRect();
-		const searchBottom = viewport.querySelector?.(".dnr-shelf-search")?.getBoundingClientRect().bottom ?? viewportBounds.top;
+		const searchBottom = viewport.querySelector?.(".dnr-shelf-search-bar")?.getBoundingClientRect().bottom ?? viewportBounds.top;
 		const shelf = { left: viewportBounds.left, top: Math.max(viewportBounds.top, searchBottom) };
 		const trigger = details.querySelector("summary").getBoundingClientRect(), width = menu.getBoundingClientRect().width;
 		const anchor = details.getBoundingClientRect();
@@ -12073,7 +12073,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					})]
 				}),
 				navigation,
-				(0, import_jsx_runtime.jsx)(ShelfSearch, { query, onChange: changeQuery, mode }),
+				(0, import_jsx_runtime.jsx)("div", { className: "dnr-shelf-search-bar", children: (0, import_jsx_runtime.jsx)(ShelfSearch, { query, onChange: changeQuery, mode }) }),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
 					ref: input,
 					type: "file",
