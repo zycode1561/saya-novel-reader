@@ -30,6 +30,13 @@ query('三体');
 let tree=nodes(ctx.CloudLibrary({mode:'cloud'}));
 assert.equal(tree.filter(n=>n.type==='article').length,1);
 assert.equal(tree.find(n=>n.props.className==='dnr-shelf-reading-label').props.children,'读至第 8 章');
+const bookButton=tree.find(n=>n.props.className==='dnr-cloud-book-open');
+const info=bookButton.props.children;
+const progressIndex=info.findIndex(n=>n.props?.className==='dnr-shelf-reading-label');
+const badgeIndex=info.findIndex(n=>n.type===ctx.ShelfStorageBadges);
+assert.ok(badgeIndex>=0);assert.equal(progressIndex,badgeIndex+1,'reading progress follows badges inside the book information grid');
+assert.ok(!tree.find(n=>n.props.className==='dnr-cloud-book-meta').props.children.some(n=>n.props?.className==='dnr-shelf-reading-label'));
+
 assert.equal(tree.filter(n=>n.type==='ContinueReadingCard').length,0);
 assert.ok(tree.some(n=>n.props.role==='status'&&n.props.children==='找到 1 本 · 云端书架'));
 query('找不到');tree=nodes(ctx.CloudLibrary({mode:'cloud'}));assert.equal(tree.filter(n=>n.type==='article').length,0);assert.ok(tree.some(n=>n.type===ctx.ShelfNoResults));assert.ok(!tree.some(n=>n.props.className==='dnr-cloud-empty'));

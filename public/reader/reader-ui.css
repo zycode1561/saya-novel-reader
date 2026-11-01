@@ -378,3 +378,9 @@
 @media (hover:none), (pointer:coarse) {
   .dnr-cloud-book-open:hover .dnr-cloud-cover { transform:none; }
 }
+
+/* Keep cloud reading progress in the same information column as title and badges. */
+.dnr-cloud-book-open > .dnr-shelf-reading-label { display:block; margin-top:8px; color:var(--dnr-muted); font-size:12px; font-weight:400; line-height:1.6; overflow-wrap:anywhere; }
+.dnr-cloud-books:not(.dnr-local-books) .dnr-cloud-book-meta { justify-content:flex-end; }
+.dnr-cloud-library[data-shelf-layout="list"] .dnr-cloud-book-open > .dnr-shelf-reading-label { grid-column:2; margin:0; padding:0; }
+.dnr-cloud-library[data-shelf-layout="list"] .dnr-cloud-books:not(.dnr-local-books) .dnr-cloud-book-meta { margin-top:0; }

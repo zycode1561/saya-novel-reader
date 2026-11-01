@@ -12201,10 +12201,10 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 									onClick: () => void openBook(entry),
 									"aria-label": `${openingId === entry.id ? "正在打开" : "打开阅读"} ${displayBookName(entry.name)}`,
 									title: displayBookName(entry.name),
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(BookCover, { entry }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: displayBookName(entry.name) }), (0, import_jsx_runtime.jsx)(ShelfStorageBadges, { labels: storageLabels(entry, true) })]
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(BookCover, { entry }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: displayBookName(entry.name) }), (0, import_jsx_runtime.jsx)(ShelfStorageBadges, { labels: storageLabels(entry, true) }), (0, import_jsx_runtime.jsx)("span", { className: "dnr-shelf-reading-label", children: readingLabel(entry) })]
 								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 									className: "dnr-cloud-book-meta",
-									children: [(0, import_jsx_runtime.jsx)("span", { className: "dnr-shelf-reading-label", children: readingLabel(entry) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", {
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", {
 										className: "dnr-cloud-book-more",
 										onToggle: (event) => positionShelfMenu(event.currentTarget),
 										onClick: toggleShelfMenu,
