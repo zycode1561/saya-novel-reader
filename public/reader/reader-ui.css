@@ -310,3 +310,17 @@
 .dnr-shell:not(.is-panel-view) > .dnr-main { margin-bottom: calc(var(--dnr-status-height) + env(safe-area-inset-bottom, 0px)); }
 .dnr-shell.is-immersive:not(.is-panel-view) > .dnr-reading-footer { bottom: 0; padding-bottom: env(safe-area-inset-bottom, 0px); border-top: 0; visibility: visible; pointer-events: auto; }
 .dnr-shell.is-immersive:not(.is-panel-view) .dnr-footer { display: none; }
+
+/* Shelf search stays above the scrolling results, within the current tab. */
+.dnr-cloud-library > .dnr-library-tabs { margin-bottom: 12px; }
+.dnr-shelf-search { flex: 0 0 44px; min-height: 44px; margin-bottom: 18px; padding-right: 4px; }
+.dnr-shell .dnr-shelf-search input { height: 100%; font-size: 16px; }
+.dnr-shelf-search input::-webkit-search-cancel-button { -webkit-appearance: none; }
+.dnr-shelf-search > svg { flex: 0 0 18px; }
+.dnr-shelf-search button { flex: 0 0 44px; width: 44px; height: 44px; border-radius: 10px; }
+.dnr-shelf-no-results { padding: 32px 16px; text-align: center; background: var(--dnr-paper); border-radius: 16px; }
+.dnr-shelf-no-results strong { font-size: 16px; }
+.dnr-shelf-no-results p { color: var(--dnr-muted); font-size: 13px; line-height: 1.7; }
+.dnr-shelf-no-results button { min-height: 44px; padding: 0 16px; border: 0; border-radius: 10px; background: var(--dnr-accent-soft); color: var(--dnr-accent); }
+.dnr-cloud-book-meta > .dnr-shelf-reading-label { display: block; min-width: 0; padding-top: 8px; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.dnr-cloud-book-meta > .dnr-cloud-book-more { flex-shrink: 0; }

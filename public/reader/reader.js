@@ -11518,13 +11518,56 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	function progress(book) {
 		return typeof book.progressPercent === "number" && Number.isFinite(book.progressPercent) ? Math.max(0, Math.min(100, Math.round(book.progressPercent))) : null;
 	}
-	function LocalShelf({ onOpened, onImport }) {
+	const shelfQueries = { cloud: "", local: "" };
+	function filterShelfBooks(books, query) {
+		const normalize = (value) => String(value ?? "").normalize("NFKC").toLocaleLowerCase();
+		const terms = normalize(query).trim().split(/\s+/).filter(Boolean);
+		if (!terms.length) return books;
+		return books.filter((book) => {
+			const title = normalize(`${book.name || ""} ${book.filename || ""}`);
+			return terms.every((term) => title.includes(term));
+		});
+	}
+	function shelfReadingLabel(entry, recent, local, lastReadAt) {
+		const remote = { chapterIndex: entry.chapter_index, updatedAt: entry.progress_updated_at };
+		const valid = (value) => value && Number.isInteger(value.chapterIndex) && value.chapterIndex >= 0;
+		const useLocal = valid(local) && (!valid(remote) || (local.updatedAt || 0) >= (remote.updatedAt || 0));
+		const position = useLocal ? local : valid(remote) ? remote : null;
+		const percent = recent?.progressPercent;
+		const label = position ? `读至第 ${position.chapterIndex + 1} 章` : "";
+		if ((useLocal || !position) && Number.isFinite(percent)) return `已读 ${Math.max(0, Math.min(100, Math.round(percent)))}%${label ? ` · ${label}` : ""}`;
+		return label || (lastReadAt > 0 ? "已开始阅读" : "尚未阅读");
+	}
+	function ShelfSearch({ query, onChange, mode }) {
+		const input = (0, import_react.useRef)(null);
+		return (0, import_jsx_runtime.jsxs)("div", { className: "dnr-search-field dnr-shelf-search", role: "search", children: [
+			(0, import_jsx_runtime.jsx)(Icon, { name: "search" }),
+			(0, import_jsx_runtime.jsx)("input", {
+				ref: input, type: "search", value: query, placeholder: "搜索我的书架",
+				"aria-label": mode === "cloud" ? "搜索云端书架" : "搜索本机书架",
+				autoComplete: "off", spellCheck: false, enterKeyHint: "search",
+				onChange: (event) => onChange(event.currentTarget.value),
+				onKeyDown: (event) => { if (event.key === "Escape" && !event.nativeEvent?.isComposing) { event.stopPropagation(); onChange(""); } }
+			}),
+			query && (0, import_jsx_runtime.jsx)("button", { type: "button", "aria-label": "清空书架搜索", onClick: () => { onChange(""); input.current?.focus(); }, children: (0, import_jsx_runtime.jsx)(Icon, { name: "close" }) })
+		] });
+	}
+	function ShelfNoResults({ onClear }) {
+		return (0, import_jsx_runtime.jsxs)("div", { className: "dnr-shelf-no-results", children: [
+			(0, import_jsx_runtime.jsx)("strong", { children: "没有找到匹配的书" }),
+			(0, import_jsx_runtime.jsx)("p", { children: "试试书名中的几个字，或清空搜索查看全部书籍。" }),
+			(0, import_jsx_runtime.jsx)("button", { type: "button", onClick: onClear, children: "清空搜索" })
+		] });
+	}
+	function LocalShelf({ onOpened, onImport, query = "", onClear }) {
 		const { recents, openRecent, removeRecent, loading, error } = useReader();
 		const [opening, setOpening] = (0, import_react.useState)(null);
 		const [removing, setRemoving] = (0, import_react.useState)(null);
 		const [failure, setFailure] = (0, import_react.useState)("");
 		const books = [...recents].sort((a, b) => b.openedAt - a.openedAt);
 		const recent = books[0];
+		const filteredBooks = filterShelfBooks(books, query);
+		const searching = query.trim().length > 0;
 		const open = async (book) => {
 			if (opening) return;
 			setOpening(book.id);
@@ -11551,20 +11594,20 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				role: "alert",
 				children: error || failure
 			}),
-			recent && (0, import_jsx_runtime.jsx)(ContinueReadingCard, {
+			!searching && recent && (0, import_jsx_runtime.jsx)(ContinueReadingCard, {
 				id: recent.id, name: recent.name, format: format(recent),
 				position: resumePosition(loadProgress()[recent.id], null, recent.progressPercent),
 				disabled: loading || opening !== null, opening: opening === recent.id, onOpen: () => void open(recent)
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 				className: "dnr-cloud-section-heading",
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "最近打开" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-					"按最近阅读排序 · ",
-					books.length,
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: searching ? "搜索结果" : "最近打开" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+					searching ? "找到 " : "按最近阅读排序 · ",
+					filteredBooks.length,
 					" 本"
 				] })] })
 			}),
-			books.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			!searching && books.length === 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "dnr-cloud-empty",
 				children: [
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
@@ -11583,9 +11626,10 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					})
 				]
 			}),
+			searching && !filteredBooks.length && (0, import_jsx_runtime.jsx)(ShelfNoResults, { onClear }),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 				className: "dnr-cloud-books dnr-local-books",
-				children: books.map((book) => {
+				children: filteredBooks.map((book) => {
 					const percent = progress(book), name = displayBookName(book.name);
 					return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", {
 						className: "dnr-cloud-book",
@@ -11706,6 +11750,15 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	function CloudLibrary({ mode = "cloud", onOpened, onBack, navigation }) {
 		const { book, recents, loadOnlineBook, forgetCloudBook, loadFile, loading, clearError } = useReader();
 		const [books, setBooks] = (0, import_react.useState)(() => read("catalog", []));
+		const [queries, setQueries] = (0, import_react.useState)(() => ({ ...shelfQueries }));
+		const query = queries[mode] || "";
+		const searching = query.trim().length > 0;
+		const filteredBooks = filterShelfBooks(sortCloudBooks(books), query);
+		const changeQuery = (value) => {
+			shelfQueries[mode] = value;
+			setQueries((current) => ({ ...current, [mode]: value }));
+			if (content.current) content.current.scrollTop = 0;
+		};
 		const [message, setMessage] = (0, import_react.useState)("");
 		const [openingId, setOpeningId] = (0, import_react.useState)(null);
 		const [refreshing, setRefreshing] = (0, import_react.useState)(false);
@@ -11851,6 +11904,16 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		};
 		const times = readingTimes(), linked = bindings();
 		const lastRead = (entry) => Math.max(entry.last_read_at || 0, times[entry.id] || 0, ...recents.filter((recent) => recent.id === `cloud-${entry.id}` || linked[recent.id] === entry.id).map((recent) => recent.openedAt));
+		const savedPositions = loadProgress();
+		const recentByCloud = new Map();
+		for (const item of [...recents].sort((a, b) => a.openedAt - b.openedAt)) {
+			const id = linked[item.id] || (item.id.startsWith("cloud-") ? item.id.slice(6) : null);
+			if (id) recentByCloud.set(id, item);
+		}
+		const readingLabel = (entry) => {
+			const recent = recentByCloud.get(entry.id);
+			return shelfReadingLabel(entry, recent, savedPositions[recent?.id || `cloud-${entry.id}`], lastRead(entry));
+		};
 		const recentBook = [...books].filter((entry) => lastRead(entry) > 0).sort((a, b) => lastRead(b) - lastRead(a))[0];
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 			ref: library,
@@ -11881,6 +11944,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					})]
 				}),
 				navigation,
+				(0, import_jsx_runtime.jsx)(ShelfSearch, { query, onChange: changeQuery, mode }),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
 					ref: input,
 					type: "file",
@@ -11919,7 +11983,8 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(UploadStatus, {}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LocalShelf, {
 							onOpened,
-							onImport: chooseLocalFile
+							onImport: chooseLocalFile,
+							query, onClear: () => changeQuery("")
 						}),
 						book && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 							type: "button",
@@ -11961,7 +12026,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 							className: "dnr-cloud-delete-notice",
 							children: deleteNotice
 						}),
-						recentBook && (0, import_jsx_runtime.jsx)(ContinueReadingCard, {
+						!searching && recentBook && (0, import_jsx_runtime.jsx)(ContinueReadingCard, {
 							id: recentBook.id, name: recentBook.name, format: bookFormat(recentBook),
 							position: (() => {
 								const recent = recents.filter((item) => item.id === `cloud-${recentBook.id}` || linked[item.id] === recentBook.id).sort((a, b) => b.openedAt - a.openedAt)[0];
@@ -11971,7 +12036,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "dnr-cloud-section-heading",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "全部书籍" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "最近上传或阅读优先" })] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: searching ? "搜索结果" : "全部书籍" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { role: "status", children: searching ? `找到 ${filteredBooks.length} 本 · 云端书架` : "最近上传或阅读优先" })] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 								className: "dnr-cloud-refresh",
 								type: "button",
 								disabled: refreshing,
@@ -11980,7 +12045,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "sync" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: refreshing ? "刷新中…" : "刷新" })]
 							})]
 						}),
-						!books.length && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						!searching && !books.length && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "dnr-cloud-empty",
 							children: [
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
@@ -12000,9 +12065,10 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 								})
 							]
 						}),
+						searching && !filteredBooks.length && (0, import_jsx_runtime.jsx)(ShelfNoResults, { onClear: () => changeQuery("") }),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 							className: "dnr-cloud-books",
-							children: sortCloudBooks(books).map((entry) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", {
+							children: filteredBooks.map((entry) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", {
 								className: "dnr-cloud-book",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 									className: "dnr-cloud-book-open",
@@ -12014,7 +12080,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(BookCover, { entry }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: displayBookName(entry.name) })]
 								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 									className: "dnr-cloud-book-meta",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: bookFormat(entry) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: formatBytes(entry.size) })] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", {
+									children: [(0, import_jsx_runtime.jsx)("span", { className: "dnr-shelf-reading-label", children: readingLabel(entry) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", {
 										className: "dnr-cloud-book-more",
 										onToggle: (event) => positionShelfMenu(event.currentTarget),
 										onClick: toggleShelfMenu,
@@ -17002,9 +17068,11 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 				const editing = event.target?.matches("input, textarea, select, [contenteditable=\"true\"]") ?? false;
 				if ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === "f") {
 					event.preventDefault();
+					if (view === "library") { presentationRoot.current?.querySelector(".dnr-shelf-search input")?.focus(); return; }
 					setView("search");
 					return;
 				}
+				if (event.key === "Escape" && editing && view === "library") return;
 				if (event.key === "Escape" && view !== "reader") {
 					event.preventDefault();
 					setView("reader");
