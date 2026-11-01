@@ -11454,7 +11454,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		if (useLocal && Number.isFinite(percent)) parts.push(`已读 ${Math.max(0, Math.min(100, Math.round(percent)))}%`);
 		return parts.join(" · ") || "打开后恢复上次阅读位置";
 	}
-	function ContinueReadingCard({ id, name, format, position, disabled, opening, onOpen }) {
+	function ContinueReadingCard({ id, name, format, position, disabled, opening, onOpen, storageLabels }) {
 		return (0, import_jsx_runtime.jsxs)("button", {
 			type: "button", className: "dnr-cloud-continue dnr-resume-card", disabled,
 			"aria-busy": opening, onClick: onOpen,
@@ -11465,6 +11465,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					(0, import_jsx_runtime.jsx)("span", { className: "dnr-cloud-eyebrow", children: "最近在读" }),
 					(0, import_jsx_runtime.jsx)("strong", { className: "dnr-resume-title", children: displayBookName(name) }),
 					(0, import_jsx_runtime.jsx)("span", { className: "dnr-resume-position", children: position }),
+					(0, import_jsx_runtime.jsx)(ShelfStorageBadges, { labels: storageLabels }),
 					(0, import_jsx_runtime.jsxs)("span", { className: "dnr-resume-action", children: [opening ? "正在打开…" : "继续阅读", (0, import_jsx_runtime.jsx)(Icon, { name: "chevron-right" })] })
 				] })
 			]
@@ -11519,6 +11520,48 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		return typeof book.progressPercent === "number" && Number.isFinite(book.progressPercent) ? Math.max(0, Math.min(100, Math.round(book.progressPercent))) : null;
 	}
 	const shelfQueries = { cloud: "", local: "" };
+	// Storage badges describe this browser's actual files, never just reading history.
+	function shelfStorageLabels(book, cloud, catalog, linked, cache) {
+		const online = Boolean(book.onlineReading || book.format === "online");
+		const cloudId = cloud ? book.id : linked[book.id] || (book.id.startsWith("cloud-") ? book.id.slice(6) : null);
+		const saved = cloud || catalog.some((entry) => entry.id === cloudId);
+		const labels = [saved ? "已存云端" : cloudId ? "云端状态待确认" : online ? "在线书源" : "仅本机"];
+		if (online) return [...labels, "需联网阅读"];
+		const keys = cloud ? cache?.originals : cache?.books;
+		const id = cloud ? `cloud-${book.id}` : book.id;
+		labels.push(!keys ? cache?.failed ? "离线状态未确认" : "检查本机缓存…" : keys.includes(id) ? "本机可离线" : cloud ? "需联网下载" : "本机正文缺失");
+		return labels;
+	}
+	function ShelfStorageBadges({ labels = [] }) {
+		return (0, import_jsx_runtime.jsx)("span", { className: "dnr-storage-badges", children: labels.map((label) =>
+			(0, import_jsx_runtime.jsx)("span", { className: "dnr-storage-badge", "data-offline": label === "本机可离线" || void 0, children: label }, label)) });
+	}
+	function useShelfCache(recents, catalog, mode) {
+		const [cache, setCache] = (0, import_react.useState)(null);
+		(0, import_react.useEffect)(() => {
+			let active = true;
+			const check = async () => {
+				try {
+					const [books, originals] = await Promise.all([
+						transaction("readonly", (store) => store.getAllKeys()),
+						openOriginals().then((db) => new Promise((resolve, reject) => {
+							const tx = db.transaction("files", "readonly"), request = tx.objectStore("files").getAllKeys();
+							tx.oncomplete = () => { db.close(); resolve(request.result); };
+							tx.onerror = tx.onabort = () => { db.close(); reject(tx.error); };
+						}))
+					]);
+					if (active) setCache({ books, originals });
+				} catch { if (active) setCache({ failed: true }); }
+			};
+			check();
+			const wake = () => { if (document.visibilityState === "visible") check(); };
+			window.addEventListener("focus", check);
+			document.addEventListener("visibilitychange", wake);
+			return () => { active = false; window.removeEventListener("focus", check); document.removeEventListener("visibilitychange", wake); };
+		}, [recents, catalog, mode]);
+		return cache;
+	}
+
 	function filterShelfBooks(books, query) {
 		const normalize = (value) => String(value ?? "").normalize("NFKC").toLocaleLowerCase();
 		const terms = normalize(query).trim().split(/\s+/).filter(Boolean);
@@ -11559,7 +11602,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			(0, import_jsx_runtime.jsx)("button", { type: "button", onClick: onClear, children: "清空搜索" })
 		] });
 	}
-	function LocalShelf({ onOpened, onImport, query = "", onClear }) {
+	function LocalShelf({ onOpened, onImport, query = "", onClear, storageLabels = () => [] }) {
 		const { recents, openRecent, removeRecent, loading, error } = useReader();
 		const [opening, setOpening] = (0, import_react.useState)(null);
 		const [removing, setRemoving] = (0, import_react.useState)(null);
@@ -11586,7 +11629,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				children: [
 					"TXT · Markdown · EPUB · 最大 50MB",
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("br", {}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "导入文件仅保存在本机，不会自动上传云端。" })
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "仅本机的书不会自动上传；需要换设备阅读，请在云端书库上传原文件。此处也包含云端书籍在本机的阅读记录。" })
 				]
 			}),
 			(error || failure) && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
@@ -11596,7 +11639,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			}),
 			!searching && recent && (0, import_jsx_runtime.jsx)(ContinueReadingCard, {
 				id: recent.id, name: recent.name, format: format(recent),
-				position: resumePosition(loadProgress()[recent.id], null, recent.progressPercent),
+				position: resumePosition(loadProgress()[recent.id], null, recent.progressPercent), storageLabels: storageLabels(recent),
 				disabled: loading || opening !== null, opening: opening === recent.id, onOpen: () => void open(recent)
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
@@ -11651,7 +11694,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 								className: "dnr-cloud-book-meta",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 									className: "dnr-local-book-source",
-									children: source(book)
+									children: (0, import_jsx_runtime.jsx)(ShelfStorageBadges, { labels: storageLabels(book) })
 								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", {
 									className: "dnr-cloud-book-more",
 									onToggle: (event) => positionShelfMenu(event.currentTarget),
@@ -11681,7 +11724,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 											}),
 											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("dl", {
 												className: "dnr-cloud-detail-meta",
-												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("dt", { children: "来源" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("dd", { children: source(book) })] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("dt", { children: "阅读进度" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("dd", { children: percent === null ? "进度待更新" : `已读 ${percent}%` })] })]
+												children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("dt", { children: "来源" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("dd", { children: storageLabels(book).join(" · ") })] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("dt", { children: "阅读进度" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("dd", { children: percent === null ? "进度待更新" : `已读 ${percent}%` })] })]
 											}),
 											/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 												className: "dnr-cloud-detail-actions",
@@ -11750,6 +11793,8 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	function CloudLibrary({ mode = "cloud", onOpened, onBack, navigation }) {
 		const { book, recents, loadOnlineBook, forgetCloudBook, loadFile, loading, clearError } = useReader();
 		const [books, setBooks] = (0, import_react.useState)(() => read("catalog", []));
+		const cache = useShelfCache(recents, books, mode);
+		const storageLabels = (entry, cloud = false) => shelfStorageLabels(entry, cloud, books, bindings(), cache);
 		const [queries, setQueries] = (0, import_react.useState)(() => ({ ...shelfQueries }));
 		const query = queries[mode] || "";
 		const searching = query.trim().length > 0;
@@ -11984,7 +12029,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LocalShelf, {
 							onOpened,
 							onImport: chooseLocalFile,
-							query, onClear: () => changeQuery("")
+							query, onClear: () => changeQuery(""), storageLabels
 						}),
 						book && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
 							type: "button",
@@ -12003,6 +12048,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					onScroll: rememberScroll,
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(UploadStatus, {}),
+						(0, import_jsx_runtime.jsx)("p", { className: "dnr-storage-hint", children: "已存云端的书可在其他设备登录后阅读；标有「本机可离线」的书，可在当前浏览器断网后打开。" }),
 						!cloudHosted && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
 								href: SITE_URL,
@@ -12027,7 +12073,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 							children: deleteNotice
 						}),
 						!searching && recentBook && (0, import_jsx_runtime.jsx)(ContinueReadingCard, {
-							id: recentBook.id, name: recentBook.name, format: bookFormat(recentBook),
+							id: recentBook.id, name: recentBook.name, format: bookFormat(recentBook), storageLabels: storageLabels(recentBook, true),
 							position: (() => {
 								const recent = recents.filter((item) => item.id === `cloud-${recentBook.id}` || linked[item.id] === recentBook.id).sort((a, b) => b.openedAt - a.openedAt)[0];
 								return resumePosition(loadProgress()[recent?.id || `cloud-${recentBook.id}`], { chapterIndex: recentBook.chapter_index, updatedAt: recentBook.progress_updated_at }, recent?.progressPercent);
@@ -12077,7 +12123,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 									onClick: () => void openBook(entry),
 									"aria-label": `${openingId === entry.id ? "正在打开" : "打开阅读"} ${displayBookName(entry.name)}`,
 									title: displayBookName(entry.name),
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(BookCover, { entry }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: displayBookName(entry.name) })]
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(BookCover, { entry }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: displayBookName(entry.name) }), (0, import_jsx_runtime.jsx)(ShelfStorageBadges, { labels: storageLabels(entry, true) })]
 								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 									className: "dnr-cloud-book-meta",
 									children: [(0, import_jsx_runtime.jsx)("span", { className: "dnr-shelf-reading-label", children: readingLabel(entry) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", {
@@ -12368,7 +12414,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 						type: "button",
 						"aria-pressed": tab === "local",
 						onClick: () => setTab("local"),
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "file" }), "本机与导入"]
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { name: "file" }), "本机书架"]
 					})]
 				})
 			})

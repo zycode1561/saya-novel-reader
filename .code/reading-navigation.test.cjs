@@ -5,6 +5,7 @@ const ts = require('typescript');
 const source = fs.readFileSync('public/reader/reader.js', 'utf8');
 const jsx = (type, props) => ({ type, props });
 const context = vm.createContext({ import_jsx_runtime: { jsx, jsxs: jsx }, ShelfBookCover: 'Cover', Icon: 'Icon', displayBookName: s => s });
+vm.runInContext(source.slice(source.indexOf('\tfunction ShelfStorageBadges('), source.indexOf('\tfunction useShelfCache(')), context);
 vm.runInContext(source.slice(source.indexOf('\tfunction resumePosition('), source.indexOf('\tfunction positionShelfMenu(')), context);
 const position = context.resumePosition;
 assert.equal(position(null, null), '打开后恢复上次阅读位置');
