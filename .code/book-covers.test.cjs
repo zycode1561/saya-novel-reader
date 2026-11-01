@@ -22,7 +22,19 @@ const compiled=ts.transpileModule(route,{compilerOptions:{module:ts.ModuleKind.C
 let exists=true,stored=null;
 const lib={guard:req=>req.method==='PUT'&&req.headers.get('x-reader-request')!=='1'?new Response(null,{status:403}):null,validId:id=>/^[a-f0-9]{64}$/.test(id),json:(v,status=200)=>Response.json(v,{status}),db:()=>({prepare:()=>({bind:()=>({first:async()=>exists?{id:'a'}:null})})}),bucket:()=>({get:async()=>stored?{body:stored}:null,put:async(_,data)=>{stored=data}}),limitedBytes:async(req,max)=>{const b=new Uint8Array(await req.arrayBuffer());if(b.length>max)throw Error();return b}};
 const routeExports={};new Function('require','exports',compiled)(()=>lib,routeExports);
+vm.runInContext(source.slice(source.indexOf('\tasync function epubCoverThumbnail('),source.indexOf('\tasync function publishBookCover(')),ctx);
 (async()=>{
+ let decoded=0,closed=0,canvasSize;
+ ctx.Blob=Blob;ctx.normalizeArchivePath=path=>path;
+ ctx.unzipSync=(_,options)=>options.filter({name:explicit.path,originalSize:100})?{[explicit.path]:new Uint8Array([1,2,3])}:{};
+ ctx.createImageBitmap=async()=>{decoded++;return{width:240,height:360,close(){closed++}}};
+ ctx.document={createElement:()=>({getContext:()=>({fillRect(){},drawImage(){}}),toBlob(callback,type){canvasSize=type;callback(new Blob(['thumbnail'],{type}))}})};
+ const thumbnail=await ctx.epubCoverThumbnail(new ArrayBuffer(0),{},new Map([['c',explicit]]));
+ assert.equal(thumbnail.type,'image/jpeg');assert.equal(decoded,1);assert.equal(closed,1);assert.equal(canvasSize,'image/jpeg');
+ ctx.unzipSync=(_,options)=>{assert.equal(options.filter({name:explicit.path,originalSize:6*1024*1024}),false);assert.equal(options.filter({name:'other.jpg',originalSize:100}),false);return{}};
+ assert.equal(await ctx.epubCoverThumbnail(new ArrayBuffer(0),{},new Map([['c',explicit]])),null);
+ ctx.unzipSync=()=>{throw Error('broken zip')};assert.equal(await ctx.epubCoverThumbnail(new ArrayBuffer(0),{},new Map([['c',explicit]])),null);
+
  const id='a'.repeat(64),context={params:Promise.resolve({id})},url='https://example.com/api/cloud/books/'+id+'/cover';
  const put=(body,type='image/jpeg',auth=true)=>routeExports.PUT(new Request(url,{method:'PUT',headers:{'content-type':type,...auth?{'x-reader-request':'1'}:{}},body}),context);
  assert.equal((await put(new Uint8Array([255,216,255,217]))).status,200);
