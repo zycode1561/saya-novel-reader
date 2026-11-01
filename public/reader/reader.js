@@ -8801,6 +8801,37 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			paragraphs
 		};
 	}
+	function findEpubCover(packageDocument, manifest) {
+		const items = [...manifest.values()];
+		const meta = allElements(packageDocument, "meta").find((item) => item.getAttribute("name") === "cover");
+		const declared = items.find((item) => item.properties.has("cover-image")) || manifest.get(meta?.getAttribute("content"));
+		const candidate = declared || items.find((item) => /(?:^|[/_-])cover(?:[._-]|$)/i.test(item.path) && /^image\//.test(item.mediaType));
+		return candidate && ["image/jpeg", "image/png", "image/webp"].includes(candidate.mediaType) ? candidate : null;
+	}
+	async function epubCoverThumbnail(buffer, packageDocument, manifest) {
+		let image;
+		try {
+			const item = findEpubCover(packageDocument, manifest);
+			if (!item || typeof createImageBitmap !== "function") return null;
+			const files = unzipSync(new Uint8Array(buffer), { filter: (entry) => normalizeArchivePath(entry.name) === item.path && entry.originalSize <= 5 * 1024 * 1024 });
+			const bytes = Object.entries(files).find(([path]) => normalizeArchivePath(path) === item.path)?.[1];
+			if (!bytes) return null;
+			image = await createImageBitmap(new Blob([bytes], { type: item.mediaType }), { resizeWidth: 240, resizeQuality: "high" });
+			const scale = Math.min(1, 480 / image.height);
+			const canvas = document.createElement("canvas");
+			canvas.width = Math.max(1, Math.round(image.width * scale)); canvas.height = Math.max(1, Math.round(image.height * scale));
+			const context = canvas.getContext("2d"); if (!context) return null;
+			context.fillStyle = "#fff"; context.fillRect(0, 0, canvas.width, canvas.height); context.drawImage(image, 0, 0, canvas.width, canvas.height);
+			const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", .82));
+			return blob && blob.type === "image/jpeg" && blob.size <= 256 * 1024 ? blob : null;
+		} catch { return null; } finally { image?.close(); }
+	}
+	async function publishBookCover(localId, cloudId, signal) {
+		const cover = await original(`cover:${localId}`);
+		if (!cover) return;
+		await original(`cover:cloud-${cloudId}`, cover).catch(() => {});
+		if (cloudHosted) await api(`/books/${cloudId}/cover`, { method: "PUT", headers: { "content-type": "image/jpeg" }, body: cover, signal });
+	}
 	async function parseEpubBuffer(buffer) {
 		let rawArchive;
 		try {
@@ -8811,7 +8842,8 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		}
 		const archive = indexArchive(rawArchive);
 		const packagePath = findPackagePath(archive);
-		const packageInfo = parsePackage(parseMarkup(decodeMarkup(requireArchiveEntry(archive, packagePath, "OPF package")), "application/xml", packagePath), packagePath);
+		const packageDocument = parseMarkup(decodeMarkup(requireArchiveEntry(archive, packagePath, "OPF package")), "application/xml", packagePath);
+		const packageInfo = parsePackage(packageDocument, packagePath);
 		const warnings = [...packageInfo.warnings];
 		const encryptedPaths = parseEncryptedPaths(archive, warnings);
 		const encryptedContent = packageInfo.spine.find((item) => encryptedPaths.has(item.path));
@@ -8860,6 +8892,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		const parsed = assembleBook(documents, navigation, warnings);
 		return {
 			title: packageInfo.title,
+			cover: await epubCoverThumbnail(buffer, packageDocument, packageInfo.manifest),
 			parsed,
 			warnings
 		};
@@ -9049,6 +9082,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					book: {
 						id: id$2,
 						name: epub.title ?? file.name.replace(/\.epub$/i, ""),
+						cover: epub.cover,
 						format: format$1,
 						encoding: "utf-8",
 						size: file.size,
@@ -9553,6 +9587,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		});
 	}
 	async function saveBook(book) {
+		if (book.cover) await original(`cover:${book.id}`, book.cover).catch(() => {});
 		const key = await transaction("readwrite", (store) => store.put(book));
 		saveHostBook(book);
 		return key;
@@ -10177,6 +10212,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			setRecents((current) => current.filter((item) => item.id !== id$1));
 			try {
 				await deleteBook(id$1);
+				await removeOriginal(`cover:${id$1}`).catch(() => {});
 			} catch {}
 		}, []);
 		const forgetCloudBook = (0, import_react.useCallback)(async (cloudId) => {
@@ -10205,7 +10241,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				return next;
 			});
 			setBookmarks((current) => current.filter((item) => item.bookId !== cachedId));
-			await Promise.allSettled([deleteBook(cachedId), removeOriginal(cachedId)]);
+			await Promise.allSettled([deleteBook(cachedId), removeOriginal(cachedId), removeOriginal(`cover:${cachedId}`)]);
 		}, [book, setProgressByBook]);
 		const updateSettings = (0, import_react.useCallback)((patch) => {
 			setSettings((current) => ({
@@ -11032,7 +11068,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		}
 	}
 	const dependencies = {
-		prepare: async (file) => (await loadBookFromFile(file)).book,
+		prepare: async (file) => { const book = (await loadBookFromFile(file)).book; if (book.cover) await original(`cover:${book.id}`, book.cover).catch(() => {}); return book; },
 		hash: async (file) => Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", await file.arrayBuffer())), (byte) => byte.toString(16).padStart(2, "0")).join(""),
 		transfer: uploadBookRequest,
 		finalize: async (file, saved, localId) => {
@@ -11047,6 +11083,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			} catch {
 				warnings.push("本机离线副本未保存，可稍后打开书籍重新缓存");
 			}
+			try { await bounded((signal) => publishBookCover(localId, saved.id, signal), 5000); } catch { warnings.push("封面暂未同步，书籍已保存"); }
 			const position = loadProgress()[localId];
 			if (position) try {
 				await bounded(async (signal) => {
@@ -11437,13 +11474,39 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	function displayBookName(name) {
 		return name.replace(/--book-[a-z0-9]+$/i, "").trim() || name;
 	}
+	function shelfCoverDesign(id, name) {
+		const hash = hashText(`${id.replace(/^cloud-/, "")}:${displayBookName(name)}`);
+		const value = parseInt(hash, 36);
+		return { tone: value % 6, motif: Math.floor(value / 6) % 3 };
+	}
 	function ShelfBookCover({ id: id$1, name, format: format$1 }) {
-		const tone = [...id$1.replace(/^cloud-/, "")].reduce((sum, char) => sum + char.charCodeAt(0), 0) % 3;
-		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-			className: "dnr-cloud-cover",
-			"data-tone": tone,
-			"aria-hidden": "true",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", { children: displayBookName(name) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: format$1 })]
+		const design = shelfCoverDesign(id$1, name);
+		const [image, setImage] = (0, import_react.useState)(null);
+		(0, import_react.useEffect)(() => {
+			let active = true, objectUrl;
+			setImage(null);
+			if (String(format$1).toLowerCase() !== "epub") return;
+			const cloudId = /^[a-f0-9]{64}$/.test(id$1) ? id$1 : id$1.startsWith("cloud-") ? id$1.slice(6) : bindings()[id$1];
+			const cacheId = /^[a-f0-9]{64}$/.test(id$1) ? `cloud-${id$1}` : id$1;
+			const controller = new AbortController();
+			(async () => {
+				let blob = await original(`cover:${cacheId}`).catch(() => null);
+				if (!blob && cloudHosted && cloudId) {
+					const response = await fetch(`/api/cloud/books/${cloudId}/cover`, { signal: controller.signal });
+					if (response.ok && response.headers.get("content-type") === "image/jpeg") {
+						blob = await response.blob();
+						await original(`cover:${cacheId}`, blob).catch(() => {});
+					}
+				}
+				if (active && blob) { objectUrl = URL.createObjectURL(blob); setImage(objectUrl); }
+			})().catch(() => {});
+			return () => { active = false; controller.abort(); if (objectUrl) URL.revokeObjectURL(objectUrl); };
+		}, [id$1, format$1]);
+		return (0, import_jsx_runtime.jsxs)("span", {
+			className: `dnr-cloud-cover${image ? " has-image" : ""}`, "data-tone": design.tone, "data-motif": design.motif, "data-monogram": displayBookName(name).slice(0, 1), "aria-hidden": "true",
+			children: image ? (0, import_jsx_runtime.jsx)("img", { src: image, alt: "", loading: "lazy", decoding: "async", onError: () => setImage(null) }) : [
+				(0, import_jsx_runtime.jsx)("strong", { children: displayBookName(name) }),
+				(0, import_jsx_runtime.jsx)("small", { children: format$1 })]
 		});
 	}
 	function resumePosition(local, remote, percent) {
@@ -11521,6 +11584,12 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	}
 	const shelfQueries = { cloud: "", local: "" };
 	// Storage badges describe this browser's actual files, never just reading history.
+	function ShelfLayoutSwitch({ value, onChange }) {
+		return (0, import_jsx_runtime.jsxs)("div", { className: "dnr-shelf-view", role: "group", "aria-label": "书架显示方式", children: [
+			(0, import_jsx_runtime.jsx)("span", { children: "显示方式" }),
+			...[["grid", "封面"], ["list", "列表"]].map(([mode, label]) => (0, import_jsx_runtime.jsx)("button", { type: "button", "aria-pressed": value === mode, onClick: () => onChange(mode), children: label }, mode))
+		] });
+	}
 	function shelfStorageLabels(book, cloud, catalog, linked, cache) {
 		const online = Boolean(book.onlineReading || book.format === "online");
 		const cloudId = cloud ? book.id : linked[book.id] || (book.id.startsWith("cloud-") ? book.id.slice(6) : null);
@@ -11794,6 +11863,8 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		const { book, recents, loadOnlineBook, forgetCloudBook, loadFile, loading, clearError } = useReader();
 		const [books, setBooks] = (0, import_react.useState)(() => read("catalog", []));
 		const cache = useShelfCache(recents, books, mode);
+		const [shelfLayout, setShelfLayout] = (0, import_react.useState)(() => read("shelf-layout", "grid") === "list" ? "list" : "grid");
+		const changeLayout = (value) => { setShelfLayout(value); try { write("shelf-layout", value); } catch {} };
 		const storageLabels = (entry, cloud = false) => shelfStorageLabels(entry, cloud, books, bindings(), cache);
 		const [queries, setQueries] = (0, import_react.useState)(() => ({ ...shelfQueries }));
 		const query = queries[mode] || "";
@@ -11919,6 +11990,10 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				await original(id$1, file);
 			}
 			const result = await loadBookFromFile(file);
+			if (result.book.cover) {
+				await original(`cover:${id$1}`, result.book.cover).catch(() => {});
+				bounded((signal) => publishBookCover(id$1, entry.id, signal), 5000).catch(() => {});
+			}
 			bind(id$1, entry.id);
 			await loadOnlineBook({
 				...result.book,
@@ -11963,6 +12038,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 			ref: library,
 			className: "dnr-cloud-library",
+			"data-shelf-layout": shelfLayout,
 			"aria-label": mode === "cloud" ? "云端书架" : "本机书架",
 			onClickCapture: (event) => {
 				if (event.target instanceof Element && event.target.closest(".dnr-library-tabs")) rememberScroll();
@@ -12026,6 +12102,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					onScroll: rememberScroll,
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(UploadStatus, {}),
+						(0, import_jsx_runtime.jsx)(ShelfLayoutSwitch, { value: shelfLayout, onChange: changeLayout }),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LocalShelf, {
 							onOpened,
 							onImport: chooseLocalFile,
@@ -12048,6 +12125,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 					onScroll: rememberScroll,
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(UploadStatus, {}),
+						(0, import_jsx_runtime.jsx)(ShelfLayoutSwitch, { value: shelfLayout, onChange: changeLayout }),
 						(0, import_jsx_runtime.jsx)("p", { className: "dnr-storage-hint", children: "已存云端的书可在其他设备登录后阅读；标有「本机可离线」的书，可在当前浏览器断网后打开。" }),
 						!cloudHosted && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {

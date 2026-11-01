@@ -21,6 +21,7 @@ export async function DELETE(request: Request, context: { params: Promise<{id:st
     } finally {
       if (backup && !backup.bodyUsed) await backup.body.cancel().catch(() => {});
     }
+    await bucket().delete(`covers/${id}`).catch(() => {});
     return json({deleted:true});
   } catch { return json({error:'删除失败，请稍后重试。'},503); }
 }

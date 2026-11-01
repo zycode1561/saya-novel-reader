@@ -1,4 +1,4 @@
-const CACHE = 'saya-reader-v32-storage-status';
+const CACHE = 'saya-reader-v33-book-covers';
 const ASSETS = ['/reader/index.html','/reader/reader.js','/reader/reader-ui.css'];
 self.addEventListener('install', event => { event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', event => { event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith('saya-reader-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
