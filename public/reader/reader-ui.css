@@ -348,8 +348,6 @@
 .dnr-cloud-cover.has-image { padding:0; background:var(--dnr-surface); }
 .dnr-cloud-cover.has-image::before { display:none; }
 .dnr-cloud-cover img { display:block; width:100%; height:100%; object-fit:contain; }
-.dnr-cloud-books .dnr-cloud-book-open:has(.dnr-cloud-cover:not(.has-image)) > h3 { display:none; }
-.dnr-cloud-books .dnr-cloud-book-open:has(.dnr-cloud-cover:not(.has-image)) > .dnr-storage-badges { margin-top:12px; }
 .dnr-shelf-view { display:flex; align-items:center; gap:4px; margin:0 0 18px; }
 .dnr-shelf-view > span { margin-right:auto; color:var(--dnr-muted); font-size:12px; }
 .dnr-shelf-view button { min-height:44px; min-width:52px; padding:0 12px; border:1px solid transparent; border-radius:10px; color:var(--dnr-muted); background:transparent; font-size:12px; }
@@ -365,8 +363,18 @@
 .dnr-cloud-library[data-shelf-layout="list"] .dnr-local-progress { margin-left:68px; }
 .dnr-cloud-library[data-shelf-layout="list"] .dnr-cloud-book-open > .dnr-cloud-cover:not(.has-image) > :is(strong,small) { display:none; }
 .dnr-cloud-library[data-shelf-layout="list"] .dnr-cloud-book-open > .dnr-cloud-cover:not(.has-image)::after { content:attr(data-monogram); inset:0; width:auto; height:auto; display:grid; place-items:center; border:0; border-radius:0; box-shadow:none; transform:none; opacity:.75; font-size:24px; font-weight:500; }
-/* Keep metadata beside the miniature rather than below its full height. */
+/* Keep the miniature in normal grid flow, including while pressing the button. */
 .dnr-cloud-library[data-shelf-layout="list"] .dnr-cloud-book { min-height:112px; box-sizing:border-box; }
-.dnr-cloud-library[data-shelf-layout="list"] .dnr-cloud-book-open { display:block; width:calc(100% - 68px); margin-left:68px; }
-.dnr-cloud-library[data-shelf-layout="list"] .dnr-cloud-book-open > .dnr-cloud-cover { position:absolute; left:0; top:16px; }
 .dnr-cloud-library[data-shelf-layout="list"] .dnr-cloud-book-open > .dnr-cloud-cover.has-image { padding:0; }
+
+/* Titles are always visible, before and after an image loads or fails. */
+.dnr-cloud-books .dnr-cloud-book-open > h3 { display:block; height:auto; min-height:3.1em; -webkit-line-clamp:unset; overflow:visible; white-space:normal; overflow-wrap:anywhere; }
+.dnr-cloud-library[data-shelf-layout="list"] .dnr-cloud-book-open > h3 { min-height:0; }
+/* Large book targets give press feedback without moving their contents. */
+.dnr-shell .dnr-cloud-library .dnr-cloud-book-open,
+.dnr-shell .dnr-cloud-library .dnr-resume-card { transform:none; transition:opacity 120ms ease, background-color 160ms ease; }
+.dnr-shell .dnr-cloud-library .dnr-cloud-book-open:active:not(:disabled),
+.dnr-shell .dnr-cloud-library .dnr-resume-card:active:not(:disabled) { transform:none; opacity:.76; }
+@media (hover:none), (pointer:coarse) {
+  .dnr-cloud-book-open:hover .dnr-cloud-cover { transform:none; }
+}
