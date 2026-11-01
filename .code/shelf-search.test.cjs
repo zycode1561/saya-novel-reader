@@ -77,3 +77,12 @@ assert.equal(cssValue('.dnr-cloud-library > .dnr-shelf-content','overflow'),'vis
 assert.equal(cssValue('.dnr-cloud-library > .dnr-shelf-search','position'),'sticky');
 assert.equal(cssValue('.dnr-cloud-library > .dnr-shelf-search','top'),'0');
 console.log('PASS: scrolling toolbar placement, one shelf scrollport, per-tab restoration, filtering at the search row and sticky-search styles.');
+
+// A sticky search mask must not paint over the preceding tabs before it sticks.
+const shadow=cssValue('.dnr-cloud-library > .dnr-shelf-search','box-shadow');
+const mask=shadow.split(',')[0].trim().split(/\s+/).slice(0,4).map(parseFloat);
+assert.ok(mask.every(Number.isFinite),'search mask uses measurable offsets');
+const upperReach=Math.max(0, -mask[1]+mask[3]);
+const tabGap=parseFloat(cssValue('.dnr-cloud-library > .dnr-library-tabs','margin-bottom'));
+assert.ok(upperReach<tabGap,`search mask reaches ${upperReach}px into the ${tabGap}px tab gap`);
+console.log('PASS: search background leaves the full tab control visible before sticking.');
