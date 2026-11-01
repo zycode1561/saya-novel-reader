@@ -61,14 +61,14 @@ async function flush() { await Promise.resolve(); await Promise.resolve(); }
   for (const triggerTop of [250, 424, 590]) {
     const menu = { style: {}, getBoundingClientRect() { return { width: 260, height: Math.min(266, Number.parseFloat(this.style.maxHeight) || 266) }; } };
     const trigger = { left: 137, right: 181, top: triggerTop, bottom: triggerTop + 44, width: 44 };
-    const shelf = { clientHeight: 428, clientWidth: 346, getBoundingClientRect: () => ({ left: 22, top: 232 }) };
-    const details = { open: true, closest: selector => selector === '.dnr-shelf-content' ? shelf : { querySelectorAll: () => [] }, querySelector: selector => selector === 'summary' ? { getBoundingClientRect: () => trigger } : menu, getBoundingClientRect: () => trigger };
+    const shelf = { clientHeight: 428, clientWidth: 346, getBoundingClientRect: () => ({ left: 22, top: 232 }), querySelector: () => ({ getBoundingClientRect: () => ({ bottom: 276 }) }) };
+    const details = { open: true, closest: selector => selector === '.dnr-cloud-library' ? shelf : { querySelectorAll: () => [] }, querySelector: selector => selector === 'summary' ? { getBoundingClientRect: () => trigger } : menu, getBoundingClientRect: () => trigger };
     const context = vm.createContext({ getComputedStyle: () => ({ paddingRight: '0' }), animateReaderSurface() {}, readerClosingMenus: new WeakMap() });
     vm.runInContext(positionCode + '\nthis.positionShelfMenu = positionShelfMenu;', context);
     context.positionShelfMenu(details);
     const top = trigger.top + Number.parseFloat(menu.style.top), bottom = top + menu.getBoundingClientRect().height;
     assert.ok(bottom <= trigger.top || top >= trigger.bottom, 'menu must never cover the summary trigger');
-    assert.ok(top >= 240 && bottom <= 652, 'menu must stay inside the shelf');
+    assert.ok(top >= 276 && bottom <= 652, 'menu must stay below the sticky search and inside the shelf');
   }
   console.log('PASS: visible exit, interruption, rapid reopen, keyboard, reduced motion, browser fallback and menu collision.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

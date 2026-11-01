@@ -11547,9 +11547,11 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			if (other !== details) closeShelfMenu(other, false);
 		});
 		const menu = details.querySelector(".dnr-cloud-book-menu");
-		const viewport = details.closest(".dnr-shelf-content");
+		const viewport = details.closest(".dnr-cloud-library");
 		if (!menu || !viewport) return;
-		const shelf = viewport.getBoundingClientRect();
+		const viewportBounds = viewport.getBoundingClientRect();
+		const searchBottom = viewport.querySelector?.(".dnr-shelf-search")?.getBoundingClientRect().bottom ?? viewportBounds.top;
+		const shelf = { left: viewportBounds.left, top: Math.max(viewportBounds.top, searchBottom) };
 		const trigger = details.querySelector("summary").getBoundingClientRect(), width = menu.getBoundingClientRect().width;
 		const anchor = details.getBoundingClientRect();
 		const right = shelf.left + viewport.clientWidth - Number.parseFloat(getComputedStyle(viewport).paddingRight || "0");
@@ -11557,10 +11559,10 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		menu.style.left = `${left - anchor.left}px`;
 		menu.style.right = "auto";
 		// Keep the menu inside the shelf without covering its trigger on short screens.
-		menu.style.maxHeight = `${Math.max(0, viewport.clientHeight - 16)}px`;
+		menu.style.maxHeight = `${Math.max(0, viewport.clientHeight - (shelf.top - viewportBounds.top) - 16)}px`;
 		const naturalHeight = menu.getBoundingClientRect().height;
 		const above = Math.max(0, trigger.top - shelf.top - 16);
-		const below = Math.max(0, shelf.top + viewport.clientHeight - trigger.bottom - 16);
+		const below = Math.max(0, viewportBounds.top + viewport.clientHeight - trigger.bottom - 16);
 		const placeAbove = above >= naturalHeight || above >= below;
 		menu.style.maxHeight = `${placeAbove ? above : below}px`;
 		const height = menu.getBoundingClientRect().height;
@@ -11859,7 +11861,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			format: bookFormat(entry)
 		});
 	}
-	function CloudLibrary({ mode = "cloud", onOpened, onBack, navigation }) {
+	function CloudLibrary({ mode = "cloud", onOpened, onBack, navigation, toolbar }) {
 		const { book, recents, loadOnlineBook, forgetCloudBook, loadFile, loading, clearError } = useReader();
 		const [books, setBooks] = (0, import_react.useState)(() => read("catalog", []));
 		const cache = useShelfCache(recents, books, mode);
@@ -11873,7 +11875,11 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		const changeQuery = (value) => {
 			shelfQueries[mode] = value;
 			setQueries((current) => ({ ...current, [mode]: value }));
-			if (content.current) content.current.scrollTop = 0;
+			if (library.current) {
+				const tabs = library.current.querySelector(".dnr-library-tabs");
+				const searchTop = tabs ? tabs.offsetTop + tabs.offsetHeight + (parseFloat(getComputedStyle(tabs).marginBottom) || 0) : 0;
+				library.current.scrollTop = Math.min(library.current.scrollTop, searchTop);
+			}
 		};
 		const [message, setMessage] = (0, import_react.useState)("");
 		const [openingId, setOpeningId] = (0, import_react.useState)(null);
@@ -11899,10 +11905,10 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		(0, import_react.useLayoutEffect)(() => {
 			if (activeMode.current !== mode) animateReaderSurface(content.current);
 			activeMode.current = mode;
-			if (content.current) content.current.scrollTop = offsets.current[mode];
+			if (library.current) library.current.scrollTop = offsets.current[mode];
 		}, [mode]);
 		const rememberScroll = () => {
-			if (content.current) offsets.current[activeMode.current] = content.current.scrollTop;
+			if (library.current) offsets.current[activeMode.current] = library.current.scrollTop;
 		};
 		const chooseLocalFile = () => {
 			clearError();
@@ -12039,11 +12045,13 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 			ref: library,
 			className: "dnr-cloud-library",
 			"data-shelf-layout": shelfLayout,
+			onScroll: rememberScroll,
 			"aria-label": mode === "cloud" ? "云端书架" : "本机书架",
 			onClickCapture: (event) => {
 				if (event.target instanceof Element && event.target.closest(".dnr-library-tabs")) rememberScroll();
 			},
 			children: [
+				toolbar && (0, import_jsx_runtime.jsx)("div", { className: "dnr-shelf-toolbar", children: toolbar }),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", {
 					className: "dnr-cloud-heading",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", { children: "沙耶的书房" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", { children: [mode === "cloud" ? `${books.length} 本藏书` : `${recents.length} 本记录`, " · 随时接着读"] })] }), mode === "cloud" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
@@ -12099,7 +12107,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				mode === "local" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					ref: content,
 					className: "dnr-shelf-content",
-					onScroll: rememberScroll,
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(UploadStatus, {}),
 						(0, import_jsx_runtime.jsx)(ShelfLayoutSwitch, { value: shelfLayout, onChange: changeLayout }),
@@ -12122,7 +12129,6 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 				}, "local") : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					ref: content,
 					className: "dnr-shelf-content",
-					onScroll: rememberScroll,
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(UploadStatus, {}),
 						(0, import_jsx_runtime.jsx)(ShelfLayoutSwitch, { value: shelfLayout, onChange: changeLayout }),
@@ -12472,12 +12478,12 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 	}
 //#endregion
 //#region src/client/components/LibraryPanel.tsx
-	function LibraryPanel({ onOpened, onBack }) {
+	function LibraryPanel({ onOpened, onBack, toolbar }) {
 		const [tab, setTab] = (0, import_react.useState)(cloudHosted ? "cloud" : "local");
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("section", {
 			className: "dnr-library-panel",
 			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CloudLibrary, {
-				mode: tab,
+				mode: tab, toolbar,
 				onBack,
 				onOpened,
 				navigation: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", {
@@ -17235,16 +17241,8 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 		const showReader = book !== null && view === "reader";
 		const readingContext = book !== null && ["reader", "toc", "search", "settings"].includes(view);
 		const toolsVisible = view !== "reader" || settings.keepNavigationVisible || panel.toolsVisible;
-		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
-			className: `dnr-shell dnr-theme-${settings.theme} ${toolsVisible ? "" : "is-immersive"} ${settings.keepNavigationVisible ? "is-navigation-pinned" : ""} ${showReader ? "" : "is-panel-view"}`,
-			ref: presentationRoot,
-			"data-reading-context": readingContext ? "true" : "false",
-			onPointerDownCapture: (event) => { readerPointerMotion = true; event.currentTarget.dataset.motionInput = "pointer"; },
-			onKeyDownCapture: (event) => { readerPointerMotion = false; event.currentTarget.dataset.motionInput = "keyboard"; },
-			"data-color-scheme": colorScheme,
-			"aria-label": "Codex 小说阅读器",
-			children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		const showLibrary = view === "library" || book === null && view === "reader";
+		const topDock = (0, import_jsx_runtime.jsx)("div", {
 					className: "dnr-top-dock",
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "dnr-top-controls",
@@ -17333,7 +17331,17 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { ref: setToolbarTarget })
 						]
 					})
-				}),
+				});
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
+			className: `dnr-shell dnr-theme-${settings.theme} ${toolsVisible ? "" : "is-immersive"} ${settings.keepNavigationVisible ? "is-navigation-pinned" : ""} ${showReader ? "" : "is-panel-view"}`,
+			ref: presentationRoot,
+			"data-reading-context": readingContext ? "true" : "false",
+			onPointerDownCapture: (event) => { readerPointerMotion = true; event.currentTarget.dataset.motionInput = "pointer"; },
+			onKeyDownCapture: (event) => { readerPointerMotion = false; event.currentTarget.dataset.motionInput = "keyboard"; },
+			"data-color-scheme": colorScheme,
+			"aria-label": "Codex 小说阅读器",
+			children: [
+				/* @__PURE__ */ (!showLibrary && topDock),
 				(view === "reader" && notices.length > 0 || hostNotice !== null) && book !== null && view !== "fanqie" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "dnr-notice-strip",
 					onClick: () => setHostNotice(null),
@@ -17357,7 +17365,8 @@ var import_react_dom = /* @__PURE__ */ __toESM(require_react_dom());
 					className: "dnr-main",
 					children: [
 
-						(view === "library" || book === null && view === "reader") && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LibraryPanel, {
+						showLibrary && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(LibraryPanel, {
+							toolbar: topDock,
 							onBack: () => setView("reader"),
 							onOpened: () => setView("reader")
 						}),

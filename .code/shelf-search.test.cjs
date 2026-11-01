@@ -47,3 +47,33 @@ let changed;tree=nodes(ctx.ShelfSearch({query:'关键字',mode:'cloud',onChange:
 tree.find(n=>n.type==='button').props.onClick();assert.equal(changed,'');
 let stopped=false;tree.find(n=>n.type==='input').props.onKeyDown({key:'Escape',stopPropagation(){stopped=true;}});assert.equal(stopped,true);
 console.log('PASS: title/file/multiword/Unicode filtering, literal queries, progress freshness, rendered cloud/local results, empty state and clearing.');
+
+// Shelf header and results share one scrollport; each tab retains its own offset.
+let refIndex=0,layoutEffects=[];const refs=[];
+ctx.import_react.useRef=value=>refs[refIndex++]??(refs[refIndex-1]={current:value});
+ctx.import_react.useLayoutEffect=callback=>layoutEffects.push(callback);
+ctx.animateReaderSurface=()=>{};
+ctx.getComputedStyle=()=>({marginBottom:'12px'});
+const tabs={offsetTop:110,offsetHeight:38};
+const viewport={scrollTop:0,querySelector:selector=>selector==='.dnr-library-tabs'?tabs:null};
+const toolbar={type:'toolbar-marker',props:{}};
+function renderShelf(mode){refIndex=0;layoutEffects=[];const root=ctx.CloudLibrary({mode,toolbar});root.props.ref.current=viewport;for(const effect of layoutEffects)effect();return root;}
+let root=renderShelf('cloud');
+assert.equal(root.props.children[0].props.className,'dnr-shelf-toolbar');
+assert.equal(root.props.children[0].props.children,toolbar);
+viewport.scrollTop=360;root.props.onScroll();
+root=renderShelf('local');assert.equal(viewport.scrollTop,0);
+viewport.scrollTop=180;root.props.onScroll();
+root=renderShelf('cloud');assert.equal(viewport.scrollTop,360);
+viewport.scrollTop=900;
+nodes(root).find(n=>n.type===ctx.ShelfSearch).props.onChange('三体');
+assert.equal(viewport.scrollTop,160,'filtering returns to the results without showing the full header');
+assert.ok(nodes(root).filter(n=>n.props.className==='dnr-shelf-content').every(n=>!n.props.onScroll));
+const css=require('postcss').parse(fs.readFileSync('public/reader/reader-ui.css','utf8'));
+function cssValue(selector,prop){let value;css.walkRules(rule=>{if(rule.selector===selector)rule.walkDecls(prop,decl=>value=decl.value)});return value;}
+assert.equal(cssValue('.dnr-cloud-library','overflow'),'auto');
+assert.equal(cssValue('.dnr-cloud-library','display'),'block');
+assert.equal(cssValue('.dnr-cloud-library > .dnr-shelf-content','overflow'),'visible');
+assert.equal(cssValue('.dnr-cloud-library > .dnr-shelf-search','position'),'sticky');
+assert.equal(cssValue('.dnr-cloud-library > .dnr-shelf-search','top'),'0');
+console.log('PASS: scrolling toolbar placement, one shelf scrollport, per-tab restoration, filtering at the search row and sticky-search styles.');

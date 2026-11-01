@@ -384,3 +384,19 @@
 .dnr-cloud-books:not(.dnr-local-books) .dnr-cloud-book-meta { justify-content:flex-end; }
 .dnr-cloud-library[data-shelf-layout="list"] .dnr-cloud-book-open > .dnr-shelf-reading-label { grid-column:2; margin:0; padding:0; }
 .dnr-cloud-library[data-shelf-layout="list"] .dnr-cloud-books:not(.dnr-local-books) .dnr-cloud-book-meta { margin-top:0; }
+
+/* The shelf owns one scrollport. Its search field is the only sticky control. */
+.dnr-cloud-library { --dnr-shelf-inline:clamp(20px,4cqw,44px); display:block; position:relative; overflow:auto; padding-top:0; overscroll-behavior:contain; scrollbar-gutter:stable; scrollbar-width:thin; scrollbar-color:var(--dnr-line) transparent; }
+.dnr-cloud-library > .dnr-shelf-toolbar { margin-inline:calc(-1 * var(--dnr-shelf-inline)); margin-bottom:32px; }
+.dnr-cloud-library > .dnr-library-tabs { width:fit-content; }
+.dnr-cloud-library > .dnr-shelf-search { position:sticky; top:0; z-index:10; background:var(--dnr-paper); box-shadow:0 -8px 0 8px var(--dnr-bg), 0 8px 0 0 var(--dnr-bg); }
+.dnr-cloud-library > .dnr-shelf-content { overflow:visible; padding-right:0; scrollbar-gutter:auto; }
+.dnr-cloud-library .dnr-shelf-toolbar .dnr-top-dock { position:relative; height:auto; flex-basis:auto; }
+.dnr-cloud-library .dnr-shelf-toolbar .dnr-top-controls { position:relative; transform:none; opacity:1; pointer-events:auto; transition:none; }
+@container (max-width:479px) {
+  .dnr-cloud-library { --dnr-shelf-inline:22px; padding-top:0; }
+  .dnr-cloud-library > .dnr-shelf-toolbar { margin-bottom:24px; }
+  .dnr-cloud-library > .dnr-library-tabs { width:100%; }
+}
+@container (max-width:359px) { .dnr-cloud-library { --dnr-shelf-inline:16px; } }
+@media (max-height:600px) { .dnr-cloud-library { padding-top:0; } .dnr-cloud-library > .dnr-shelf-toolbar { margin-bottom:18px; } }
