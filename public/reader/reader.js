@@ -13831,9 +13831,124 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 		value: "chapter-title",
 		label: "章节名称"
 	}];
+	function passcodeField(label, autoComplete, value, onChange, minLength) {
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+			className: "dnr-passcode-field",
+			children: [label, /* @__PURE__ */ (0, import_jsx_runtime.jsx)("input", {
+				type: "password",
+				autoComplete,
+				value,
+				required: true,
+				minLength,
+				maxLength: 128,
+				onChange: (event) => onChange(event.currentTarget.value)
+			})]
+		});
+	}
+	function PasscodeSettings() {
+		const [expanded, setExpanded] = (0, import_react.useState)(false);
+		const [current, setCurrent] = (0, import_react.useState)("");
+		const [next, setNext] = (0, import_react.useState)("");
+		const [confirmation, setConfirmation] = (0, import_react.useState)("");
+		const [busy, setBusy] = (0, import_react.useState)(false);
+		const [error, setError] = (0, import_react.useState)("");
+		const [done, setDone] = (0, import_react.useState)("");
+		async function submit(event) {
+			event.preventDefault();
+			setError("");
+			setDone("");
+			if (next.length < 8) {
+				setError("新口令至少 8 位。");
+				return;
+			}
+			if (next !== confirmation) {
+				setError("两次输入的新口令不一致。");
+				return;
+			}
+			if (next === current) {
+				setError("新口令不能与当前口令相同。");
+				return;
+			}
+			setBusy(true);
+			try {
+				const response = await fetch("/api/session/passcode", {
+					method: "PUT",
+					headers: {
+						"content-type": "application/json",
+						"x-reader-request": "1"
+					},
+					body: JSON.stringify({
+						currentPasscode: current,
+						newPasscode: next
+					}),
+					cache: "no-store"
+				});
+				const data = await response.json().catch(() => ({}));
+				if (!response.ok) throw new Error(data.error || `修改失败（${response.status}）`);
+				setCurrent("");
+				setNext("");
+				setConfirmation("");
+				setDone("口令已更新，其他设备需要重新登录。");
+			} catch (failure) {
+				setError(failure instanceof Error ? failure.message : "修改失败，请稍后重试。");
+			} finally {
+				setBusy(false);
+			}
+		}
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
+			className: "dnr-settings-section dnr-account",
+			"aria-label": "账号与安全",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "账号与安全" }),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+					type: "button",
+					className: "dnr-passcode-toggle",
+					"aria-expanded": expanded,
+					onClick: () => {
+						setExpanded(!expanded);
+						setError("");
+						setDone("");
+					},
+					children: expanded ? "收起修改口令" : "修改登录口令"
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "dnr-settings-hint",
+					children: "口令用于登录书库。修改后，其他设备需要重新登录。"
+				}),
+				expanded ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
+					className: "dnr-passcode-form",
+					onSubmit: submit,
+					children: [
+						passcodeField("当前口令", "current-password", current, setCurrent),
+						passcodeField("新口令", "new-password", next, setNext, 8),
+						passcodeField("确认新口令", "new-password", confirmation, setConfirmation, 8),
+						error ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "dnr-passcode-message",
+							role: "alert",
+							"data-tone": "error",
+							children: error
+						}) : null,
+						done ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "dnr-passcode-message",
+							role: "status",
+							"data-tone": "ok",
+							children: done
+						}) : null,
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "submit",
+							className: "dnr-passcode-submit",
+							disabled: busy,
+							children: busy ? "保存中…" : "保存新口令"
+						})
+					]
+				}) : null
+			]
+		});
+	}
 	function SettingsPanel({ onBack } = {}) {
 		const { settings, updateSettings } = useReader();
 		const fontSizeId = (0, import_react.useId)();
+		const accountSettings = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("account") === "1";
 		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 			className: "dnr-settings",
 			children: [
@@ -14036,6 +14151,7 @@ var import_react = /* @__PURE__ */ __toESM(require_react());
 						]
 					})]
 				}),
+				accountSettings ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PasscodeSettings, {}) : null,
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
 					className: "dnr-settings-status",
 					children: "修改即时生效，无需额外保存"

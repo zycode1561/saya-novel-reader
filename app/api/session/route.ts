@@ -1,12 +1,12 @@
 import { safeRelativeReturnPath } from "../../chatgpt-auth";
 import {
   clearLoginFailures,
+  currentSessionToken,
   loginBlocked,
+  passcodeConfigured,
   passcodeMatches,
-  readerPasscode,
   recordLoginFailure,
   sessionCookie,
-  sessionToken,
 } from "@/lib/session";
 
 const FORM_HEADERS = { "cache-control": "no-store" } as const;
@@ -35,13 +35,15 @@ export async function POST(request: Request): Promise<Response> {
   const returnTo = safeRelativeReturnPath(String(form.get("return_to") ?? "/"));
   const passcode = String(form.get("passcode") ?? "");
 
-  if (!readerPasscode()) return redirectTo("/unlock?error=unconfigured");
+  if (!(await passcodeConfigured())) {
+    return redirectTo("/unlock?error=unconfigured");
+  }
   if (await loginBlocked(request)) {
     return redirectTo(
       `/unlock?error=locked&return_to=${encodeURIComponent(returnTo)}`,
     );
   }
-  if (!passcodeMatches(passcode)) {
+  if (!(await passcodeMatches(passcode))) {
     await recordLoginFailure(request);
     return redirectTo(
       `/unlock?error=wrong&return_to=${encodeURIComponent(returnTo)}`,
@@ -49,6 +51,6 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   await clearLoginFailures(request);
-  const token = await sessionToken(readerPasscode());
+  const token = await currentSessionToken();
   return redirectTo(returnTo, sessionCookie(token, secure));
 }

@@ -27,3 +27,7 @@ export const readerLoginAttempts = sqliteTable('reader_login_attempts', {
   key: text('key').primaryKey(), count: integer('count').notNull(),
   expiresAt: integer('expires_at').notNull(),
 });
+export const readerSettings = sqliteTable('reader_settings', {
+  key: text('key').primaryKey(), value: text('value').notNull(),
+  updatedAt: integer('updated_at').notNull().default(0),
+});

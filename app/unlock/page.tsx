@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { safeRelativeReturnPath } from "../chatgpt-auth";
-import { isAuthorized, readerPasscode } from "@/lib/session";
+import { isAuthorized, passcodeConfigured } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +21,8 @@ export default async function UnlockPage({
   const requestHeaders = await headers();
 
   if (await isAuthorized(requestHeaders)) redirect(returnTo);
+
+  const configured = await passcodeConfigured();
 
   const error = firstValue(params.error);
   const message =
@@ -103,16 +105,16 @@ export default async function UnlockPage({
 
         <button
           type="submit"
-          disabled={!readerPasscode()}
+          disabled={!configured}
           style={{
             padding: "12px 16px",
             fontSize: "15px",
             fontWeight: 600,
             borderRadius: "12px",
             border: 0,
-            background: readerPasscode() ? "#0071e3" : "#c7c7cc",
+            background: configured ? "#0071e3" : "#c7c7cc",
             color: "#ffffff",
-            cursor: readerPasscode() ? "pointer" : "not-allowed",
+            cursor: configured ? "pointer" : "not-allowed",
           }}
         >
           进入书库

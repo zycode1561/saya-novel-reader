@@ -131,6 +131,16 @@
 .dnr-settings-more { margin-top: 18px; padding: 0 22px; border: 1px solid var(--dnr-line); border-radius: 16px; background: var(--dnr-paper); }
 .dnr-settings-more-body { padding-bottom: 14px; }
 .dnr-settings-hint, .dnr-settings-status { font-size: 12px; }
+.dnr-account .dnr-passcode-toggle { width: 100%; min-height: 44px; border: 1px solid var(--dnr-line); border-radius: 12px; background: var(--dnr-bg); color: var(--dnr-accent); font-size: 14px; font-weight: 600; }
+.dnr-passcode-form { display: grid; gap: 12px; margin-top: 14px; }
+.dnr-passcode-field { display: grid; gap: 6px; font-size: 13px; color: var(--dnr-muted); }
+.dnr-passcode-field input { min-height: 44px; padding: 0 12px; border: 1px solid var(--dnr-line); border-radius: 11px; background: var(--dnr-bg); color: var(--dnr-text); font-size: 15px; }
+.dnr-passcode-field input:focus-visible { outline: 2px solid var(--dnr-accent); outline-offset: 1px; }
+.dnr-passcode-submit { min-height: 44px; border: 0; border-radius: 12px; background: var(--dnr-accent); color: #fff; font-size: 14px; font-weight: 600; }
+.dnr-passcode-submit:disabled { opacity: .6; }
+.dnr-passcode-message { margin: 0; font-size: 12px; }
+.dnr-passcode-message[data-tone="error"] { color: #c41230; }
+.dnr-passcode-message[data-tone="ok"] { color: #1a7f37; }
 .dnr-sync-check, .dnr-shell[data-color-scheme="dark"] .dnr-sync-check { stroke: var(--dnr-accent); }
 .dnr-reader-article h1 { font-weight: 600; letter-spacing: -.015em; }
 .dnr-reading-status { font-variant-numeric: tabular-nums; }

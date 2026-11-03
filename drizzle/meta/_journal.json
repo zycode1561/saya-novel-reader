@@ -29,6 +29,13 @@
       "when": 1793675000000,
       "tag": "0003_reader_storage",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1793710000000,
+      "tag": "0004_reader_settings",
+      "breakpoints": true
     }
   ]
 }

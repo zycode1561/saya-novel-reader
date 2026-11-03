@@ -2,16 +2,153 @@ import { env } from 'cloudflare:workers';
 
 // Self-hosted sign-in: the reader can run on Cloudflare Workers without the
 // Sites platform's injected identity headers. A single owner passcode is
-// exchanged for an HMAC-signed, HttpOnly cookie.
+// exchanged for an HMAC-signed, HttpOnly cookie. The passcode itself is stored
+// in D1 as a salted PBKDF2 hash; the HMAC key lives in a separate row so the
+// passcode never has to be kept in plaintext.
 const COOKIE_NAME = 'saya_reader_session';
 const SESSION_MESSAGE = 'saya-reader-session-v1';
-export const SESSION_MAX_AGE = 60 * 60 * 24 * 30;
+const PBKDF2_ITERATIONS = 120_000;
+const SETTING_SALT = 'passcode_salt';
+const SETTING_HASH = 'passcode_hash';
+const SETTING_SESSION_KEY = 'session_key';
 
-const encoder = new TextEncoder();
-let cachedToken: { passcode: string; token: Promise<string> } | null = null;
+export const SESSION_MAX_AGE = 60 * 60 * 24 * 30;
 
 const LOGIN_LIMIT = 10;
 const LOGIN_WINDOW_MS = 10 * 60 * 1000;
+
+const encoder = new TextEncoder();
+let cachedToken: { key: string; token: Promise<string> } | null = null;
+
+type Config = { salt?: string; hash?: string; sessionKey?: string };
+
+export function readerPasscode(): string {
+  const value = (env as unknown as { READER_PASSCODE?: string }).READER_PASSCODE;
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+export async function readConfig(): Promise<Config> {
+  const store = env.DB;
+  if (!store) return {};
+  try {
+    const rows = await store
+      .prepare('SELECT key, value FROM reader_settings WHERE key IN (?, ?, ?)')
+      .bind(SETTING_SALT, SETTING_HASH, SETTING_SESSION_KEY)
+      .all<{ key: string; value: string }>();
+    const values = new Map((rows.results ?? []).map((row) => [row.key, row.value]));
+    return {
+      salt: values.get(SETTING_SALT),
+      hash: values.get(SETTING_HASH),
+      sessionKey: values.get(SETTING_SESSION_KEY),
+    };
+  } catch {
+    // Older databases may not have the settings table yet.
+    return {};
+  }
+}
+
+export async function passcodeConfigured(): Promise<boolean> {
+  const config = await readConfig();
+  return Boolean(config.hash && config.salt) || readerPasscode().length > 0;
+}
+
+export async function passcodeMatches(input: string): Promise<boolean> {
+  const value = input.trim();
+  if (!value) return false;
+
+  const config = await readConfig();
+  if (config.salt && config.hash) {
+    return safeEqual(await deriveHash(value, config.salt), config.hash);
+  }
+
+  const fallback = readerPasscode();
+  return fallback.length > 0 && safeEqual(value, fallback);
+}
+
+export async function currentSessionToken(): Promise<string> {
+  const config = await readConfig();
+  const key = config.sessionKey || readerPasscode();
+  if (!key) return '';
+  if (cachedToken?.key !== key) {
+    cachedToken = { key, token: signSession(key) };
+  }
+  return cachedToken.token;
+}
+
+export async function changePasscode(
+  current: string,
+  next: string,
+): Promise<boolean> {
+  if (!(await passcodeMatches(current))) return false;
+
+  const store = env.DB;
+  if (!store) return false;
+
+  const salt = randomHex(16);
+  const hash = await deriveHash(next, salt);
+  const sessionKey = randomHex(32);
+  const now = Date.now();
+
+  await store.batch([
+    upsertSetting(store, SETTING_SALT, salt),
+    upsertSetting(store, SETTING_HASH, hash),
+    upsertSetting(store, SETTING_SESSION_KEY, sessionKey),
+    store
+      .prepare('DELETE FROM reader_login_attempts WHERE key LIKE ?')
+      .bind('passcode:%'),
+  ]);
+
+  cachedToken = null;
+  return true;
+}
+
+function upsertSetting(
+  store: D1Database,
+  key: string,
+  value: string,
+): D1PreparedStatement {
+  return store
+    .prepare(
+      `INSERT INTO reader_settings (key, value, updated_at) VALUES (?, ?, ?)
+       ON CONFLICT(key) DO UPDATE SET
+         value = excluded.value,
+         updated_at = excluded.updated_at`,
+    )
+    .bind(key, value, Date.now());
+}
+
+async function deriveHash(passcode: string, salt: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(passcode),
+    'PBKDF2',
+    false,
+    ['deriveBits'],
+  );
+  const bits = await crypto.subtle.deriveBits(
+    {
+      name: 'PBKDF2',
+      salt: hexToBytes(salt),
+      iterations: PBKDF2_ITERATIONS,
+      hash: 'SHA-256',
+    },
+    key,
+    256,
+  );
+  return toHex(new Uint8Array(bits));
+}
+
+async function signSession(secret: string): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(SESSION_MESSAGE));
+  return toHex(new Uint8Array(signature));
+}
 
 function loginKey(request: Request): string {
   const ip =
@@ -73,52 +210,6 @@ export async function clearLoginFailures(request: Request): Promise<void> {
   }
 }
 
-export function readerPasscode(): string {
-  const value = (env as unknown as { READER_PASSCODE?: string }).READER_PASSCODE;
-  return typeof value === 'string' ? value.trim() : '';
-}
-
-export async function sessionToken(passcode: string): Promise<string> {
-  if (!passcode) return '';
-  if (cachedToken?.passcode !== passcode) {
-    cachedToken = { passcode, token: signSession(passcode) };
-  }
-  return cachedToken.token;
-}
-
-async function signSession(passcode: string): Promise<string> {
-  const key = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(passcode),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  );
-  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(SESSION_MESSAGE));
-  return toHex(new Uint8Array(signature));
-}
-
-export function passcodeMatches(input: string): boolean {
-  const expected = readerPasscode();
-  return expected.length > 0 && safeEqual(input.trim(), expected);
-}
-
-export async function isAuthorized(headers: Headers): Promise<boolean> {
-  const passcode = readerPasscode();
-
-  if (!passcode) {
-    // Deployed on ChatGPT Sites (or the local dev server), where the platform
-    // authenticates every request and injects the identity headers.
-    return Boolean(headers.get('oai-authenticated-user-email'));
-  }
-
-  // Self-hosted: only the signed session cookie is trusted. Request headers can
-  // be spoofed by any client, so they must not bypass the passcode.
-  const provided = readCookie(headers.get('cookie'), COOKIE_NAME);
-  if (!provided) return false;
-  return safeEqual(provided, await sessionToken(passcode));
-}
-
 export function sessionCookie(token: string, secure: boolean): string {
   return `${COOKIE_NAME}=${token}; Path=/; Max-Age=${SESSION_MAX_AGE}; HttpOnly; SameSite=Lax${secure ? '; Secure' : ''}`;
 }
@@ -136,6 +227,34 @@ function readCookie(header: string | null, name: string): string | null {
     return part.slice(index + 1).trim();
   }
   return null;
+}
+
+export async function isAuthorized(headers: Headers): Promise<boolean> {
+  const configured = await passcodeConfigured();
+
+  if (!configured) {
+    // Deployed on ChatGPT Sites (or the local dev server), where the platform
+    // authenticates every request and injects the identity headers.
+    return Boolean(headers.get('oai-authenticated-user-email'));
+  }
+
+  // Self-hosted: only the signed session cookie is trusted. Request headers can
+  // be spoofed by any client, so they must not bypass the passcode.
+  const provided = readCookie(headers.get('cookie'), COOKIE_NAME);
+  if (!provided) return false;
+  return safeEqual(provided, await currentSessionToken());
+}
+
+function randomHex(bytes: number): string {
+  return toHex(crypto.getRandomValues(new Uint8Array(bytes)));
+}
+
+function hexToBytes(value: string): Uint8Array<ArrayBuffer> {
+  const bytes = new Uint8Array(value.length / 2);
+  for (let index = 0; index < bytes.length; index += 1) {
+    bytes[index] = Number.parseInt(value.slice(index * 2, index * 2 + 2), 16);
+  }
+  return bytes;
 }
 
 function toHex(bytes: Uint8Array): string {
