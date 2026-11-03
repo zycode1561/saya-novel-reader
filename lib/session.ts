@@ -7,9 +7,12 @@ import { env } from 'cloudflare:workers';
 // passcode never has to be kept in plaintext.
 const COOKIE_NAME = 'saya_reader_session';
 const SESSION_MESSAGE = 'saya-reader-session-v1';
-const PBKDF2_ITERATIONS = 120_000;
+// Cloudflare Workers rejects PBKDF2 iteration counts above 100,000.
+const PBKDF2_ITERATIONS = 100_000;
+const PBKDF2_MAX_ITERATIONS = 100_000;
 const SETTING_SALT = 'passcode_salt';
 const SETTING_HASH = 'passcode_hash';
+const SETTING_ITERATIONS = 'passcode_iterations';
 const SETTING_SESSION_KEY = 'session_key';
 
 export const SESSION_MAX_AGE = 60 * 60 * 24 * 30;
@@ -20,7 +23,7 @@ const LOGIN_WINDOW_MS = 10 * 60 * 1000;
 const encoder = new TextEncoder();
 let cachedToken: { key: string; token: Promise<string> } | null = null;
 
-type Config = { salt?: string; hash?: string; sessionKey?: string };
+type Config = { salt?: string; hash?: string; iterations?: number; sessionKey?: string };
 
 export function readerPasscode(): string {
   const value = (env as unknown as { READER_PASSCODE?: string }).READER_PASSCODE;
@@ -32,13 +35,17 @@ export async function readConfig(): Promise<Config> {
   if (!store) return {};
   try {
     const rows = await store
-      .prepare('SELECT key, value FROM reader_settings WHERE key IN (?, ?, ?)')
-      .bind(SETTING_SALT, SETTING_HASH, SETTING_SESSION_KEY)
+      .prepare('SELECT key, value FROM reader_settings WHERE key IN (?, ?, ?, ?)')
+      .bind(SETTING_SALT, SETTING_HASH, SETTING_ITERATIONS, SETTING_SESSION_KEY)
       .all<{ key: string; value: string }>();
     const values = new Map((rows.results ?? []).map((row) => [row.key, row.value]));
+    const storedIterations = Number(values.get(SETTING_ITERATIONS));
     return {
       salt: values.get(SETTING_SALT),
       hash: values.get(SETTING_HASH),
+      iterations: Number.isSafeInteger(storedIterations) && storedIterations > 0
+        ? Math.min(storedIterations, PBKDF2_MAX_ITERATIONS)
+        : undefined,
       sessionKey: values.get(SETTING_SESSION_KEY),
     };
   } catch {
@@ -58,7 +65,10 @@ export async function passcodeMatches(input: string): Promise<boolean> {
 
   const config = await readConfig();
   if (config.salt && config.hash) {
-    return safeEqual(await deriveHash(value, config.salt), config.hash);
+    return safeEqual(
+      await deriveHash(value, config.salt, config.iterations ?? PBKDF2_ITERATIONS),
+      config.hash,
+    );
   }
 
   const fallback = readerPasscode();
@@ -85,13 +95,13 @@ export async function changePasscode(
   if (!store) return false;
 
   const salt = randomHex(16);
-  const hash = await deriveHash(next, salt);
+  const hash = await deriveHash(next, salt, PBKDF2_ITERATIONS);
   const sessionKey = randomHex(32);
-  const now = Date.now();
 
   await store.batch([
     upsertSetting(store, SETTING_SALT, salt),
     upsertSetting(store, SETTING_HASH, hash),
+    upsertSetting(store, SETTING_ITERATIONS, String(PBKDF2_ITERATIONS)),
     upsertSetting(store, SETTING_SESSION_KEY, sessionKey),
     store
       .prepare('DELETE FROM reader_login_attempts WHERE key LIKE ?')
@@ -117,7 +127,11 @@ function upsertSetting(
     .bind(key, value, Date.now());
 }
 
-async function deriveHash(passcode: string, salt: string): Promise<string> {
+async function deriveHash(
+  passcode: string,
+  salt: string,
+  iterations: number,
+): Promise<string> {
   const key = await crypto.subtle.importKey(
     'raw',
     encoder.encode(passcode),
@@ -129,7 +143,7 @@ async function deriveHash(passcode: string, salt: string): Promise<string> {
     {
       name: 'PBKDF2',
       salt: hexToBytes(salt),
-      iterations: PBKDF2_ITERATIONS,
+      iterations,
       hash: 'SHA-256',
     },
     key,

@@ -46,7 +46,14 @@ export async function PUT(request: Request): Promise<Response> {
     return json({ error: "尝试次数过多，请 10 分钟后再试" }, 429);
   }
 
-  if (!(await changePasscode(current, next))) {
+  let changed = false;
+  try {
+    changed = await changePasscode(current, next);
+  } catch (error) {
+    console.error("[passcode] change failed", error);
+    return json({ error: "修改失败，请稍后重试" }, 500);
+  }
+  if (!changed) {
     await recordLoginFailure(request);
     return json({ error: "当前口令不正确" }, 400);
   }

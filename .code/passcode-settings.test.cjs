@@ -8,6 +8,9 @@ assert.match(migration, /CREATE TABLE IF NOT EXISTS `reader_settings`/);
 
 const session = read('lib/session.ts');
 assert.match(session, /PBKDF2/);
+assert.match(session, /PBKDF2_ITERATIONS = 100_000/);
+assert.match(session, /PBKDF2_MAX_ITERATIONS = 100_000/);
+assert.match(session, /SETTING_ITERATIONS/);
 assert.match(session, /passcode_hash/);
 assert.match(session, /session_key/);
 assert.match(session, /changePasscode/);
@@ -16,6 +19,7 @@ assert.match(session, /cachedToken = null/);
 const api = read('app/api/session/passcode/route.ts');
 assert.match(api, /MIN_LENGTH = 8/);
 assert.match(api, /changePasscode\(current, next\)/);
+assert.match(api, /修改失败，请稍后重试/);
 assert.match(api, /sessionCookie\(token, secure\)/);
 assert.match(api, /当前口令不正确/);
 assert.match(api, /loginBlocked/);
