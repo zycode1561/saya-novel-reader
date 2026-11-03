@@ -1,12 +1,12 @@
 import { db, guard, json, limitedBytes, snapshot, validId } from '@/lib/cloud';
 import { validProgress } from '@/lib/progress';
 export async function GET(request: Request, context: { params: Promise<{id:string}> }) {
-  const denied = guard(request); if (denied) return denied;
+  const denied = await guard(request); if (denied) return denied;
   const {id} = await context.params; if (!validId(id)) return json({error:'无效书籍编号'},400);
   const current = await snapshot(id); return current ? json(current) : json({error:'未找到书籍'},404);
 }
 export async function PUT(request: Request, context: { params: Promise<{id:string}> }) {
-  const denied = guard(request); if (denied) return denied;
+  const denied = await guard(request); if (denied) return denied;
   const {id} = await context.params; if (!validId(id)) return json({error:'无效书籍编号'},400);
   let input;
   try { input = JSON.parse(new TextDecoder().decode(await limitedBytes(request,256*1024))); } catch { return json({error:'进度数据无效或过大'},400); }

@@ -1,0 +1,63 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-cloudflare
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_D1_DATABASE_ID: ${{ vars.CLOUDFLARE_D1_DATABASE_ID }}
+      CLOUDFLARE_WORKER_NAME: ${{ vars.CLOUDFLARE_WORKER_NAME || 'saya-novel-reader' }}
+      CLOUDFLARE_R2_DISABLED: '1'
+      READER_PASSCODE: ${{ secrets.READER_PASSCODE }}
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Check configuration
+        run: |
+          missing=0
+          for name in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID CLOUDFLARE_D1_DATABASE_ID READER_PASSCODE; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing repository setting: $name"
+              missing=1
+            fi
+          done
+          exit "$missing"
+
+      - run: npm ci
+
+      - name: Run checks
+        run: |
+          for test in .code/*.test.cjs; do
+            node "$test"
+          done
+
+      - run: npm run build
+
+      - name: Apply D1 migrations
+        run: node scripts/migrate.mjs --remote
+
+      - name: Update access passcode
+        run: printf '%s' "$READER_PASSCODE" | npx wrangler secret put READER_PASSCODE --config dist/server/wrangler.json
+
+      - name: Deploy Worker
+        run: npx wrangler deploy --config dist/server/wrangler.json

@@ -10,6 +10,16 @@ const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
 
 const { d1, r2 } = hostingConfig;
 
+// Deployment overrides; the Sites platform leaves these unset and keeps using
+// the hosting.json bindings.
+const d1DatabaseId =
+  process.env.CLOUDFLARE_D1_DATABASE_ID?.trim() ||
+  SITE_CREATOR_PLACEHOLDER_DATABASE_ID;
+const r2BucketName =
+  process.env.CLOUDFLARE_R2_BUCKET?.trim() || "site-creator-r2";
+const r2Disabled = process.env.CLOUDFLARE_R2_DISABLED === "1";
+const workerName = process.env.CLOUDFLARE_WORKER_NAME?.trim() || undefined;
+
 // macOS Seatbelt blocks FSEvents, so Codex previews need polling for HMR.
 const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
 const managedLinux = readExecutionProfile() === "managed-linux";
@@ -22,15 +32,15 @@ const localBindingConfig = {
         {
           binding: d1,
           database_name: "site-creator-d1",
-          database_id: SITE_CREATOR_PLACEHOLDER_DATABASE_ID,
+          database_id: d1DatabaseId,
         },
       ]
     : [],
-  r2_buckets: r2
+  r2_buckets: r2 && !r2Disabled
     ? [
         {
           binding: r2,
-          bucket_name: "site-creator-r2",
+          bucket_name: r2BucketName,
         },
       ]
     : [],
@@ -68,6 +78,7 @@ export default defineConfig(async ({ command }) => {
         viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
         inspectorPort: false,
         config: {
+          ...(workerName ? { name: workerName } : {}),
           ...localBindingConfig,
           ...(command === "serve"
             ? {

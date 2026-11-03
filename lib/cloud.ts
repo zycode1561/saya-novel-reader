@@ -1,11 +1,12 @@
 import { env } from 'cloudflare:workers';
+import { isAuthorized } from '@/lib/session';
 // This is a single-owner PRIVATE Site. Sites dispatch authenticates every request,
 // including the local bridge's server-only OAI-Sites-Authorization token.
 // Do not broaden the Site audience without adding per-user library namespaces.
 export function db() { if (!env.DB) throw new Error('数据库尚未配置'); return env.DB; }
-export function bucket() { if (!env.BUCKET) throw new Error('文件存储尚未配置'); return env.BUCKET; }
 export function json(value: unknown, status = 200) { return Response.json(value, { status, headers: { 'cache-control': 'no-store' } }); }
-export function guard(request: Request): Response | null {
+export async function guard(request: Request): Promise<Response | null> {
+  if (!(await isAuthorized(request.headers))) return json({ error: '请先登录' }, 401);
   const origin = request.headers.get('origin');
   if (origin && origin !== new URL(request.url).origin) return json({ error: '请求来源不匹配' }, 403);
   if (!['GET', 'HEAD'].includes(request.method) && request.headers.get('x-reader-request') !== '1') return json({ error: '无效请求' }, 403);

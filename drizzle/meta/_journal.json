@@ -22,6 +22,13 @@
       "when": 1792594951104,
       "tag": "0002_exotic_forgotten_one",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1793675000000,
+      "tag": "0003_reader_storage",
+      "breakpoints": true
     }
   ]
 }

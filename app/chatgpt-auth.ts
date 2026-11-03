@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { isAuthorized } from "@/lib/session";
 
 export type ChatGPTUser = {
   userId: string;
@@ -45,7 +46,19 @@ export async function requireChatGPTUser(
   const user = await getChatGPTUser();
   if (user) return user;
 
-  redirect(chatGPTSignInPath(returnTo));
+  // Self-hosted deployments sign in with the owner passcode instead of the
+  // Sites platform headers.
+  const requestHeaders = await headers();
+  if (await isAuthorized(requestHeaders)) {
+    return {
+      userId: "owner",
+      displayName: "书房主人",
+      email: "owner@local",
+      fullName: null,
+    };
+  }
+
+  redirect(`/unlock?return_to=${encodeURIComponent(safeRelativeReturnPath(returnTo))}`);
 }
 
 export function chatGPTSignInPath(returnTo: string): string {
@@ -58,7 +71,7 @@ export function chatGPTSignOutPath(returnTo = "/"): string {
   return `${SIGN_OUT_PATH}?return_to=${encodeURIComponent(safeReturnTo)}`;
 }
 
-function safeRelativeReturnPath(value: string): string {
+export function safeRelativeReturnPath(value: string): string {
   if (!value.startsWith("/") || value.startsWith("//")) return "/";
 
   let url: URL;
@@ -77,7 +90,9 @@ function isReservedAuthPath(pathname: string): boolean {
   return (
     pathname === SIGN_IN_PATH ||
     pathname === SIGN_OUT_PATH ||
-    pathname === CALLBACK_PATH
+    pathname === CALLBACK_PATH ||
+    pathname === "/unlock" ||
+    pathname === "/signout"
   );
 }
 

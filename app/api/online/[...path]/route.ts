@@ -6,7 +6,7 @@ import type { OnlineReadingReference } from '@/lib/online-runtime/runtime.mjs';
 const raw=z.record(z.string(),z.unknown()),format=z.enum(['any-reader','sonovel']);
 async function body(request:Request) {return JSON.parse(new TextDecoder().decode(await limitedBytes(request,2*1024*1024+16384)));}
 async function handle(request:Request):Promise<Response> {
-  const denied=guard(request);if(denied)return json({error:{code:'FORBIDDEN',message:'请求来源不匹配。'}},403);
+  const denied=await guard(request);if(denied)return json({error:{code:'FORBIDDEN',message:'请求来源不匹配。'}},403);
   const url=new URL(request.url),parts=url.pathname.slice('/api/online/'.length).split('/').map(decodeURIComponent),method=request.method;
   try {
     const {rules,engine,unpack}=await service();

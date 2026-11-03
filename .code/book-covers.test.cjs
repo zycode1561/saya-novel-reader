@@ -20,7 +20,7 @@ assert.equal(toggle.props.role,'group');const buttons=toggle.props.children.filt
 const route=fs.readFileSync('app/api/cloud/books/[id]/cover/route.ts','utf8');
 const compiled=ts.transpileModule(route,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
 let exists=true,stored=null;
-const lib={guard:req=>req.method==='PUT'&&req.headers.get('x-reader-request')!=='1'?new Response(null,{status:403}):null,validId:id=>/^[a-f0-9]{64}$/.test(id),json:(v,status=200)=>Response.json(v,{status}),db:()=>({prepare:()=>({bind:()=>({first:async()=>exists?{id:'a'}:null})})}),bucket:()=>({get:async()=>stored?{body:stored}:null,put:async(_,data)=>{stored=data}}),limitedBytes:async(req,max)=>{const b=new Uint8Array(await req.arrayBuffer());if(b.length>max)throw Error();return b}};
+const lib={guard:req=>req.method==='PUT'&&req.headers.get('x-reader-request')!=='1'?new Response(null,{status:403}):null,validId:id=>/^[a-f0-9]{64}$/.test(id),json:(v,status=200)=>Response.json(v,{status}),db:()=>({prepare:()=>({bind:()=>({first:async()=>exists?{id:'a'}:null})})}),getObject:async()=>stored?{body:stored}:null,putObject:async(_,data)=>{stored=data},limitedBytes:async(req,max)=>{const b=new Uint8Array(await req.arrayBuffer());if(b.length>max)throw Error();return b}};
 const routeExports={};new Function('require','exports',compiled)(()=>lib,routeExports);
 vm.runInContext(source.slice(source.indexOf('\tasync function epubCoverThumbnail('),source.indexOf('\tasync function publishBookCover(')),ctx);
 (async()=>{

@@ -19,6 +19,8 @@
 
 打开[云端阅读器](https://saya-novel-library.zycode1561.chatgpt.site)，使用拥有站点访问权限的账号登录。电脑和手机可使用同一账号接着阅读。
 
+> 自托管到 Cloudflare Workers 时，改为输入部署时设置的访问口令。部署与自动更新见 [docs/deploy.md](docs/deploy.md)。
+
 ### 上传和打开书籍
 
 1. 在“书库 → 云端书库”中点击“上传书籍”，选择 TXT、Markdown 或 EPUB 文件。
